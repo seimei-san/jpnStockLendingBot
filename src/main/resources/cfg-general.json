@@ -1,0 +1,19 @@
+{
+  "maxCounterParty": 3,
+  "maxRfqDay": 99,
+  "maxIoiDay": 99,
+  "maxRollDay": 99,
+  "intChatRoomId": "MNU4Bo7d+j912UzhkqrGVX///ox+4XlVdA==",
+  "owner": "masao.edo",
+  "myCounterPartyName": "SYMPNY",
+  "databasePath": "sqlite3/",
+  "tableBackUpPath": "/home/seimeisama/projects/bots/jpnStockLendingBot/src/main/resources/backup",
+  "importCsvPath": "/home/seimeisama/projects/bots/jpnStockLendingBot/src/main/resources/csv",
+  "database": "stockLending.sqlite3",
+  "transactionSchema":"(counterPartyNameRequester text, type text, lotNo integer, requestId text, noOfBlast integer, versionNo integer, timeStamp text, lineNo integer, stockCode text, requesterQty integer, requesterStart text, requesterEnd text, providerNo integer, counterPartyNameProvider text, providerQty integer, providerStart text, providerEnd text, providerRate real, providerStatus text, updatedBy text)",
+  "counterPartySchema":"(counterPartyId text, counterPartyName text, counterPartyType text, counterPartyBotName text, extChatRoomId text, isActive integer)",
+  "transactionTable": "transactions",
+  "counterPartyTable": "counterParties",
+  "transactionTableSql" : "counterPartyNameRequester, type, lotNo, requestId, noOfBlast, versionNo, timeStamp, lineNo, stockCode, requesterQty, requesterStart, requesterEnd, providerNo, counterPartyNameProvider, providerQty, providerStart, providerEnd, providerRate, providerStatus, updatedBy",
+  "counterPartyTableSql": "counterPartyId, counterPartyName, counterPartyType, counterPartyBotName, extChatRoomId, isActive"
+}
