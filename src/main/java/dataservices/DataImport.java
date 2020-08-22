@@ -1,5 +1,7 @@
 package dataservices;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scripts.ConfigLoader;
 
 import java.io.BufferedReader;
@@ -12,6 +14,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public class DataImport {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataImport.class);
+
     private static final String JOB_NAME = "CSV import: ";
 
     public static String importCsv(String tableName) {
@@ -21,13 +25,13 @@ public class DataImport {
         }
         Connection connection = null;
         BufferedReader br = null;
-        String line = null;
+        String line;
 
         try {
 //            Check the target CSV file exists or not
             String fileName = ConfigLoader.importCsvPath + "/" + tableName + ".csv";
             File file = new File(fileName);
-            Boolean fileExists = file.exists();
+            boolean fileExists = file.exists();
             if (!fileExists) {
                 return tableName + ".csv import: Failed (the CSV file not exist)";
             }

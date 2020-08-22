@@ -5,14 +5,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scripts.ConfigLoader;
 
+import javax.xml.crypto.Data;
+
 
 public class StockLendingBot {
-    private static final Logger log = LoggerFactory.getLogger(StockLendingBot.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(StockLendingBot.class);
 
     public static void main(String[] args) {
         new StockLendingBot();
-
     }
+
     public StockLendingBot() {
         BasicConfigurator.configure();
 
@@ -27,10 +29,12 @@ public class StockLendingBot {
                     new ElementsListenerImpl(actionProcessor)
             );
 
-            ConfigLoader.loadConfig();
-            DataServices.getCounterPartyList();
+            ConfigLoader.loadConfig(); LOGGER.debug("ConfigLoader.loadConfig executed");
+            DataServices.getCounterPartyList(); LOGGER.debug("DataServices.getCounterPartyList executed");
+            DataServices.getExtRoomIdList(); LOGGER.debug("DataServices.getExtRoomIdList executed");
         } catch (Exception e) {
             e.printStackTrace();
+            LOGGER.error("StockLendingBotException thrown on StockLendingBOt", e);
 
 
         }

@@ -1,12 +1,17 @@
 package scripts;
 
+import dataservices.DataServices;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
 public class Miscellaneous {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Miscellaneous.class);
+
     private String personName;
     private static Miscellaneous instance;
     public static Miscellaneous getInstance() {
@@ -17,11 +22,11 @@ public class Miscellaneous {
     }
 
     public static String getNewRequestId(String type, int lotNo) {
-        String newRequestId = "";
+        String newRequestId;
         String timeStamp = getTimeStamp("requestId");
-        if (type == "RFQ") {
+        if (type.equals("RFQ")) {
             newRequestId = "B" + timeStamp + String.format("%1$02d", lotNo);
-        } else if (type == "IOI") {
+        } else if (type.equals("IOI")) {
             newRequestId = "L" + timeStamp + String.format("%1$02d", lotNo);
 
         } else {
@@ -37,25 +42,29 @@ public class Miscellaneous {
         //協定世界時のUTC 1970年1月1日深夜零時との差をミリ秒で取得
         long millis = System.currentTimeMillis();
 
-        String pattern = "";
+        String pattern;
 
         //ミリ秒を引数としてTimestampオブジェクトを作成
         Timestamp timestamp = new Timestamp(millis);
 
-        if (type == "backupFileName") {
-            pattern = "yyyyMMddHHmm";
-        } else if (type == "requestId") {
-            pattern = "yyMMdd";
-        } else if (type == "transaction") {
-            pattern = "yyyy-MM-dd HH:mm:ss";
-        } else {
-            pattern = "yyyyMMddHHmm";
+        switch (type) {
+            case "backupFileName":
+                pattern = "yyyyMMddHHmm";
+                break;
+            case "requestId":
+                pattern = "yyMMdd";
+                break;
+            case "transaction":
+                pattern = "yyyy-MM-dd HH:mm:ss";
+                break;
+            default:
+                pattern = "yyyyMMddHHmm";
+                break;
         }
         SimpleDateFormat sdf = new SimpleDateFormat(pattern);
         sdf.setTimeZone(TimeZone.getTimeZone("Asia/Tokyo"));  // get TimeZone
-        String str = sdf.format(timestamp);
 
-        return str;
+        return sdf.format(timestamp);
     }
 
 
@@ -69,7 +78,7 @@ public class Miscellaneous {
         return  personName;
     }
 
-    public boolean isNumber(String val) {
+    public static boolean isNumber(String val) {
         try {
             Integer.parseInt(val);
             return true;
@@ -77,12 +86,22 @@ public class Miscellaneous {
             return false;
         }
     }
-    public String fourDigitDate(String strDate) {
+    public static String fourDigitDate(String strDate) {
         try {
             Integer.parseInt(strDate);
             return String.format("%04d",Integer.parseInt(strDate));
         } catch (NumberFormatException e) {
             return strDate;
         }
+    }
+    public static boolean checkRoomId(String streamId) {
+        boolean hitRoomId = false;
+        for (int i = 0; i < DataServices.extRoomIdList.length; i++) {
+            if (streamId.equals(DataServices.extRoomIdList[i])) {
+                hitRoomId = true;
+                break;
+            }
+        }
+        return hitRoomId;
     }
 }

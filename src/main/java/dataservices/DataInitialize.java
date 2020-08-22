@@ -1,5 +1,7 @@
 package dataservices;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scripts.ConfigLoader;
 
 import java.sql.Connection;
@@ -13,7 +15,9 @@ import java.sql.Statement;
  * Masaaki Kurosawa 2020-08-10
  */
 
-public class DbInitialize {
+public class DataInitialize {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataInitialize.class);
+
 
     private static final String JOB_NAME = "DB Initialization: ";
 
@@ -26,11 +30,11 @@ public class DbInitialize {
         String counterPartyTableIndexName = "counterPartyTableIndices";
         String transactionTableIndexName = "transactionTableIndices";
         String counterPartyTableIndexColumn1 = "counterPartyName";
-        String transactionTableIndexColumn1 = "counterPartyNameRequester";
+        String transactionTableIndexColumn1 = "borrowerName";
         String transactionTableIndexColumn2 = "lotNo";
         String transactionTableIndexColumn3 = "requestId";
         String transactionTableIndexColumn4 = "providerNo";
-        String transactionTableIndexColumn5 = "counterPartyNameProvider";
+        String transactionTableIndexColumn5 = "lenderName";
 
         Connection connection = null;
         Statement statement = null;
@@ -55,19 +59,23 @@ public class DbInitialize {
 //            System.out.println("create table " + ConfigLoader.transactionTable + " " + ConfigLoader.transactionSchema);
 
 //             create index to the tables
-            String indexCounterPartySql = "create index counterPartyIndices on " + ConfigLoader.counterPartyTable + "(" + counterPartyTableIndexColumn1 + ")" ;
-            statement.executeUpdate(indexCounterPartySql);
+            String uniqueIndexCounterPartySql = "create unique index counterPartyUniqueIndex on " + ConfigLoader.counterPartyTable + "("  + counterPartyTableIndexColumn1 + ")" ;
+            statement.executeUpdate(uniqueIndexCounterPartySql);
             String indexTransactionSql = "create index transactionIndices on " + ConfigLoader.transactionTable + "(" +
                     transactionTableIndexColumn1 + ", " + transactionTableIndexColumn2 + ", " + transactionTableIndexColumn3 + ", " +
                     transactionTableIndexColumn4 + ", "+ transactionTableIndexColumn5 +")" ;
             statement.executeUpdate(indexTransactionSql);
 
+            LOGGER.debug("DataInitialize.initializeTable Indices applied");
+
 
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
+            LOGGER.error("DataInitialize.initializeTable Error:", e);
             return JOB_NAME + "Failed (JDBC Class not exist)!";
         } catch (SQLException e) {
             e.printStackTrace();
+            LOGGER.error("DataInitialize.initializeTable Error:", e);
             return JOB_NAME + "Failed (SQL Error)!";
         } finally {
             // ステートメントとコネクションはクローズする

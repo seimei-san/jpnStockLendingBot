@@ -1,23 +1,23 @@
 package dataservices;
 
-public class Rfq {
+public class CreateRfq {
     private String requestId;
     private String type;
     private int lineNo;
     private String stockCode;
-    private int requesterQty;
-    private String requesterStart;
-    private String requesterEnd;
+    private int borrowerQty;
+    private String borrowerStart;
+    private String borrowerEnd;
 
 
-    public Rfq(String requestId, String type, int lineNo, String stockCode, int requesterQty, String requesterStart, String requesterEnd) {
+    public CreateRfq(String requestId, String type, int lineNo, String stockCode, int borrowerQty, String borrowerStart, String borrowerEnd) {
         this.requestId = requestId;
         this.type = type;
         this.lineNo = lineNo;
         this.stockCode = stockCode;
-        this.requesterQty = requesterQty;
-        this.requesterStart = requesterStart;
-        this.requesterEnd = requesterEnd;
+        this.borrowerQty = borrowerQty;
+        this.borrowerStart = borrowerStart;
+        this.borrowerEnd = borrowerEnd;
 
     }
 
@@ -35,13 +35,13 @@ public class Rfq {
         return this.stockCode;
     }
     public int getRequesterQty() {
-        return this.requesterQty;
+        return this.borrowerQty;
     }
     public String getRequesterStart() {
-        return this.requesterStart;
+        return this.borrowerStart;
     }
     public String getRequesterEnd() {
-        return this.requesterEnd;
+        return this.borrowerEnd;
     }
 
 

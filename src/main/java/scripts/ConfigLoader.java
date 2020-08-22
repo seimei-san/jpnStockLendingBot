@@ -3,12 +3,15 @@ package scripts;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 
 
 public class ConfigLoader {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigLoader.class);
 
     private static final String JOB_NAME = "Configuration Loader: ";
 
@@ -21,10 +24,14 @@ public class ConfigLoader {
     public static int maxRollDay = 0;
     public static String intChatRoomId = "";
     public static String owner = "";
+    public static String rfqHashTag = "";
+    public static String ioiHashTag = "";
+    public static String rolHashTag = "";
     public static String myCounterPartyName = "";
     public static String databasePath = "";
     public static String tableBackUpPath = "";
     public static String importCsvPath = "";
+    public static String sendRfqCsvPath = "";
     public static String database = "";
     public static String transactionSchema = "";
     public static String counterPartySchema = "";
@@ -47,10 +54,14 @@ public class ConfigLoader {
             maxRollDay = node.get("maxRollDay").asInt();
             intChatRoomId = node.get("intChatRoomId").asText();
             owner = node.get("owner").asText();
+            rfqHashTag = node.get("rfqHashTag").asText();
+            ioiHashTag = node.get("ioiHashTag").asText();
+            rolHashTag = node.get("rolHashTag").asText();
             myCounterPartyName = node.get("myCounterPartyName").asText();
             databasePath = node.get("databasePath").asText();
             tableBackUpPath = node.get("tableBackUpPath").asText();
             importCsvPath = node.get("importCsvPath").asText();
+            sendRfqCsvPath = node.get("sendRfqCsvPath").asText();
             database = node.get("database").asText();
             transactionSchema = node.get("transactionSchema").asText();
             counterPartySchema = node.get("counterPartySchema").asText();

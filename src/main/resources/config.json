@@ -11,8 +11,8 @@
     "truststorePath": "certificates/all_symphony_certs_truststore",
     "truststorePassword": "changeit",
 
-    "botUsername": "bot.borrower",
-    "botEmailAddress": "bot.borrower@symphony.com",
+    "botUsername": "lendingbot.symphony",
+    "botEmailAddress": "lendingbot.symphony@symphony.com",
 
     "botPrivateKeyPath": "rsa/",
     "botPrivateKeyName": "rsa-private-bot.borrower.pem",

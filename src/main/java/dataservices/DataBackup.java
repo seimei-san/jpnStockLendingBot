@@ -3,6 +3,8 @@ package dataservices;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.QuoteMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scripts.ConfigLoader;
 import scripts.Miscellaneous;
 
@@ -14,7 +16,9 @@ import java.nio.file.Paths;
 import java.sql.*;
 
 
-public class DbBackup {
+public class DataBackup {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataBackup.class);
+
     private static final String TRANSACTION_TABLE = "transactions";
     private static final String COUNTERPARTY_TABLE = "counterParties";
     private static final String JOB_NAME = "DB backup: ";
@@ -60,45 +64,49 @@ public class DbBackup {
             statement = connection.createStatement();
 
             try {
-                ResultSet results = statement.executeQuery(sqlSelect);
+                ResultSet resultSet = statement.executeQuery(sqlSelect);
                 BufferedWriter writer = Files.newBufferedWriter(Paths.get(fileName));
-                CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(results.getMetaData()).withQuoteMode(QuoteMode.ALL));
+                CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(resultSet.getMetaData()).withQuoteMode(QuoteMode.ALL));
 
                 if (tableName.equals(COUNTERPARTY_TABLE)) {
-                    while (results.next()) {
+                    while (resultSet.next()) {
                         csvPrinter.printRecord(
-                                results.getString(1),
-                                results.getString(2),
-                                results.getString(3),
-                                results.getString(4),
-                                results.getString(5),
-                                results.getInt(6)
+                                resultSet.getString("counterPartyId"),
+                                resultSet.getString("counterPartyName"),
+                                resultSet.getString("counterPartyType"),
+                                resultSet.getString("counterPartyBotName"),
+                                resultSet.getString("extChatRoomId"),
+                                resultSet.getInt("isActive")
                         );
                     }
 
                 } else if (tableName.equals(TRANSACTION_TABLE)) {
-                    while (results.next()) {
+                    while (resultSet.next()) {
                         csvPrinter.printRecord(
-                                results.getString(1),
-                                results.getString(2),
-                                results.getInt(3),
-                                results.getString(4),
-                                results.getInt(5),
-                                results.getInt(6),
-                                results.getString(7),
-                                results.getInt(8),
-                                results.getString(9),
-                                results.getInt(10),
-                                results.getString(11),
-                                results.getString(12),
-                                results.getInt(13),
-                                results.getString(14),
-                                results.getInt(15),
-                                results.getString(16),
-                                results.getString(17),
-                                results.getDouble(18),
-                                results.getString(19),
-                                results.getString(20)
+                                resultSet.getString("type"),
+                                resultSet.getInt("lotNo"),
+                                resultSet.getString("requestId"),
+                                resultSet.getInt("versionNo"),
+                                resultSet.getInt("lineNo"),
+                                resultSet.getString("stockCode"),
+                                resultSet.getString("borrowerName"),
+                                resultSet.getInt("borrowerQty"),
+                                resultSet.getString("borrowerStart"),
+                                resultSet.getString("borrowerEnd"),
+                                resultSet.getString("borrowerRate"),
+                                resultSet.getString("borrowerCondition"),
+                                resultSet.getString("borrowerStatus"),
+                                resultSet.getString("providerNo"),
+                                resultSet.getString("lenderName"),
+                                resultSet.getInt("lenderQty"),
+                                resultSet.getString("lenderStart"),
+                                resultSet.getString("lenderEnd"),
+                                resultSet.getDouble("lenderRate"),
+                                resultSet.getString("lenderCondition"),
+                                resultSet.getString("lenderStatus"),
+                                resultSet.getString("timeStamp"),
+                                resultSet.getString("updatedBy")
+
                         );
                     }
 
@@ -106,19 +114,24 @@ public class DbBackup {
                 csvPrinter.flush();
                 csvPrinter.close();
 
+
             } catch (SQLException e) {
                 e.printStackTrace();
+                LOGGER.error("DataBackup.backupTables.SQLException, e");
                 return tableName + " Table Backup: Failed (SQL Error)";
             } catch (IOException e) {
                 e.printStackTrace();
+                LOGGER.error("DataBackup.backupTables.IOException, e");
                 return tableName + " Table Backup: Failed (IO Error)";
             }
 
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
+            LOGGER.error("DataBackup.backupTables.ClassException, e");
             return tableName + " Table Backup: Failed (JDBC Class not exist)";
         } catch (SQLException e) {
             e.printStackTrace();
+            LOGGER.error("DataBackup.backupTables.SQLException, e");
             return tableName +  " Table Backup: Failed (SQL Error)";
         } finally {
             // ステートメントとコネクションはクローズする
@@ -138,6 +151,8 @@ public class DbBackup {
 
             }
         }
+        LOGGER.debug("DataBackup.backupTables completed");
+
         return tableName + " Table Backup: Successful";
 
     }
