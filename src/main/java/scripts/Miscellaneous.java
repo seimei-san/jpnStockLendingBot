@@ -36,6 +36,7 @@ public class Miscellaneous {
     }
 
 
+
     public static String getTimeStamp(String type) {
         //get TimeStamp in Tokyo Time Zone
 
@@ -48,8 +49,8 @@ public class Miscellaneous {
         Timestamp timestamp = new Timestamp(millis);
 
         switch (type) {
-            case "backupFileName":
-                pattern = "yyyyMMddHHmm";
+            case "fileName":
+                pattern = "yyyyMMdd_HHmm";
                 break;
             case "requestId":
                 pattern = "yyMMdd";

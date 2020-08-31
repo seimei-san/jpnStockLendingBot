@@ -29,7 +29,7 @@ public class DataImport {
 
         try {
 //            Check the target CSV file exists or not
-            String fileName = ConfigLoader.importCsvPath + "/" + tableName + ".csv";
+            String fileName = ConfigLoader.importCsvPath + File.separator + tableName + ".csv";
             File file = new File(fileName);
             boolean fileExists = file.exists();
             if (!fileExists) {

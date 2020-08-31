@@ -4,10 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scripts.ConfigLoader;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 
 /**
@@ -20,6 +17,7 @@ public class DataInitialize {
 
 
     private static final String JOB_NAME = "DB Initialization: ";
+
 
     public static String initializeTables() {
         if (!ConfigLoader.isInitialized) {
@@ -97,6 +95,53 @@ public class DataInitialize {
         }
         return JOB_NAME + "Successful";
 
+    }
+    public static String freshCounterPartyTable() {
+        Connection connection = null;
+        Statement statement = null;
+        try {
+
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String sqlDeleteCounterParties = "delete from " + ConfigLoader.counterPartyTable;
+
+            PreparedStatement preStatement = connection.prepareStatement(sqlDeleteCounterParties);
+
+            preStatement.executeUpdate();
+
+
+        }catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataInitialize.freshCounterPartyTable.ClassException", e);
+            return JOB_NAME + "(Fresh counterParties Table) Failed";
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("ataInitialize.freshCounterPartyTable.SQLException", e);
+            return JOB_NAME + "(Fresh counterParties Table) Failed";
+
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        LOGGER.debug("ataInitialize.freshCounterPartyTable completed");
+        return JOB_NAME + "(Fresh counterParties Table) Successful";
 
     }
 

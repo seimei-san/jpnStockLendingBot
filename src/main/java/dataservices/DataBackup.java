@@ -49,7 +49,7 @@ public class DataBackup {
             if (!exportDir.exists()) {
                 exportDir.mkdirs();
             }
-            String fileName = exportDir.toString() + "/" + tableName + "-" + Miscellaneous.getTimeStamp("backupFileName") + ".csv";
+            String fileName = exportDir.toString() + File.separator + tableName + "-" + Miscellaneous.getTimeStamp("fileName") + ".csv";
 
             if (tableName.equals(COUNTERPARTY_TABLE)) {
                  sqlSelect = "SELECT " + ConfigLoader.counterPartyTableSql + " FROM " + tableName + ";";
@@ -104,6 +104,7 @@ public class DataBackup {
                                 resultSet.getDouble("lenderRate"),
                                 resultSet.getString("lenderCondition"),
                                 resultSet.getString("lenderStatus"),
+                                resultSet.getString("price"),
                                 resultSet.getString("timeStamp"),
                                 resultSet.getString("updatedBy")
 

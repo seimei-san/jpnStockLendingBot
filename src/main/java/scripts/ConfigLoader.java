@@ -18,6 +18,7 @@ public class ConfigLoader {
     public static final int MAX_REQID_LEN = 9;
     public static final String NO_REQUESTID = "(自動割当)";
 
+    public static String env = "";
     public static int maxCounterParty = 0;
     public static int maxRfqDay = 0;
     public static int maxIoiDay = 0;
@@ -48,6 +49,7 @@ public class ConfigLoader {
         ObjectMapper mapper = new ObjectMapper();
         try {
             JsonNode node = mapper.readTree(new File("src/main/resources/cfg-general.json"));
+            env = node.get("env").asText();
             maxCounterParty = node.get("maxCounterParty").asInt();
             maxRfqDay = node.get("maxRfqDay").asInt();
             maxIoiDay = node.get("maxIoiDay").asInt();
