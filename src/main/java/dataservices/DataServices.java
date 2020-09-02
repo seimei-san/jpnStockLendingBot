@@ -223,7 +223,7 @@ public class DataServices {
     }
 
     public static void insertRfq(String borrowerName, String type, int lotNo, String requestId, int versionNo,
-                                int lineNo, String stockCode, int borrowerQty, String borrowerStart, String borrowerEnd, int providerNo,  String timeStamp) {
+                                int lineNo, String stockCode, int borrowerQty, String borrowerStart, String borrowerEnd, int lenderNo,  String timeStamp) {
         Connection connection = null;
         Statement statement = null;
 
@@ -239,7 +239,7 @@ public class DataServices {
 //            String timeStamp = Miscellaneous.getTimeStamp("transaction");
 
             String sqlReserveRequest = "insert into " + ConfigLoader.transactionTable + "(borrowerName, type, lotNo, requestId, " +
-                    "versionNo, lineNo, stockCode, borrowerQty, borrowerStart, borrowerEnd, providerNo, timeStamp) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
+                    "versionNo, lineNo, stockCode, borrowerQty, borrowerStart, borrowerEnd, lenderNo, timeStamp) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
 
             PreparedStatement preStatement = connection.prepareStatement(sqlReserveRequest);
             preStatement.setString(1,borrowerName);
@@ -252,7 +252,7 @@ public class DataServices {
             preStatement.setInt(8,borrowerQty);
             preStatement.setString(9,Miscellaneous.fourDigitDate(borrowerStart));
             preStatement.setString(10,Miscellaneous.fourDigitDate(borrowerEnd));
-            preStatement.setInt(11, providerNo);
+            preStatement.setInt(11, lenderNo);
             preStatement.setString(12,timeStamp);
 
             preStatement.executeUpdate();
@@ -285,7 +285,7 @@ public class DataServices {
 
     }
 
-    public ArrayList<CreateRfq> getTargetRfqs(String requestId, int providerNo) {
+    public ArrayList<CreateRfq> getTargetRfqs(String requestId, int lenderNo) {
 
         Connection connection = null;
         Statement statement = null;
@@ -297,8 +297,8 @@ public class DataServices {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sql = "SELECT requestId, type, lineNo, stockCode, borrowerQty, borrowerStart, borrowerEnd, providerNo FROM "
-                    + ConfigLoader.transactionTable + " WHERE requestId = " + "'" + requestId + "'" + " AND providerNo = " + providerNo + ";";
+            String sql = "SELECT requestId, type, lineNo, stockCode, borrowerQty, borrowerStart, borrowerEnd, lenderNo FROM "
+                    + ConfigLoader.transactionTable + " WHERE requestId = " + "'" + requestId + "'" + " AND lenderNo = " + lenderNo + ";";
             ResultSet resultSet = statement.executeQuery(sql);
 
 
@@ -439,7 +439,7 @@ public class DataServices {
         return tmpArray;
     }
 
-    public static String insertGetRfqsForTargetCounterParty(String type, String requestId, String lenderName, int providerNo) {
+    public static String insertGetRfqsForTargetCounterParty(String type, String requestId, String lenderName, int lenderNo) {
         Connection connection = null;
         Statement statement = null;
         String rfqsData = "";
@@ -454,18 +454,18 @@ public class DataServices {
 
 
 //           while (rs.next()) failed into Loop so that limit loop by the count of results
-            String sqlCountTargetRfqs = "select count(requestId) as cnt from " + ConfigLoader.transactionTable + " where providerNo=0 AND type='" + type + "' AND requestId=" + "'" + requestId + "'";
+            String sqlCountTargetRfqs = "select count(requestId) as cnt from " + ConfigLoader.transactionTable + " where lenderNo=0 AND type='" + type + "' AND requestId=" + "'" + requestId + "'";
             ResultSet rsCount = statement.executeQuery(sqlCountTargetRfqs);
             int resultCount = rsCount.getInt(1);
 
-            String sqlGetTargetRfqs = "select * from " + ConfigLoader.transactionTable + " where providerNo=0 AND type='" + type + "' AND requestId=?";
+            String sqlGetTargetRfqs = "select * from " + ConfigLoader.transactionTable + " where lenderNo=0 AND type='" + type + "' AND requestId=?";
             PreparedStatement preStatementSelect = connection.prepareStatement(sqlGetTargetRfqs);
             preStatementSelect.setString(1, requestId);
             ResultSet resultSet = preStatementSelect.executeQuery();
 
             String sqlInsertRfqForTargetCounterParty = "insert into " + ConfigLoader.transactionTable +
                     " (type, lotNo, requestId, versionNo, lineNo, stockCode, borrowerName, borrowerQty, " +
-                    "borrowerStart, borrowerEnd, providerNo, lenderName, timeStamp, price) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                    "borrowerStart, borrowerEnd, lenderNo, lenderName, timeStamp, price) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             PreparedStatement preparedStatementInsert = connection.prepareStatement(sqlInsertRfqForTargetCounterParty);
 
             String timeStamp = Miscellaneous.getTimeStamp("transaction");
@@ -495,7 +495,7 @@ public class DataServices {
                 preparedStatementInsert.setInt(8, Integer.parseInt( tmpArray[8])); // borrowerQty
                 preparedStatementInsert.setString(9,  tmpArray[9]); // borrowerStart
                 preparedStatementInsert.setString(10,  tmpArray[10]); // borrowerEnd
-                preparedStatementInsert.setInt(11, providerNo); // providerNo
+                preparedStatementInsert.setInt(11, lenderNo); // lenderNo
                 preparedStatementInsert.setString(12, lenderName); // lenderName
                 preparedStatementInsert.setString(13, timeStamp); // timeStamp
                 preparedStatementInsert.setInt(14, 0); // price
@@ -512,7 +512,7 @@ public class DataServices {
                 rfqsData += Integer.parseInt( tmpArray[8]) + ","; // borrowerQty
                 rfqsData += tmpArray[9] + ","; // borrowerStart
                 rfqsData += tmpArray[10] + ","; // borrowerEnd
-                rfqsData += providerNo + ","; // providerNo
+                rfqsData += lenderNo + ","; // lenderNo
                 rfqsData += lenderName + ","; // lenderName
                 rfqsData += timeStamp + "\r"; // timeStamp
 
@@ -569,7 +569,7 @@ public class DataServices {
 
             String sqlInsertRfqForTargetCounterParty = "insert into " + ConfigLoader.transactionTable +
                     " (type, lotNo, requestId, versionNo, lineNo, stockCode, borrowerName, borrowerQty, " +
-                    "borrowerStart, borrowerEnd, providerNo, lenderName, timeStamp, price, lenderStatus, updatedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                    "borrowerStart, borrowerEnd, lenderNo, lenderName, timeStamp, price, lenderStatus, updatedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             PreparedStatement preparedStatementInsert = connection.prepareStatement(sqlInsertRfqForTargetCounterParty);
 
             String timeStamp = Miscellaneous.getTimeStamp("transaction");
@@ -598,7 +598,7 @@ public class DataServices {
                         preparedStatementInsert.setInt(8, Integer.parseInt( tmpArray[8])); // borrowerQty
                         preparedStatementInsert.setString(9,  tmpArray[9]); // borrowerStart
                         preparedStatementInsert.setString(10,  tmpArray[10]); // borrowerEnd
-                        preparedStatementInsert.setInt(11, Integer.parseInt(tmpArray[11])); // providerNo
+                        preparedStatementInsert.setInt(11, Integer.parseInt(tmpArray[11])); // lenderNo
                         preparedStatementInsert.setString(12, tmpArray[12]); // lenderName
                         preparedStatementInsert.setString(13, timeStamp); // timeStamp
                         preparedStatementInsert.setInt(14, 0); // price
@@ -683,7 +683,7 @@ public class DataServices {
                         resultSet.getDouble("borrowerRate"),
                         resultSet.getString("borrowerCondition"),
                         resultSet.getString("borrowerStatus"),
-                        resultSet.getInt("providerNo"),
+                        resultSet.getInt("lenderNo"),
                         resultSet.getString("lenderName"),
                         resultSet.getInt("lenderQty"),
                         resultSet.getString("lenderStart"),
@@ -762,7 +762,7 @@ public class DataServices {
                         resultSet.getDouble("borrowerRate"),
                         resultSet.getString("borrowerCondition"),
                         resultSet.getString("borrowerStatus"),
-                        resultSet.getInt("providerNo"),
+                        resultSet.getInt("lenderNo"),
                         resultSet.getString("lenderName"),
                         resultSet.getInt("lenderQty"),
                         resultSet.getString("lenderStart"),
@@ -884,7 +884,7 @@ public class DataServices {
                         quotesForBorrower.getDouble("borrowerRate"),
                         quotesForBorrower.getString("borrowerCondition"),
                         quotesForBorrower.getString("borrowerStatus"),
-                        quotesForBorrower.getInt("providerNo"),
+                        quotesForBorrower.getInt("lenderNo"),
                         quotesForBorrower.getString("lenderName"),
                         quotesForBorrower.getInt("lenderQty"),
                         quotesForBorrower.getString("lenderStart"),
@@ -963,7 +963,7 @@ public class DataServices {
                 quoteData += quotesForBorrower.getDouble("borrowerRate") + ",";
                 quoteData += quotesForBorrower.getString("borrowerCondition") + ",";
                 quoteData += quotesForBorrower.getString("borrowerStatus") + ",";
-                quoteData += quotesForBorrower.getInt("providerNo") + ",";
+                quoteData += quotesForBorrower.getInt("lenderNo") + ",";
                 quoteData += quotesForBorrower.getString("lenderName") + ",";
                 quoteData += quotesForBorrower.getInt("lenderQty") + ",";
                 quoteData += quotesForBorrower.getString("lenderStart") + ",";

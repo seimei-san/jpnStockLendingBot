@@ -19,7 +19,7 @@ public class DataExports {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataExports.class);
 
 
-    public static String exportRfqsForTargetProvider(String requestId, String borrowerName, String lenderName) {
+    public static String exportRfqsForTargetlender(String requestId, String borrowerName, String lenderName) {
         String fileFullPath = "";
         Connection connection = null;
         Statement statement = null;
@@ -32,12 +32,12 @@ public class DataExports {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sqlCollectRfqsForTargetProvider =
+            String sqlCollectRfqsForTargetlender =
                     "SELECT type as 種別, borrowerName as 依頼元, stockCode as 銘柄, borrowerQty as 依頼数,  borrowerStart as 開始日, borrowerEnd as 終了期間, " +
                             "lenderName as 依頼先_C, requestId as 依頼番号_C, lineNo as 行番_C, lenderQty as 可能数_C, lenderStart as 可能開始_C, " +
                             "lenderEnd as 可能終了期間_C, lenderRate as 利率_C, lenderCondition as 条件_C FROM " +
                             ConfigLoader.transactionTable + " WHERE requestId=? AND borrowerName=? AND lenderName=?;";
-            PreparedStatement preparedStatement = connection.prepareStatement(sqlCollectRfqsForTargetProvider);
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlCollectRfqsForTargetlender);
             preparedStatement.setString(1, requestId);
             preparedStatement.setString(2, borrowerName);
             preparedStatement.setString(3, lenderName);
@@ -75,26 +75,26 @@ public class DataExports {
                 }
                 csvPrinter.flush();
                 csvPrinter.close();
-                LOGGER.debug("DataExports.exportRfqsForTargetProvider completed");
+                LOGGER.debug("DataExports.exportRfqsForTargetlender completed");
 
             } catch (SQLException e) {
                 e.printStackTrace();
-                LOGGER.error("DataExports.exportRfqsForTargetProvider.SQLException",e);
+                LOGGER.error("DataExports.exportRfqsForTargetlender.SQLException",e);
                 isError = true;
             } catch (IOException e) {
                 e.printStackTrace();
-                LOGGER.error("DataExports.exportRfqsForTargetProvider.IOException",e);
+                LOGGER.error("DataExports.exportRfqsForTargetlender.IOException",e);
                 isError = true;
             }
 
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-            LOGGER.error("DataExports.exportRfqsForTargetProvider.ClassException",e);
+            LOGGER.error("DataExports.exportRfqsForTargetlender.ClassException",e);
             isError = true;
 
         } catch (SQLException e) {
             e.printStackTrace();
-            LOGGER.error("DataExports.exportRfqsForTargetProvider.SQLException",e);
+            LOGGER.error("DataExports.exportRfqsForTargetlender.SQLException",e);
             isError = true;
 
         } finally {
@@ -121,7 +121,7 @@ public class DataExports {
     }
 
 
-    public static String exportRfqsToProvider(String lenderName, String lenderStatus) {
+    public static String exportRfqsTolender(String lenderName, String lenderStatus) {
         String fileFullPath = "";
         Connection connection = null;
         Statement statement = null;
@@ -135,12 +135,12 @@ public class DataExports {
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
 
-            String sqlCollectRfqsToProvider =
+            String sqlCollectRfqsTolender =
                     "SELECT type as 種別, borrowerName as 依頼元, stockCode as 銘柄, borrowerQty as 依頼数,  borrowerStart as 開始日, borrowerEnd as 終了期間, " +
                             "lenderName as 依頼先_C, requestId as 依頼番号_c, lineNo as 行番_c, lenderQty as 可能数_c, lenderStart as 可能開始_c, " +
                             "lenderEnd as 可能終了_c, lenderRate as 利率_c, lenderCondition as 条件_c, price as 価格_c FROM " +
                             ConfigLoader.transactionTable + " WHERE type='QUO' AND lenderStatus=?";
-            PreparedStatement preparedStatement = connection.prepareStatement(sqlCollectRfqsToProvider);
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlCollectRfqsTolender);
             preparedStatement.setString(1, lenderStatus);
 
 
@@ -180,22 +180,22 @@ public class DataExports {
 
             } catch (SQLException e) {
                 e.printStackTrace();
-                LOGGER.error("DataExports.exportRfqsToProvider.SQLException",e);
+                LOGGER.error("DataExports.exportRfqsTolender.SQLException",e);
                 isError = true;
             } catch (IOException e) {
                 e.printStackTrace();
-                LOGGER.error("DataExports.exportRfqsToProvider.IOException",e);
+                LOGGER.error("DataExports.exportRfqsTolender.IOException",e);
                 isError = true;
             }
 
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-            LOGGER.error("DataExports.exportRfqsToProvider.ClassException",e);
+            LOGGER.error("DataExports.exportRfqsTolender.ClassException",e);
             isError = true;
 
         } catch (SQLException e) {
             e.printStackTrace();
-            LOGGER.error("DataExports.exportRfqsToProvider.SQLException",e);
+            LOGGER.error("DataExports.exportRfqsTolender.SQLException",e);
             isError = true;
 
         } finally {
@@ -215,10 +215,10 @@ public class DataExports {
             }
         }
         if (isError) {
-            LOGGER.debug("DataExports.exportRfqsToProvider Error");
+            LOGGER.debug("DataExports.exportRfqsTolender Error");
             return "";
         } else {
-            LOGGER.debug("DataExports.exportRfqsToProvider completed");
+            LOGGER.debug("DataExports.exportRfqsTolender completed");
             return fileFullPath;
         }
     }

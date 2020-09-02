@@ -1,9 +1,6 @@
 import clients.SymBotClient;
 import com.google.common.base.Splitter;
-import dataservices.DataExports;
-import dataservices.DataServices;
-import dataservices.DataUpdate;
-import dataservices.SendRfq;
+import dataservices.*;
 import model.OutboundMessage;
 import org.glassfish.jersey.internal.guava.Lists;
 import scripts.ConfigLoader;
@@ -31,7 +28,7 @@ public class test {
 
 //        System.out.println(DataBackup.backupTables(ConfigLoader.counterPartyTable));
 //        System.out.println(DataBackup.backupTables(ConfigLoader.transactionTable));
-//        System.out.println(DataInitialize.initializeTables());
+        System.out.println(DataInitialize.initializeTables());
 //        System.out.println(DataImport.importCsv(ConfigLoader.counterPartyTable));
 //        System.out.println(DataServices.getCounterPartyList());
 //
@@ -67,7 +64,7 @@ public class test {
 //            System.out.println(sendRfq.getBorrowerQty());
 //            System.out.println(sendRfq.getBorrowerStart());
 //            System.out.println(sendRfq.getBorrowerEnd());
-//            System.out.println(sendRfq.getProviderNo());
+//            System.out.println(sendRfq.getlenderNo());
 //            System.out.println(sendRfq.getLenderName());
 //            System.out.println(sendRfq.getLenderQty());
 //            System.out.println(sendRfq.getLenderStart());
@@ -78,7 +75,7 @@ public class test {
 //
 //        }
 //////        System.out.println(i);
-//        String csvName = DataExports.exportRfqsForTargetProvider("B20082103", "SYMPNY", "NKKO");
+//        String csvName = DataExports.exportRfqsForTargetlender("B20082103", "SYMPNY", "NKKO");
 //        System.out.println(csvName);
 //
 // 
@@ -156,61 +153,61 @@ public class test {
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
-//        String test = DataExports.exportRfqsToProvider("MIKAN","YET");
+//        String test = DataExports.exportRfqsTolender("MIKAN","YET");
 //        System.out.println(test);
 
-
-        Connection connection = null;
-        Statement statement = null;
-
-        try {
-            Class.forName("org.sqlite.JDBC");
-
-            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
-            statement = connection.createStatement();
-            statement.setQueryTimeout(30);  // set timeout to 30 sec.
-
-            String sqlListTargetBorrowers = "select borrowerName from " + ConfigLoader.transactionTable + " where type='QUO' AND (lenderStatus='NEW' OR lenderStatus='UPDATE') GROUP By borrowerName";
-            String sqlSelectQuoteToBorrower = "select * from " + ConfigLoader.transactionTable + " where type='QUO' AND (lenderStatus='NEW' OR lenderStatus='UPDATE') AND borrowerName=?";
-            ResultSet borrowerList = statement.executeQuery(sqlListTargetBorrowers);
-            while (borrowerList.next()) {
-                System.out.println("================================");
-                System.out.println(borrowerList.getString("borrowerName"));
-                PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectQuoteToBorrower);
-                preparedStatement.setString(1, borrowerList.getString("borrowerName"));
-                ResultSet quotesForBorrower = preparedStatement.executeQuery();
-                while (quotesForBorrower.next()) {
-                    System.out.println("--------------------------------");
-                    System.out.println(quotesForBorrower.getString("borrowerName"));
-                    System.out.println(quotesForBorrower.getString("StockCode"));
-                    System.out.println(quotesForBorrower.getInt("borrowerQty"));
-                }
-            }
-
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            try {
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-
-            }
-
-
-
-        }
+//
+//        Connection connection = null;
+//        Statement statement = null;
+//
+//        try {
+//            Class.forName("org.sqlite.JDBC");
+//
+//            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+//            statement = connection.createStatement();
+//            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+//
+//            String sqlListTargetBorrowers = "select borrowerName from " + ConfigLoader.transactionTable + " where type='QUO' AND (lenderStatus='NEW' OR lenderStatus='UPDATE') GROUP By borrowerName";
+//            String sqlSelectQuoteToBorrower = "select * from " + ConfigLoader.transactionTable + " where type='QUO' AND (lenderStatus='NEW' OR lenderStatus='UPDATE') AND borrowerName=?";
+//            ResultSet borrowerList = statement.executeQuery(sqlListTargetBorrowers);
+//            while (borrowerList.next()) {
+//                System.out.println("================================");
+//                System.out.println(borrowerList.getString("borrowerName"));
+//                PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectQuoteToBorrower);
+//                preparedStatement.setString(1, borrowerList.getString("borrowerName"));
+//                ResultSet quotesForBorrower = preparedStatement.executeQuery();
+//                while (quotesForBorrower.next()) {
+//                    System.out.println("--------------------------------");
+//                    System.out.println(quotesForBorrower.getString("borrowerName"));
+//                    System.out.println(quotesForBorrower.getString("StockCode"));
+//                    System.out.println(quotesForBorrower.getInt("borrowerQty"));
+//                }
+//            }
+//
+//        } catch (ClassNotFoundException e) {
+//            e.printStackTrace();
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        } finally {
+//            try {
+//                if (statement != null) {
+//                    statement.close();
+//                }
+//            } catch (SQLException e) {
+//                e.printStackTrace();
+//            }
+//            try {
+//                if (connection != null) {
+//                    connection.close();
+//                }
+//            } catch (SQLException e) {
+//                e.printStackTrace();
+//
+//            }
+//
+//
+//
+//        }
 
     }
 

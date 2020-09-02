@@ -75,7 +75,7 @@ public class DataUpdate {
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
             String sql = "SELECT requestId, type, lineNo, stockCode, borrowerQty, borrowerStart, borrowerEnd, lenderNo FROM "
-                    + ConfigLoader.transactionTable + " WHERE type = '" + type + "' AND requestId = " + "'" + requestId + "'" + " AND providerNo = " + lenderName + ";";
+                    + ConfigLoader.transactionTable + " WHERE type = '" + type + "' AND requestId = " + "'" + requestId + "'" + " AND lenderNo = " + lenderName + ";";
             ResultSet resultSet = statement.executeQuery(sql);
 
 

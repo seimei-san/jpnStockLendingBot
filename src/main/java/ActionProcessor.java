@@ -1,5 +1,4 @@
 import clients.SymBotClient;
-import com.fasterxml.jackson.module.jaxb.ser.DataHandlerJsonSerializer;
 import dataservices.DataServices;
 import dataservices.DataExports;
 import dataservices.DataUpdate;
@@ -31,27 +30,31 @@ public class ActionProcessor {
     public void process(SymphonyElementsAction action, User user) {
 
         Map<String, Object> formValues = action.getFormValues();
+        String botIdForm = (String) formValues.get("bot_id");
+        String botIdSelf = String.valueOf(botClient.getBotUserId());
         switch (action.getFormId()) {
 
             case "create-rfq-form": {
-                if (formValues.get("action").equals("import-rfq-button")) {
+                // Form for creating RFQ by pasting the copied RFQ data [INTERNAL CHAT ROOM AT BORROWER]
+                if (formValues.get("action").equals("import-rfq-button")) {     // Import the pasted RFQ data into table "transactions"
                     String userName = user.getDisplayName();
                     int lotNo;
                     String[] requestIdAndLotNo;
                     String requestId;
-                    if (formValues.get("request_id").equals(ConfigLoader.NO_REQUESTID)) {
+                    if (formValues.get("request_id").equals(ConfigLoader.NO_REQUESTID)) {  // create a new unique Request ID for the day for new RFQ
                         requestIdAndLotNo = DataServices.createRequestId("RFQ");
                         requestId = requestIdAndLotNo[0];
                         lotNo = Integer.parseInt(requestIdAndLotNo[1]);
-                    } else {
+                    } else {            // if not new RFQ (normally re-create RFQ with existing Request ID, extra LineNo from Request ID
                         requestId = (String)formValues.get("request_id");
-                        lotNo = Integer.parseInt(requestId.substring(requestId.length()-2));
+                        lotNo = Integer.parseInt(requestId.substring(requestId.length()-2));    
                     }
                     this.manageAddRfqForm(action, userName, requestId, lotNo);
                 }
                 break;
             }
             case "submit-rfq-form" : {
+                // after RFQ imported, this form give user this function to submit RFQ to selected Lenders [Borrower Internal Chat Room
                 if (formValues.get("action").equals("recreate-rfq-button")) {
 //                  Maintain the Request ID but delete the transactions with the Request ID
                     String userName = user.getDisplayName();
@@ -64,41 +67,43 @@ public class ActionProcessor {
                     }
 
                 } else if (formValues.get("action").equals("cancel-rfq-button")) {
-                    // Delete the transactions for the Request ID and return the simple text message "Cancelled"
+                    // Delete the transactions for the Request ID and return the simple text message "Cancelled" [INTERNAL CHAT ROOM AT BORROWER]
                     String userName = user.getDisplayName();
                     String requestId =  (String)formValues.get("request_id");
                     DataServices.deleteRfqsByRequestId(requestId);
                     this.noticeCancelCompletion(action, userName, requestId);
 
                 } else if (formValues.get("action").equals("send-rfq-button")) {
-                    // Insert the RFQs into the transaction table with the selected Providers and submit the RFQs to those providers
+                    // fetch Lender Names from Elements pull-down boxes (max 5 boxes)   [INTERNAL CHAT ROOM AT BORROWER]
                     String userName = user.getDisplayName();
                     String requestId = (String)formValues.get("request_id");
-                    String requesterName = (String)formValues.get("counterparty_requester");
-                    String providerName1 = (String)formValues.get("provider1-select");
-                    String providerName2 = (String)formValues.get("provider2-select");
-                    String providerName3 = (String)formValues.get("provider3-select");
-                    String providerName4 = (String)formValues.get("provider4-select");
-                    String providerName5 = (String)formValues.get("provider5-select");
-                    if (providerName1!=null) {
+                    String borrowerName = (String)formValues.get("counterparty_borrower");
+                    String lenderName1 = (String)formValues.get("lender1-select");
+                    String lenderName2 = (String)formValues.get("lender2-select");
+                    String lenderName3 = (String)formValues.get("lender3-select");
+                    String lenderName4 = (String)formValues.get("lender4-select");
+                    String lenderName5 = (String)formValues.get("lender5-select");
+                    
+                    // send RFQ to each selected Lender
+                    if (lenderName1!=null) {
                         requestId = (String)formValues.get("request_id");
-                        blastSendReqForm(false, userName, requestId, requesterName,1, providerName1, true);
+                        blastSendReqForm(false, userName, requestId, borrowerName,1, lenderName1, true);
                     } else {
                         this.noticeNoCounterParty(action);
                         this.manageResendRfqForm(action, userName, requestId);
                     }
-                    if (providerName2!=null) {
-                        blastSendReqForm(false, userName, requestId, requesterName,2, providerName2, true);
+                    if (lenderName2!=null) {
+                        blastSendReqForm(false, userName, requestId, borrowerName,2, lenderName2, true);
                     }
-                    if (providerName3!=null) {
-                        blastSendReqForm(false, userName, requestId, requesterName,3, providerName3, true);
+                    if (lenderName3!=null) {
+                        blastSendReqForm(false, userName, requestId, borrowerName,3, lenderName3, true);
                     }
-                    if (providerName4!=null) {
-                        blastSendReqForm(false, userName, requestId, requesterName,4, providerName4, true);
+                    if (lenderName4!=null) {
+                        blastSendReqForm(false, userName, requestId, borrowerName,4, lenderName4, true);
 
                     }
-                    if (providerName5!=null) {
-                        blastSendReqForm(false, userName, requestId, requesterName,5, providerName5, true);
+                    if (lenderName5!=null) {
+                        blastSendReqForm(false, userName, requestId, borrowerName,5, lenderName5, true);
 
                     }
                 }
@@ -107,46 +112,53 @@ public class ActionProcessor {
             case "receive-rfq-form" : {
 //                After Borrower send RFQ to a target Lenders, this form is used in the External Chat Room where Borrower and Lender are exist together.
 //                The actions here expects that the lender in the External Chat Room initiates.
+//                [EXTERNAL CHAT ROOM OPERATED BY  LENDER ONLY]
                 String requestId = (String)formValues.get("request_id");
-                String borrowerName = (String)formValues.get("counterparty_requester");
-                String lenderName = (String)formValues.get("counterparty_provider");
+                String borrowerName = (String)formValues.get("counterparty_borrower");
+                String lenderName = (String)formValues.get("counterparty_lender");
                 String rfqData = (String)formValues.get("rfqs_data");
                 if (formValues.get("action").equals("accept-rfq-button")) {
-                    if (formValues.get("counterparty_requester").equals(ConfigLoader.myCounterPartyName)) {     // should be comment out for production or testing
-//                    if (formValues.get("counterparty_provider").equals(ConfigLoader.myCounterPartyName)) {    // should be comment out for development
+//                    This action only allowed for Lender(=lender), not allowed for Borrower(=borrower)
+                    if (formValues.get("counterparty_borrower").equals(ConfigLoader.myCounterPartyName)) {     // should be comment out for production or testing
+//                    if (formValues.get("counterparty_lender").equals(ConfigLoader.myCounterPartyName)) {    // should be comment out for development
                         String userName = user.getDisplayName();
                         DataServices.getInsertRfqsIntoTargetCounterParty(rfqData, userName);
                       this.noticeAcceptQuote(action, userName, requestId, borrowerName, lenderName);
 
                     } else {
-                        String providerName = (String)formValues.get("counterparty_provider");
-                        noticeNotAllowYou(action, providerName);
+                        lenderName = (String)formValues.get("counterparty_lender");
+                        noticeNotAllowYou(action, lenderName);
                     }
                 }
                 if (formValues.get("action").equals("nothing-quote-button")) {
-                    if (formValues.get("counterparty_requester").equals(ConfigLoader.myCounterPartyName)) {     // should be comment out for production or testing
-//                    if (formValues.get("counterparty_provider").equals(ConfigLoader.myCounterPartyName)) {    // should be comment out for development
+//                    Instantly return No Inventory from Lender to Borrower in case of when it is obvious for Lender not to have any inventory
+//                    [EXTERNAL CHAT ROOM OPERATED BY LENDER ONLY]
+                    if (formValues.get("counterparty_borrower").equals(ConfigLoader.myCounterPartyName)) {     // should be comment out for production or testing
+//                    if (formValues.get("counterparty_lender").equals(ConfigLoader.myCounterPartyName)) {    // should be comment out for development
                         String userName = user.getDisplayName();
                         this.replyRfqNothing(action, userName, requestId, borrowerName, lenderName);
                     } else {
-                        String providerName = (String)formValues.get("counterparty_provider");
-                        noticeNotAllowYou(action, providerName);
+                        lenderName = (String)formValues.get("counterparty_lender");
+                        noticeNotAllowYou(action, lenderName);
                     }
                 }
                 break;
             }
             case "create-quote-form" : {
+//                Import the copied/pasted quote data into the table "transactions"
+//                [INTERNAL CHAT ROOM AT LENDER]
                 if (formValues.get("action").equals("import-quote-button")) {
                     String userName = user.getDisplayName();
                     this.manageAddQuoteForm(action, userName,"YET", "NEW", "");
-
                 }
                 break;
             }
             case "submit-quote-form" : {
+//                Submit the imported quote data from Lender to Borrower
+//                [INTERNAL CHAT ROOM AT LENDER]
                 if (formValues.get("action").equals("recreate-quote-button")) {
                     String userName = user.getDisplayName();
-                    String csvFilePath = DataExports.exportRfqsToProvider(ConfigLoader.myCounterPartyName,"NEW");
+                    String csvFilePath = DataExports.exportRfqsTolender(ConfigLoader.myCounterPartyName,"NEW");
                     this.blastSendQuoteForm(action, userName, "NEW", "NEW", csvFilePath, true);
                 } else if (formValues.get("action").equals("send-quote-button")) {
 //                    get list of borrowerNames
@@ -154,30 +166,74 @@ public class ActionProcessor {
 //                    update lenderStatus from NEW to "SENT"
 //                    display the form with lenderStatus = SENT
                     String userName = user.getDisplayName();
-                    String providerName = ConfigLoader.myCounterPartyName;
-                    this.blastSendQuoteToBorrowerForm(action, userName, providerName,"NEW","SENT", true);
+                    String lenderName = ConfigLoader.myCounterPartyName;
+                    this.blastSendQuoteToBorrowerForm(action, userName, lenderName,"NEW","SENT", true);
+                }
+                break;
+            }
 
+            case "receive-quote-form" : {
+//                This form is submitted by bot at lender(lender)
+//                The actions expects by Borrower, not Lender(lender)
+//                but update the DB on both Lender and Borrower
+//                [EXTERNAL CHAT ROOM OPERATED BY BORROWER ONLY]
+                if (formValues.get("action").equals("reject-quote-button")) {
+                    if (botIdForm.equals(botIdSelf)) {
+                        if (formValues.get("counterparty_borrower").equals(ConfigLoader.myCounterPartyName)) {
 
+                        } else {
+                            String borrowerName = (String)formValues.get("counterparty_borrower");
+                            noticeNotAllowYou(action, borrowerName);
+                        }
 
+                    } else {
+//                        Borrower BOT needs to insert Quote Data into Borrower's database
+
+                    }
+                } else if (formValues.get("action").equals("accept-quote-button")) {
+                    if (botIdForm.equals(botIdSelf)) {
+
+                    } else {
+
+                    }
                 }
 
+
+
+//                if (formValues.get("counterparty_borrower").equals(ConfigLoader.myCounterPartyName)) {     // should be comment out for production or testing
+                if (formValues.get("counterparty_lender").equals(ConfigLoader.myCounterPartyName)) {    // should be comment out for development
+                    if (formValues.get("action").equals("reject-quote-button")) {
+                        // Borrower rejects quote provided by Lender in EXT Chat Room
+                        // update LenderStatus from SENT to REJECT by the Lender's bot listening EXT Chat room
+
+
+
+                    } else if (formValues.get("action").equals("accept-quote-button")) {
+
+                    }
+
+
+                } else {
+                    String borrowerName = (String)formValues.get("counterparty_borrower");
+                    noticeNotAllowYou(action, borrowerName);
+                }
                 break;
             }
 
 
 
             case "notify-nothing-form" : {
-                if (formValues.get("counterparty_requester").equals(ConfigLoader.myCounterPartyName)) {
+                if (formValues.get("counterparty_borrower").equals(ConfigLoader.myCounterPartyName)) {
                     String userName = user.getDisplayName();
                     String requestId = (String)formValues.get("request_id");
-                    String borrowerName = (String)formValues.get("counterparty_requester");
-                    String lenderName = (String)formValues.get("counterparty_provider");
+                    String borrowerName = (String)formValues.get("counterparty_borrower");
+                    String lenderName = (String)formValues.get("counterparty_lender");
                     String timeStamp = Miscellaneous.getTimeStamp("transaction");
                     DataUpdate.updateWithNothing("RFQ", requestId,lenderName,lenderName,timeStamp,"NONE","NONE");
                     this.acceptRfqNothing(action, userName, requestId, borrowerName, lenderName);
                 } else {
-                    String providerName = (String)formValues.get("counterparty_requester");
-                    noticeNotAllowYou(action, providerName);
+                    String lenderName = (String)formValues.get("counterparty_borrower");
+                    noticeNotAllowYou(action, lenderName);
                 }
                 break;
             }
@@ -206,7 +262,7 @@ public class ActionProcessor {
         int borrowerQty;
         String borrowerStart;
         String borrowerEnd;
-        final int providerNo = 0;
+        final int lenderNo = 0;
 
         boolean notError = true;
 
@@ -242,7 +298,7 @@ public class ActionProcessor {
                         borrowerEnd = fieldValues[3];
 
                         DataServices.insertRfq(ConfigLoader.myCounterPartyName, type, lotNo, requestId, 0, lineNo,
-                                stockCode, borrowerQty, borrowerStart, borrowerEnd, providerNo, Miscellaneous.getTimeStamp("transaction"));
+                                stockCode, borrowerQty, borrowerStart, borrowerEnd, lenderNo, Miscellaneous.getTimeStamp("transaction"));
 
                     } else {
                         bufferMojis = bufferMojis + String.valueOf(moji);
@@ -260,8 +316,8 @@ public class ActionProcessor {
 
         }
         if (notError) {
-
-            OutboundMessage messageOut = MessageSender.getInstance().buildCreateRequestFormMessage(false, userName, requestId, ConfigLoader.myCounterPartyName, "", false, false);
+            String botId = String.valueOf(botClient.getBotUserId());
+            OutboundMessage messageOut = MessageSender.getInstance().buildCreateRequestFormMessage(false, botId, userName, requestId, ConfigLoader.myCounterPartyName, "", false, false);
             MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
             LOGGER.debug("ActionProcessor.manageAddRfqForm completed");
         }
@@ -296,10 +352,10 @@ public class ActionProcessor {
                 DataUpdate.updateQuote(items[0], fromLenderStatus, items[0], items[1],
                         Integer.parseInt(items[2]), Integer.parseInt(items[3]), items[4], items[5],
                                 Double.parseDouble(items[6]),items[7],Integer.parseInt(items[8]), toLenderStatus) ;
-
             }
             if (notError) {
-                OutboundMessage messageOut = MessageSender.getInstance().buildCreateQuoteFormMessage(false, userName, ConfigLoader.myCounterPartyName, toLenderStatus, csvFilePath, false);
+                String botId = String.valueOf(botClient.getBotUserId());
+                OutboundMessage messageOut = MessageSender.getInstance().buildCreateQuoteFormMessage(false, botId, userName, "",ConfigLoader.myCounterPartyName, toLenderStatus, csvFilePath, false);
                 MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
                 LOGGER.debug("ActionProcessor.manageAddQuoteForm completed");
             }
@@ -312,37 +368,40 @@ public class ActionProcessor {
         }
     }
 
-    public void blastSendReqForm(boolean onErrorProviders, String userName, String requestId, String requesterName, int providerNo, String providerName, boolean isSent) {
-        String rfqsData = DataServices.insertGetRfqsForTargetCounterParty("RFQ", requestId, providerName, providerNo);
-//        String csvFilePath = DataExports.exportRfqsForTargetProvider(requestId, requesterName,providerName);
-        String[] providerNameInfo = DataServices.getCounterPartyInfo(providerName);
-        OutboundMessage messageOut = MessageSender.getInstance().buildSendRfqFormMessage(onErrorProviders, userName, requestId, requesterName, providerName, rfqsData, "", isSent);
-        MessageSender.getInstance().sendMessage(providerNameInfo[4], messageOut);
+    public void blastSendReqForm(boolean onErrorlenders, String userName, String requestId, String borrowerName, int lenderNo, String lenderName, boolean isSent) {
+        String rfqsData = DataServices.insertGetRfqsForTargetCounterParty("RFQ", requestId, lenderName, lenderNo);
+//        String csvFilePath = DataExports.exportRfqsForTargetlender(requestId, borrowerName,lenderName);
+        String[] lenderNameInfo = DataServices.getCounterPartyInfo(lenderName);
+        String botId = String.valueOf(botClient.getBotUserId());
+        OutboundMessage messageOut = MessageSender.getInstance().buildSendRfqFormMessage(onErrorlenders, botId, userName, requestId, borrowerName, lenderName, rfqsData, "", isSent);
+        MessageSender.getInstance().sendMessage(lenderNameInfo[4], messageOut);
         LOGGER.debug("ActionProcessor.blastSendReqForm completed");
     }
 
     public void blastSendQuoteForm(SymphonyElementsAction action, String userName, String fromLenderStatus, String toLenderStatus, String csvFilePath, boolean isNew) {
-        OutboundMessage messageOut = MessageSender.getInstance().buildCreateQuoteFormMessage(false, userName, ConfigLoader.myCounterPartyName, toLenderStatus, csvFilePath, isNew);
+        String botId = String.valueOf(botClient.getBotUserId());
+        OutboundMessage messageOut = MessageSender.getInstance().buildCreateQuoteFormMessage(false, botId, userName, "", ConfigLoader.myCounterPartyName, toLenderStatus, csvFilePath, isNew);
         MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
         LOGGER.debug("ActionProcessor.blastSendQuoteForm completed");
     }
 
-    public void blastSendQuoteToBorrowerForm(SymphonyElementsAction action, String userName, String providerName, String fromLenderStatus, String toLenderStatus, boolean isNew) {
+    public void blastSendQuoteToBorrowerForm(SymphonyElementsAction action, String userName, String lenderName, String fromLenderStatus, String toLenderStatus, boolean isNew) {
         String quoteData;
         ArrayList<String> borrowerNames = DataServices.getInstance().listBorrowerNames();
+        String botId = String.valueOf(botClient.getBotUserId());
+
         for (String borrowerName : borrowerNames) {
             quoteData = DataServices.getInstance().getQuoteForBorrowerToTextarea(borrowerName, fromLenderStatus, toLenderStatus);
-            String[] providerNameInfo = DataServices.getCounterPartyInfo(borrowerName);
-            OutboundMessage messageOut = MessageSender.getInstance().buildSendQuoteFormMessage(false, userName, borrowerName, providerName, toLenderStatus,  quoteData, isNew);
-            MessageSender.getInstance().sendMessage(providerNameInfo[4], messageOut);
+            String[] lenderNameInfo = DataServices.getCounterPartyInfo(borrowerName);
+            OutboundMessage messageOut = MessageSender.getInstance().buildSendQuoteFormMessage(false, botId, userName, borrowerName, lenderName, toLenderStatus,  quoteData, isNew);
+            MessageSender.getInstance().sendMessage(lenderNameInfo[4], messageOut);
             DataUpdate.updateLenderStatusAfterSentQuote(borrowerName, fromLenderStatus, toLenderStatus);
         }
     }
 
-
-
     public void manageResendRfqForm(SymphonyElementsAction action, String userName, String requestId) {
-        OutboundMessage messageOut = MessageSender.getInstance().buildCreateRequestFormMessage(false, userName, requestId, "", ConfigLoader.myCounterPartyName,false, false);
+        String botId = String.valueOf(botClient.getBotUserId());
+        OutboundMessage messageOut = MessageSender.getInstance().buildCreateRequestFormMessage(false, botId, userName, requestId, "", ConfigLoader.myCounterPartyName,false, false);
         MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
         LOGGER.debug("ActionProcessor.manageResendRfqForm completed");
     }
@@ -355,30 +414,32 @@ public class ActionProcessor {
     }
 
     public void reCreateRfqForm(SymphonyElementsAction action, String userName, String requestId) {
-        OutboundMessage messageOut = MessageSender.getInstance().buildCreateRequestFormMessage(false, userName, requestId, ConfigLoader.myCounterPartyName, "", false, true);
+        String botId = String.valueOf(botClient.getBotUserId());
+        OutboundMessage messageOut = MessageSender.getInstance().buildCreateRequestFormMessage(false, botId,
+                userName, requestId, ConfigLoader.myCounterPartyName, "", false, true);
         MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
         LOGGER.debug("ActionProcessor.reCreateRfqForm completed");
     }
 
-    public void noticeNotAllowYou(SymphonyElementsAction action, String tmpName) {
-        OutboundMessage messageOut = MessageSender.getInstance().buildNotAllowYouMessage(tmpName);
+    public void noticeNotAllowYou(SymphonyElementsAction action, String allowedCounterPartyName) {
+        OutboundMessage messageOut = MessageSender.getInstance().buildNotAllowYouMessage(allowedCounterPartyName);
         MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
         LOGGER.debug("ActionProcessor.noticeNowAllowYou completed");
     }
 
-    public void replyRfqNothing(SymphonyElementsAction action, String userName, String requestId, String requesterName, String providerName) {
-        OutboundMessage messageOut = MessageSender.getInstance().buildNothingMessage(userName, requestId, requesterName, providerName);
+    public void replyRfqNothing(SymphonyElementsAction action, String userName, String requestId, String borrowerName, String lenderName) {
+        OutboundMessage messageOut = MessageSender.getInstance().buildNothingMessage(userName, requestId, borrowerName, lenderName);
         MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
         LOGGER.debug("ActionProcessor.replyRfqNothing completed");
     }
 
-    public void noticeAcceptQuote(SymphonyElementsAction action, String userName, String requestId, String requesterName, String providerName) {
-        OutboundMessage messageOut = MessageSender.getInstance().buildAcceptQuoteMessage(requestId, userName, requesterName, providerName);
+    public void noticeAcceptQuote(SymphonyElementsAction action, String userName, String requestId, String borrowerName, String lenderName) {
+        OutboundMessage messageOut = MessageSender.getInstance().buildAcceptQuoteMessage(requestId, userName, borrowerName, lenderName);
         MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
         LOGGER.debug("ActionProcessor.notifyAcceptQuote completed");
     }
-    public void acceptRfqNothing(SymphonyElementsAction action, String userName, String requestId, String requesterName, String providerName) {
-        OutboundMessage messageOut = MessageSender.getInstance().buildAcceptNothingMessage(requestId, userName, requesterName, providerName);
+    public void acceptRfqNothing(SymphonyElementsAction action, String userName, String requestId, String borrowerName, String lenderName) {
+        OutboundMessage messageOut = MessageSender.getInstance().buildAcceptNothingMessage(requestId, userName, borrowerName, lenderName);
         MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
         LOGGER.debug("ActionProcessor.acceptRfqNothing completed");
     }

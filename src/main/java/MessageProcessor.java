@@ -135,17 +135,18 @@ public class MessageProcessor {
 
     public void createRfqForm(InboundMessage inboundMessage) {
         MessageManager.getInstance().reset();
-        MessageManager.getInstance().setRequesterName(inboundMessage.getUser().getDisplayName());
+        MessageManager.getInstance().setborrowerName(inboundMessage.getUser().getDisplayName());
         OutboundMessage messageOut = MessageSender.getInstance().buildCreateRequestFormMessage();
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.createRfqForm executed");
     }
     public void createQuoteForm(InboundMessage inboundMessage, String lenderStatus) {
         MessageManager.getInstance().reset();
-        String csvFilePath = DataExports.exportRfqsToProvider(ConfigLoader.myCounterPartyName,"YET");
+        String csvFilePath = DataExports.exportRfqsTolender(ConfigLoader.myCounterPartyName,"YET");
+        String botId = String.valueOf(botClient.getBotUserId());
 //        DataUpdate.updateLenderStatus("YET", "EXPT");
         String userName = inboundMessage.getUser().getDisplayName();
-        OutboundMessage messageOut = MessageSender.getInstance().buildCreateQuoteFormMessage(false, userName, ConfigLoader.myCounterPartyName, lenderStatus, csvFilePath, true);
+        OutboundMessage messageOut = MessageSender.getInstance().buildCreateQuoteFormMessage(false, botId, userName, "", ConfigLoader.myCounterPartyName, lenderStatus, csvFilePath, true);
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.createRfqForm executed");
     }
@@ -153,7 +154,8 @@ public class MessageProcessor {
     public void submitQuoteForm(InboundMessage inboundMessage, String lenderStatus) {
         MessageManager.getInstance().reset();
         String userName = inboundMessage.getUser().getDisplayName();
-        OutboundMessage messageOut = MessageSender.getInstance().buildCreateQuoteFormMessage(false, userName, ConfigLoader.myCounterPartyName, lenderStatus, "", false);
+        String botId = String.valueOf(botClient.getBotUserId());
+        OutboundMessage messageOut = MessageSender.getInstance().buildCreateQuoteFormMessage(false, botId, userName, "", ConfigLoader.myCounterPartyName, lenderStatus, "", false);
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.submitQuoteForm executed");
     }

@@ -14,7 +14,7 @@ public class SendRfq {
     private double borrowerRate;
     private String borrowerCondition;
     private String borrowerStatus;
-    private int providerNo;
+    private int lenderNo;
     private String lenderName;
     private int lenderQty;
     private String lenderStart;
@@ -28,7 +28,7 @@ public class SendRfq {
 
     public SendRfq(String type, int lotNo, String requestId, int versionNo, int lineNo, String stockCode, String borrowerName,
                    int borrowerQty, String borrowerStart, String borrowerEnd, double borrowerRate, String borrowerCondition,
-                   String borrowerStatus, int providerNo, String lenderName, int lenderQty, String lenderStart, String lenderEnd,
+                   String borrowerStatus, int lenderNo, String lenderName, int lenderQty, String lenderStart, String lenderEnd,
                    double lenderRate, String lenderCondition, String lenderStatus, String timeStamp, String updatedBy
     ) {
 
@@ -45,7 +45,7 @@ public class SendRfq {
         this.borrowerRate = borrowerRate;
         this.borrowerCondition = borrowerCondition;
         this.borrowerStatus = borrowerStatus;
-        this.providerNo = providerNo;
+        this.lenderNo = lenderNo;
         this.lenderName = lenderName;
         this.lenderQty = lenderQty;
         this.lenderStart = lenderStart;
@@ -71,7 +71,7 @@ public class SendRfq {
     public double getBorrowerRate() {return this.borrowerRate;}
     public String getBorrowerCondition() {return this.borrowerCondition;}
     public String getBorrowerStatus() {return this.borrowerStatus;}
-    public int getProviderNo() {return this.providerNo;}
+    public int getlenderNo() {return this.lenderNo;}
     public String getLenderName() {return this.lenderName;}
     public int getLenderQty() {return this.lenderQty;}
     public String getLenderStart() {return this.lenderStart;}

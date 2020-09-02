@@ -34,13 +34,13 @@ public class CreateRfq {
     public String getStockCode() {
         return this.stockCode;
     }
-    public int getRequesterQty() {
+    public int getborrowerQty() {
         return this.borrowerQty;
     }
-    public String getRequesterStart() {
+    public String getborrowerStart() {
         return this.borrowerStart;
     }
-    public String getRequesterEnd() {
+    public String getborrowerEnd() {
         return this.borrowerEnd;
     }
 

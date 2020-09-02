@@ -31,7 +31,7 @@ public class DataInitialize {
         String transactionTableIndexColumn1 = "borrowerName";
         String transactionTableIndexColumn2 = "lotNo";
         String transactionTableIndexColumn3 = "requestId";
-        String transactionTableIndexColumn4 = "providerNo";
+        String transactionTableIndexColumn4 = "lenderNo";
         String transactionTableIndexColumn5 = "lenderName";
 
         Connection connection = null;

@@ -2,7 +2,7 @@
 
 public class MessageManager {
     private static MessageManager instance;
-    private String requesterName;
+    private String borrowerName;
 
     public static MessageManager getInstance() {
         if (instance == null) {
@@ -11,12 +11,12 @@ public class MessageManager {
         return instance;
     }
     public void reset() {
-        this.requesterName = "";
+        this.borrowerName = "";
     }
-    public String getRequesterName() {
-        return requesterName;
+    public String getborrowerName() {
+        return borrowerName;
     }
-    public void setRequesterName(String requesterName) {
-        this.requesterName = requesterName;
+    public void setborrowerName(String borrowerName) {
+        this.borrowerName = borrowerName;
     }
 }

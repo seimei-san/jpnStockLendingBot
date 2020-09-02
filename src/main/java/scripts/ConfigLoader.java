@@ -42,6 +42,7 @@ public class ConfigLoader {
     public static String counterPartyTableSql = "";
     public static boolean isInitialized = false;
 
+
 //    public static String[] counterPartiesList; <- relocated to DataServices
 
 

@@ -78,12 +78,12 @@ public class MessageSender {
 
     public OutboundMessage buildCreateRequestFormMessage() {
         LOGGER.debug("buildCreateRequestFormMessage returned");
-        return this.buildCreateRequestFormMessage(false, "", "", "", "", false, true);
+        return this.buildCreateRequestFormMessage(false, "", "", "", "", "", false, true);
     }
 
 
 
-    public OutboundMessage buildCreateRequestFormMessage(boolean errorOnProviders, String userName, String requestId, String requesterName, String providerName, boolean isInserted, boolean isNew) {
+    public OutboundMessage buildCreateRequestFormMessage(boolean errorOnlenders, String botId, String userName, String requestId, String borrowerName, String lenderName, boolean isInserted, boolean isNew) {
         MessageManager messageManager = MessageManager.getInstance();
 
 
@@ -111,10 +111,10 @@ public class MessageSender {
 
         if (displayRequestId.equals("")) {
             message =
-            "<h3 class=\"tempo-text-color--white tempo-bg-color--purple\">" + titleForm + requesterName + " []</h3>";
+            "<h3 class=\"tempo-text-color--white tempo-bg-color--purple\">" + titleForm + borrowerName + " []</h3>";
         } else {
             message =
-            "<h3 class=\"tempo-text-color--white tempo-bg-color--purple\">" + titleForm + requesterName+ " [<hash tag=\"" + displayRequestId + "\"/>]</h3>";
+            "<h3 class=\"tempo-text-color--white tempo-bg-color--purple\">" + titleForm + borrowerName+ " [<hash tag=\"" + displayRequestId + "\"/>]</h3>";
         }
 
 
@@ -139,15 +139,15 @@ public class MessageSender {
         DataServices dataServices = DataServices.getInstance();
         int totalQty = 0;
         for (CreateRfq createRfq : dataServices.getTargetRfqs(requestId, 0)) {
-            totalQty += createRfq.getRequesterQty();
+            totalQty += createRfq.getborrowerQty();
             message +=
                         "<tr>" +
                             "<td>" + createRfq.getType() + "</td>" +
                             "<td style='text-align:right'>" + createRfq.getLineNo() + "</td>" +
                             "<td>" + createRfq.getStockCode() + "</td>" +
-                            "<td style='text-align:right'>" + String.format("%,d", createRfq.getRequesterQty()) + "</td>" +
-                            "<td>" + createRfq.getRequesterStart() + "</td>" +
-                            "<td>" + createRfq.getRequesterEnd() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", createRfq.getborrowerQty()) + "</td>" +
+                            "<td>" + createRfq.getborrowerStart() + "</td>" +
+                            "<td>" + createRfq.getborrowerEnd() + "</td>" +
                         "</tr>";
         }
 
@@ -183,12 +183,13 @@ public class MessageSender {
                 message +=
                         "<h3>依頼番号: " + requestId + "</h3>" +
                         "<br/>" +
-                        "<div style=\"display:none\">" +
-                        "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
-                        "<text-field name=\"counterparty_requester\" required=\"false\">" + requesterName + "</text-field>" +
-                        "<text-field name=\"counterparty_provider\" required=\"false\">" + providerName + "</text-field>" +
+//                        "<div style=\"display:none\">" +
+                        "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
                         "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" +
-                        "</div>";
+                        "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
+                        "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                        "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>";
+//                        "</div>";
             }
 
             message +=
@@ -213,10 +214,10 @@ public class MessageSender {
         }
         if (!isNew) {
 
-            if (errorOnProviders) {
+            if (errorOnlenders) {
                 message +=
                         "<span class=\"tempo-text-color--red\">" +
-                                "You need to choose a least on Provider1 before to submit your RFQ form." +
+                                "You need to choose a least on lender1 before to submit your RFQ form." +
                                 "</span>" ;
             }
 
@@ -225,43 +226,44 @@ public class MessageSender {
 
             message +=
                     "<h3>依頼番号: " + requestId + "</h3>" +
-                            "<br/>" +
-                            "<div style=\"display:none\">" +
-                            "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
-                            "<text-field name=\"counterparty_requester\" required=\"false\">" + requesterName + "</text-field>" +
-                            "</div>"+
-                            "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">RFQを貸手に送信</h3>" +
-                            "<br/>";
+                    "<br/>" +
+//                    "<div style=\"display:none\">" +
+                    "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
+                    "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                    "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+//                    "</div>"+
+                    "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">RFQを貸手に送信</h3>" +
+                    "<br/>";
 
             message +=
-                    "<select name=\"provider1-select\" required=\"false\" data-placeholder=\"貸手1を選択\">";
+                    "<select name=\"lender1-select\" required=\"false\" data-placeholder=\"貸手1を選択\">";
             message += messageOptions;
             message +=
                     "</select>" +
 
-                            "<select name=\"provider2-select\" required=\"false\" data-placeholder=\"貸手2を選択\">";
+                            "<select name=\"lender2-select\" required=\"false\" data-placeholder=\"貸手2を選択\">";
             message += messageOptions;
             message +=
                     "</select>" +
 
-                            "<select name=\"provider3-select\" required=\"false\" data-placeholder=\"貸手3を選択\">";
+                            "<select name=\"lender3-select\" required=\"false\" data-placeholder=\"貸手3を選択\">";
             message += messageOptions;
             message +=
                     "</select>" +
 
-                            "<select name=\"provider4-select\" required=\"false\" data-placeholder=\"貸手4を選択\">";
+                            "<select name=\"lender4-select\" required=\"false\" data-placeholder=\"貸手4を選択\">";
             message += messageOptions;
             message +=
                     "</select>" +
 
-                            "<select name=\"provider5-select\" required=\"false\" data-placeholder=\"貸手5を選択\">";
+                            "<select name=\"lender5-select\" required=\"false\" data-placeholder=\"貸手5を選択\">";
             message += messageOptions;
             message +=
                     "</select>" +
-                            "<button type=\"action\" name=\"recreate-rfq-button\">再作成</button>" +
-                            "<button type=\"action\" name=\"cancel-rfq-button\">取消</button>" +
-                            "<button type=\"action\" name=\"send-rfq-button\">送信</button>" +
-                            "</form>";
+                    "<button type=\"action\" name=\"recreate-rfq-button\">再作成</button>" +
+                    "<button type=\"action\" name=\"cancel-rfq-button\">取消</button>" +
+                    "<button type=\"action\" name=\"send-rfq-button\">送信</button>" +
+                    "</form>";
         }
 
         message +=
@@ -286,19 +288,20 @@ public class MessageSender {
 
 //    --------------------------------------------------------------------------------------------------------------------
 //    --------------------------------------------------------------------------------------------------------------------
-//    ---------------- Build a message for sending RFQs to Provider ------------------------------------------------------
+//    ---------------- Build a message for sending RFQs to lender ------------------------------------------------------
 //    --------------------------------------------------------------------------------------------------------------------
 //    --------------------------------------------------------------------------------------------------------------------
 
 
-    public OutboundMessage buildSendRfqFormMessage(boolean errorOnProviders, String userName, String requestId, String requesterName, String providerName, String rfqsData, String csvFullPath, boolean isSent) {
+    public OutboundMessage buildSendRfqFormMessage(boolean errorOnlenders, String botId, String userName, String requestId,
+                                                   String borrowerName, String lenderName, String rfqsData, String csvFullPath, boolean isSent) {
         MessageManager messageManager = MessageManager.getInstance();
 
 
         String message;
 
         message =
-                "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">QUOTEの依頼："+ requesterName + "[<hash tag=\"" + requestId + "\"/>]" + " → " + providerName + "</h3>";
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">QUOTEの依頼："+ borrowerName + "[<hash tag=\"" + requestId + "\"/>]" + " → " + lenderName + "</h3>";
 
         message +=
                 "<h4>依頼者： " + userName + "</h4>" +
@@ -325,11 +328,11 @@ public class MessageSender {
 
 
         DataServices dataServices = DataServices.getInstance();
-        int totalQtyRequester = 0;
-        int totalQtyProvider = 0;
-        for (SendRfq sendRfq : dataServices.getSendRfqs(requestId, providerName)) {
-            totalQtyRequester += sendRfq.getBorrowerQty();
-            totalQtyProvider += sendRfq.getLenderQty();
+        int totalQtyborrower = 0;
+        int totalQtylender = 0;
+        for (SendRfq sendRfq : dataServices.getSendRfqs(requestId, lenderName)) {
+            totalQtyborrower += sendRfq.getBorrowerQty();
+            totalQtylender += sendRfq.getLenderQty();
 
             message +=
                         "<tr>" +
@@ -357,11 +360,11 @@ public class MessageSender {
                         "<td></td>" +
                         "<td></td>" +
                         "<td style='text-align:right;font-weight:bold'>合計: </td>" +
-                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyRequester) + "</td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
                         "<td></td>" +
                         "<td></td>" +
                         "<td style='text-align:right;font-weight:bold'>合計: </td>" +
-                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyProvider) + "</td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
                         "<td></td>" +
                         "<td></td>" +
                         "<td></td>" +
@@ -398,14 +401,15 @@ public class MessageSender {
             message +=
                     "<h3>依頼番号: " + requestId + "</h3>" +
                     "<br/>" +
-                    "<div style=\"display:none\">" +
+//                    "<div style=\"display:none\">" +
                     "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
                     "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" +
-                    "<text-field name=\"counterparty_requester\" required=\"false\">" + requesterName + "</text-field>" +
-                    "<text-field name=\"counterparty_provider\" required=\"false\">" + providerName + "</text-field>" +
+                    "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                    "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                    "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
                     "<textarea name=\"rfqs_data\" required=\"false\">" + rfqsData + "</textarea>" +
-                    "</div>"+
-                    "<h3 class=\"tempo-text-color--white tempo-bg-color--blue\">貸手(" + providerName + ")の対応</h3>" +
+//                    "</div>"+
+                    "<h3 class=\"tempo-text-color--white tempo-bg-color--blue\">貸手(" + lenderName + ")の対応</h3>" +
                     "<br/>";
 
 
@@ -440,17 +444,17 @@ public class MessageSender {
         return messageOut;
     }
 
-    public OutboundMessage buildNotAllowYouMessage(String tmpName) {
+    public OutboundMessage buildNotAllowYouMessage(String allowedCounterPartyName) {
         String message =
-                "<h3>この操作は、" + tmpName + "のみが行える操作です。</h3>" +
+                "<h3>この操作は、" + allowedCounterPartyName + "のみが行える操作です。</h3>" +
                 "<p>チャットボットの動作についての詳細は、システム管理者にお問い合わせください。</p>";
         OutboundMessage messageOut = new OutboundMessage();
         messageOut.setMessage(message);
         return messageOut;
     }
-    public OutboundMessage buildAcceptNothingMessage(String requestId, String userName, String requesterName, String lenderName) {
+    public OutboundMessage buildAcceptNothingMessage(String requestId, String userName, String borrowerName, String lenderName) {
         String message =
-                "<h5>依頼番号[<hash tag=\"" + requestId + "\"/>] " + lenderName + "からの<b>在庫無し連絡</b>は、" + requesterName + "(" + userName + ")に承諾されました。</h5>" +
+                "<h5>依頼番号[<hash tag=\"" + requestId + "\"/>] " + lenderName + "からの<b>在庫無し連絡</b>は、" + borrowerName + "(" + userName + ")に承諾されました。</h5>" +
                 "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.rfqHashTag + "\"/></p>";
                 OutboundMessage messageOut = new OutboundMessage();
         messageOut.setMessage(message);
@@ -458,9 +462,9 @@ public class MessageSender {
     }
 
 
-    public OutboundMessage buildAcceptQuoteMessage(String requestId, String userName, String requesterName, String lenderName) {
+    public OutboundMessage buildAcceptQuoteMessage(String requestId, String userName, String borrowerName, String lenderName) {
         String message =
-                "<h5>依頼番号[<hash tag=\"" + requestId + "\"/>] " + requesterName + "からの<b>QUOTE依頼</b>は、" + userName + "に受付されました。</h5>" +
+                "<h5>依頼番号[<hash tag=\"" + requestId + "\"/>] " + borrowerName + "からの<b>QUOTE依頼</b>は、" + userName + "に受付されました。</h5>" +
                         "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.rfqHashTag + "\"/></p>";
         OutboundMessage messageOut = new OutboundMessage();
         messageOut.setMessage(message);
@@ -511,25 +515,25 @@ public class MessageSender {
         return messageOut;
     }
 
-    public OutboundMessage buildAccpetRfqMessageForProvider(String requestId, String requesterName, String providerName, String csvFullPath) {
+    public OutboundMessage buildAccpetRfqMessageForlender(String requestId, String borrowerName, String lenderName, String csvFullPath) {
         String message =
-                "<h3>" + requesterName + "の依頼[<hash tag=\"" + requestId + "\"/>]を" + providerName + "が受け付けました。</h3>";
+                "<h3>" + borrowerName + "の依頼[<hash tag=\"" + requestId + "\"/>]を" + lenderName + "が受け付けました。</h3>";
 //                        "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.rfqHashTag + "\"/></p>";
         OutboundMessage messageOut = new OutboundMessage();
         messageOut.setAttachment(new File(csvFullPath));
 
         messageOut.setMessage(message);
-        LOGGER.debug("buildAccpetRfqMessageForProvider returned");
+        LOGGER.debug("buildAccpetRfqMessageForlender returned");
         return messageOut;
     }
 
 
-    public OutboundMessage buildNothingMessage(String userName, String requestId, String requesterName, String providerName) {
+    public OutboundMessage buildNothingMessage(String userName, String requestId, String borrowerName, String lenderName) {
         MessageManager messageManager = MessageManager.getInstance();
 
 
         String message =
-                "<h3 class=\"tempo-text-color--black tempo-bg-color--yellow\">RFQへの回答："+ requesterName + "[<hash tag=\"" + requestId + "\"/>]" + " ← " + providerName + "</h3>" +
+                "<h3 class=\"tempo-text-color--black tempo-bg-color--yellow\">RFQへの回答："+ borrowerName + "[<hash tag=\"" + requestId + "\"/>]" + " ← " + lenderName + "</h3>" +
                 "<h4>回答者： " + userName + "</h4>" +
                 "<br/>" +
                 "<div style=\"display: flex;\">";
@@ -537,12 +541,12 @@ public class MessageSender {
         message +=
                     "<div style=\"width:50%;\">" +
                         "<form id=\"notify-nothing-form\">" +
-                            "<div style=\"display:none\">" +
+//                            "<div style=\"display:none\">" +
                             "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
-                            "<text-field name=\"counterparty_requester\" required=\"false\">" + requesterName + "</text-field>" +
-                            "<text-field name=\"counterparty_provider\" required=\"false\">" + providerName + "</text-field>" +
-                            "</div>"+
-                            "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">借手(" + requesterName + ")の対応</h3>" +
+                            "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                            "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+//                            "</div>"+
+                            "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">借手(" + borrowerName + ")の対応</h3>" +
                             "<br/>" +
                             "<button type=\"action\" name=\"nothing-accept-button\">承諾</button>" +
                             "<br/>" +
@@ -554,7 +558,7 @@ public class MessageSender {
                      "<div style=\"width:50%;\">" +
 //                         "<form id=\"notify-nothing-form\">" +
 //                         "</form>" +
-                         "<h5>" + providerName + "(" + userName + ")が依頼番号[" + requestId + "]に<b>在庫無し</b>と回答しました。</h5>" +
+                         "<h5>" + lenderName + "(" + userName + ")が依頼番号[" + requestId + "]に<b>在庫無し</b>と回答しました。</h5>" +
                      "</div>";
 
         message +=
@@ -615,12 +619,12 @@ public class MessageSender {
 
     public OutboundMessage buildCreateQuoteFormMessage() {
         LOGGER.debug("buildCreateQuoteFormMessage returned");
-        return this.buildCreateQuoteFormMessage(false, "","", "", "", true);
+        return this.buildCreateQuoteFormMessage(false, "", "", "","", "", "", true);
     }
 
 
 
-    public OutboundMessage buildCreateQuoteFormMessage(boolean errorOnProviders, String userName, String providerName, String lenderStatus, String csvFullPath, boolean isNew) {
+    public OutboundMessage buildCreateQuoteFormMessage(boolean errorOnlenders, String botId, String userName, String borrowerName, String lenderName, String lenderStatus, String csvFullPath, boolean isNew) {
         MessageManager messageManager = MessageManager.getInstance();
 
 
@@ -634,7 +638,7 @@ public class MessageSender {
         }
 
         message =
-                "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">" + titleForm + "依頼者（複数）← " + providerName + "</h3>";
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">" + titleForm + "依頼者（複数）← " + lenderName + "</h3>";
 
 
 
@@ -667,11 +671,11 @@ public class MessageSender {
 
 
         DataServices dataServices = DataServices.getInstance();
-        int totalQtyRequester = 0;
-        int totalQtyProvider = 0;
+        int totalQtyborrower = 0;
+        int totalQtylender = 0;
         for (ReceivedRfq receivedRfq : dataServices.getReceivedRfqs(lenderStatus)) {
-            totalQtyRequester += receivedRfq.getBorrowerQty();
-            totalQtyProvider += receivedRfq.getLenderQty();
+            totalQtyborrower += receivedRfq.getBorrowerQty();
+            totalQtylender += receivedRfq.getLenderQty();
 
             message +=
                     "<tr>" +
@@ -701,13 +705,13 @@ public class MessageSender {
                             "<td></td>" +
                             "<td></td>" +
                             "<td style='text-align:right;font-weight:bold'>計: </td>" +
-                            "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyRequester) + "</td>" +
+                            "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
                             "<td></td>" +
                             "<td></td>" +
                             "<td></td>" +
                             "<td></td>" +
                             "<td style='text-align:right;font-weight:bold'>計: </td>" +
-                            "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyProvider) + "</td>" +
+                            "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
                             "<td></td>" +
                             "<td></td>" +
                             "<td></td>" +
@@ -733,7 +737,13 @@ public class MessageSender {
 
         if (isNew) {
             message +=
-                    "<form id=\"create-quote-form\">";
+                    "<form id=\"create-quote-form\">"+
+//                    "<div style=\"display:none\">" +
+                    "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                    "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                    "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                    "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" ;
+//                    "</div>";
 
 //            if (!isInserted) {
 //
@@ -741,12 +751,12 @@ public class MessageSender {
 //                        "<h3>依頼番号: " + requestId + "</h3>" +
 //                                "<br/>" +
 //                                "<div style=\"display:none\">" +
-//                                "<text-field name=\"counterparty_provider\" required=\"false\">" + providerName + "</text-field>" +
+//                                "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
 //                                "</div>";
 //            }
 
             message +=
-                    "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">QUOTEデータの入力</h3>" +
+                    "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">QUOTEのデータの入力</h3>" +
                             "<br/>" +
 //                                "<h6>入力欄にQUOTEデータをコピー／貼付してください</h6>" +
                             "<textarea name=\"inputQuote\" placeholder=\"ここにコピーしたQUOTEデータを貼付てください。 " +
@@ -767,39 +777,44 @@ public class MessageSender {
         }
         if (!isNew) {
 
-            if (errorOnProviders) {
+            if (errorOnlenders) {
                 message +=
                         "<span class=\"tempo-text-color--cyan\">" +
-                                "You need to choose a least on Provider1 before to submit your RFQ form." +
+                                "You need to choose a least on lender1 before to submit your RFQ form." +
                                 "</span>" ;
             }
 
             message +=
-                    "<form id=\"submit-quote-form\">";
+                    "<form id=\"submit-quote-form\">"+
+//                     "<div style=\"display:none\">" +
+                    "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                    "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                    "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" ;
+//                    "</div>";
 
             message +=
 //                    "<h3>依頼番号: " + requestId + "</h3>" +
 //                            "<br/>" +
 //                            "<div style=\"display:none\">" +
 //                            "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
-//                            "<text-field name=\"counterparty_requester\" required=\"false\">" + requesterName + "</text-field>" +
+//                            "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
 //                            "</div>"+
-                            "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">QUOTEを借手に送信</h3>" +
-                            "<br/>";
+                    "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">QUOTEを借手に送信</h3>" +
+                    "<br/>";
 
             message +=
 
-                            "<button type=\"action\" name=\"recreate-quote-button\">再作成</button>" +
+                    "<button type=\"action\" name=\"recreate-quote-button\">再作成</button>" +
 //                            "<button type=\"action\" name=\"cancel-rfq-button\">取消</button>" +
-                            "<button type=\"action\" name=\"send-quote-button\">送信</button>" +
-                            "</form>";
+                    "<button type=\"action\" name=\"send-quote-button\">送信</button>" +
+                    "</form>";
         }
 
         message +=
                 "</div>"+
 
 
-                        "</div>";
+            "</div>";
 
 
         OutboundMessage messageOut = new OutboundMessage();
@@ -812,7 +827,7 @@ public class MessageSender {
     }
 
 
-    public OutboundMessage buildSendQuoteFormMessage(boolean errorOnProviders, String userName, String requesterName, String providerName, String lenderStatus, String quoteData, boolean isNew) {
+    public OutboundMessage buildSendQuoteFormMessage(boolean errorOnlenders, String botId, String userName, String borrowerName, String lenderName, String lenderStatus, String quoteData, boolean isNew) {
         MessageManager messageManager = MessageManager.getInstance();
 
 
@@ -826,7 +841,7 @@ public class MessageSender {
         }
 
         message =
-                "<h3 class=\"tempo-text-color--white tempo-bg-color--blue\">" + titleForm + requesterName + " ← " + providerName + "</h3>";
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--blue\">" + titleForm + borrowerName + " ← " + lenderName + "</h3>";
 
 
 
@@ -859,11 +874,11 @@ public class MessageSender {
 
 
         DataServices dataServices = DataServices.getInstance();
-        int totalQtyRequester = 0;
-        int totalQtyProvider = 0;
-        for (SendQuote sendQuote : dataServices.getQuoteForBorrower(requesterName, "SENT")) {
-            totalQtyRequester += sendQuote.getBorrowerQty();
-            totalQtyProvider += sendQuote.getLenderQty();
+        int totalQtyborrower = 0;
+        int totalQtylender = 0;
+        for (SendQuote sendQuote : dataServices.getQuoteForBorrower(borrowerName, "SENT")) {
+            totalQtyborrower += sendQuote.getBorrowerQty();
+            totalQtylender += sendQuote.getLenderQty();
 
             message +=
                     "<tr>" +
@@ -893,13 +908,13 @@ public class MessageSender {
                         "<td></td>" +
                         "<td></td>" +
                         "<td style='text-align:right;font-weight:bold'>計: </td>" +
-                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyRequester) + "</td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
                         "<td></td>" +
                         "<td></td>" +
                         "<td></td>" +
                         "<td></td>" +
                         "<td style='text-align:right;font-weight:bold'>計: </td>" +
-                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyProvider) + "</td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
                         "<td></td>" +
                         "<td></td>" +
                         "<td></td>" +
@@ -918,26 +933,25 @@ public class MessageSender {
                 "<div style=\"width:50%;\">";
 
 
-            if (errorOnProviders) {
+            if (errorOnlenders) {
                 message +=
                         "<span class=\"tempo-text-color--cyan\">" +
-                                "You need to choose a least on Provider1 before to submit your RFQ form." +
+                                "You need to choose a least on lender1 before to submit your RFQ form." +
                                 "</span>" ;
             }
 
             message +=
-                    "<form id=\"receive-quote-form\">";
+                    "<form id=\"receive-quote-form\">" +
+//                    "<div style=\"display:none\">" +
+                    "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" +
+                    "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                    "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                    "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                    "<textarea name=\"quote_data\" required=\"false\">" + quoteData + "</textarea>";
+//                    "</div>";
 
             message +=
-                    "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">借手(" + requesterName + ")の対応</h3>" +
-
-                    "<div style=\"display:none\">" +
-                    "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" +
-                    "<text-field name=\"counterparty_requester\" required=\"false\">" + requesterName + "</text-field>" +
-                    "<text-field name=\"counterparty_provider\" required=\"false\">" + providerName + "</text-field>" +
-                    "<textarea name=\"quote_data\" required=\"false\">" + quoteData + "</textarea>" +
-                    "</div>"+
-
+                    "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">借手(" + borrowerName + ")の対応</h3>" +
                     "<br/>";
 
             message +=
@@ -984,13 +998,13 @@ public class MessageSender {
 //    ======================= templates =========================
 //    ======================= templates =========================
 
-    public OutboundMessage template(String requestId, String requesterName, String providerName) {
+    public OutboundMessage template(String requestId, String borrowerName, String lenderName) {
         MessageManager messageManager = MessageManager.getInstance();
         String message;
 
         message =
-                "<h3 class=\"tempo-text-color-white tempo-bg-color--yellow\">RFQへの回答：" + requesterName + "[<hash tag=\"" + requestId + "\"/>]" + " ← " + providerName + "</h3>" +
-                        "<h4>回答者： " + messageManager.getRequesterName() + "</h4>" +
+                "<h3 class=\"tempo-text-color-white tempo-bg-color--yellow\">RFQへの回答：" + borrowerName + "[<hash tag=\"" + requestId + "\"/>]" + " ← " + lenderName + "</h3>" +
+                        "<h4>回答者： " + messageManager.getborrowerName() + "</h4>" +
                         "<br/>" +
                         "<div style=\"display: flex;\">";
 
