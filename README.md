@@ -1,4 +1,12 @@
 # jpnStockLendingBot
+This chat bot helps to reduce human hands from Stock Lending Workflow.
+The bot stays on both sides: Borrower and Lender.
+Borrower Bot helps the borrower to create RFQ and blast the RFQ to the multiple Lenders (max. 5).
+Lender receives the RFQ data in External Chat Room via Elements form and insert the data into his/her own database in order to co-work with downstream systems.
+Lender will genrate Quotation based on RFQ data and then return the quotation to Borrower throughout External Chat Room.
+Borrower and Lender can engotiate rates in External Chat Room.
+Once both parties reach the agreement, Lender can send final quotation or Borrower accept the received quotation.
+The quotation data will be stored into the database at borrower side.
 
 ## Concept Diagram
 ![JapanStockLendingBot](https://user-images.githubusercontent.com/53326909/92078914-0c2b6980-edfa-11ea-9a8c-5a00849d966e.jpg)
@@ -9,3 +17,7 @@
 3. Send RFQ to the EXT chat rooms based on the selected lenders.
 4. In the EXT chat room, Lender accept or reject the received RFQ.
 ![JapanStockLendingBot_0-1](https://user-images.githubusercontent.com/53326909/92079263-91168300-edfa-11ea-9c17-a4775b33f052.gif)
+
+## Basic Information
+* This chat bot is developed based on Symphony SDK for Java.
+* 
