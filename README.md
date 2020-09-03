@@ -32,7 +32,28 @@ The quotation data will be stored into the database at borrower side.
 * sqlite3 and required JDBC
 
 ## Details
-* src/main/java
-** StockLendingBot.java:   main mothoed to start required listeners
-** IMListenerImpl.java: Lisner for IM messages
-** 
+* **src/main/java
+  * StockLendingBot.java:   main mothoed to start required listeners  
+  * IMListenerImpl.java: Listener for IM messages
+  * RoomListenerImpl.java: Listener for room conversation
+  * ElementsListnerImpl.java: Listener for Elements forms and actions
+  * MessageHelper.java:  to provide clean command message to MessageProcessor.
+  * MessageProcessor.java:  catch a specific command message and evoke a specific process.
+  * ActionProcessor.java:  catch a specific action in a specific Elements form and evoke a specific process.
+  * MessageSender.java:   Build a specific a message for a specific command message or a specific action in a Element Form
+* **src/main/java/scripts
+  * ConfigLoader.java: Load a chat bot config from the config file (cfg-general.json) and store the parameters in the public variables
+  * Miscellaneous.java: Methods handle a minior process.
+* **src/main/java/dataservices
+  * DataBackup.java: includes methods to make backup CSV file for the tables in the sqlite3 database "stockLending.sqlite3"
+    - transactions
+    - counterParties
+  * DataExports.java: includes methods to generate CSV file for attaching into a message
+  * DataImport.csv: includes methods to import data in CSV file into the database table
+    - resources/csv/counterParties.csv
+  * DataInitialize.java: includes methods to intialize the tables in the database
+  * DataUpdate.java: includes methods to update the tables, mostly status in transaction records.
+  
+  
+  
+ 
