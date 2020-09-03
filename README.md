@@ -25,3 +25,14 @@ The quotation data will be stored into the database at borrower side.
 * Transaction data and counter parties information are stored in the sqlite3 database located in /splite3/stockLending.splite3
 * The code does not include the RSA private key should be located in the folder /rsa
 * This application is still under development. 
+
+## Requirements
+* Java8
+* Maven
+* sqlite3 and required JDBC
+
+## Details
+* src/main/java
+** StockLendingBot.java:   main mothoed to start required listeners
+** IMListenerImpl.java: Lisner for IM messages
+** 
