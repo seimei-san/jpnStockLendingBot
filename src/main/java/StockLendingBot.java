@@ -7,8 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scripts.ConfigLoader;
 
-import javax.xml.crypto.Data;
-
 
 public class StockLendingBot {
     private static final Logger LOGGER = LoggerFactory.getLogger(StockLendingBot.class);
