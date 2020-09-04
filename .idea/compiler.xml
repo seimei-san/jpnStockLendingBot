@@ -10,7 +10,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="jpnStockLendingBot" target="11" />
+      <module name="jpnStockLendingBot" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

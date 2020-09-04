@@ -183,13 +183,13 @@ public class MessageSender {
                 message +=
                         "<h3>依頼番号: " + requestId + "</h3>" +
                         "<br/>" +
-//                        "<div style=\"display:none\">" +
+                        "<div style=\"display:none\">" +
                         "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
                         "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" +
                         "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
                         "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
-                        "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>";
-//                        "</div>";
+                        "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>"+
+                        "</div>";
             }
 
             message +=

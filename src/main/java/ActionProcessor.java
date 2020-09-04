@@ -110,7 +110,7 @@ public class ActionProcessor {
                 break;
             }
             case "receive-rfq-form" : {
-//                After Borrower send RFQ to a target Lenders, this form is used in the External Chat Room where Borrower and Lender are exist together.
+//                After Borrower send RFQ to a target Lenders, this form is used in the External Chat Room where Borrower and Lender exist together.
 //                The actions here expects that the lender in the External Chat Room initiates.
 //                [EXTERNAL CHAT ROOM OPERATED BY  LENDER ONLY]
                 String requestId = (String)formValues.get("request_id");
