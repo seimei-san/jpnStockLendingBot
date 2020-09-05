@@ -76,6 +76,7 @@ public class DataBackup {
                                 resultSet.getString("counterPartyType"),
                                 resultSet.getString("counterPartyBotName"),
                                 resultSet.getString("extChatRoomId"),
+                                resultSet.getString("botImStreamId"),
                                 resultSet.getInt("isActive")
                         );
                     }

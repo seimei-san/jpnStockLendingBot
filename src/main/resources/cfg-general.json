@@ -16,9 +16,9 @@
   "sendRfqCsvPath": "/home/seimeisama/projects/bots/borrower/JapanLendingBotBorrower/csvrfqs",
   "database": "stockLending.sqlite3",
   "transactionSchema":"(type text, lotNo integer, requestId text, versionNo integer, lineNo integer, stockCode text, borrowerName text, borrowerQty integer, borrowerStart text, borrowerEnd text, borrowerRate real, borrowerCondition text, borrowerStatus text, lenderNo integer, lenderName text, lenderQty integer, lenderStart text, lenderEnd text, lenderRate real, lenderCondition text, lenderStatus text, price integer, timeStamp text, updatedBy text)",
-  "counterPartySchema":"(counterPartyId text, counterPartyName text, counterPartyType text, counterPartyBotName text, extChatRoomId text, isActive integer)",
+  "counterPartySchema":"(counterPartyId text, counterPartyName text, counterPartyType text, counterPartyBotName text, extChatRoomId text, botImStreamId text, isActive integer)",
   "transactionTable": "transactions",
   "counterPartyTable": "counterParties",
   "transactionTableSql" : "type, lotNo, requestId, versionNo, lineNo, stockCode, borrowerName, borrowerQty, borrowerStart, borrowerEnd, borrowerRate, borrowerCondition, borrowerStatus, lenderNo, lenderName, lenderQty, lenderStart, lenderEnd, lenderRate, lenderCondition, lenderStatus, price, timeStamp, updatedBy",
-  "counterPartyTableSql": "counterPartyId, counterPartyName, counterPartyType, counterPartyBotName, extChatRoomId, isActive"
+  "counterPartyTableSql": "counterPartyId, counterPartyName, counterPartyType, counterPartyBotName, extChatRoomId, botImStreamId, isActive"
 }

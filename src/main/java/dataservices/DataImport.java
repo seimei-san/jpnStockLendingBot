@@ -38,7 +38,7 @@ public class DataImport {
 //            connect database
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
-            PreparedStatement stmt = connection.prepareStatement("insert into " + tableName + "(" + ConfigLoader.counterPartyTableSql +") values (?, ?, ?, ?, ?, ?)");
+            PreparedStatement stmt = connection.prepareStatement("insert into " + tableName + "(" + ConfigLoader.counterPartyTableSql +") values (?, ?, ?, ?, ?, ?, ?)");
             br = new BufferedReader(new FileReader(fileName));
             while ((line = br.readLine()) != null) {
                 String[] table = line.split(",");
@@ -48,6 +48,7 @@ public class DataImport {
                 stmt.setString(4, table[3]);
                 stmt.setString(5, table[4]);
                 stmt.setString(6, table[5]);
+                stmt.setString(7, table[6]);
                 stmt.executeUpdate();
             }
 

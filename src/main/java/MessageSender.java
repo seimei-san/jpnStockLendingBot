@@ -29,8 +29,6 @@ public class MessageSender {
     public static void createInstance(SymBotClient botClient) {
         if (messageSender == null) {
             messageSender = new MessageSender(botClient);
-        } else {
-//            TODO
         }
     }
     public void sendMessage(String streamId, OutboundMessage messageOut) {
@@ -78,14 +76,11 @@ public class MessageSender {
 
     public OutboundMessage buildCreateRequestFormMessage() {
         LOGGER.debug("buildCreateRequestFormMessage returned");
-        return this.buildCreateRequestFormMessage(false, "", "", "", "", "", false, true);
+        return this.buildCreateRequestFormMessage("", "", "", "", "", false, true);
     }
 
 
-
-    public OutboundMessage buildCreateRequestFormMessage(boolean errorOnlenders, String botId, String userName, String requestId, String borrowerName, String lenderName, boolean isInserted, boolean isNew) {
-        MessageManager messageManager = MessageManager.getInstance();
-
+    public OutboundMessage buildCreateRequestFormMessage(String botId, String userName, String requestId, String borrowerName, String lenderName, boolean isInserted, boolean isNew) {
 
         String message;
         StringBuilder messageOptions = new StringBuilder();
@@ -116,7 +111,6 @@ public class MessageSender {
             message =
             "<h3 class=\"tempo-text-color--white tempo-bg-color--purple\">" + titleForm + borrowerName+ " [<hash tag=\"" + displayRequestId + "\"/>]</h3>";
         }
-
 
 
         message +=
@@ -171,8 +165,13 @@ public class MessageSender {
                 "<div style=\"display: flex;\">" +
                     "<div style=\"width:50%;\">";
 
-//       Div in Left Bottom
+//       Div in Left Bottom -----------------------------------------
+//       Div in Left Bottom -----------------------------------------
+//       Div in Left Bottom -----------------------------------------
+//       Div in Left Bottom -----------------------------------------
         if (isNew) {
+            // 1st step to import the pasted RFQ data in the textarea
+
             message +=
                     "<form id=\"create-rfq-form\">";
 
@@ -213,13 +212,7 @@ public class MessageSender {
                     "</form>";
         }
         if (!isNew) {
-
-            if (errorOnlenders) {
-                message +=
-                        "<span class=\"tempo-text-color--red\">" +
-                                "You need to choose a least on lender1 before to submit your RFQ form." +
-                                "</span>" ;
-            }
+            // after import, the form re-submitted with the following form in order to submit RFQ to selected lenders (max. 5).
 
             message +=
                     "<form id=\"submit-rfq-form\">";
@@ -227,11 +220,11 @@ public class MessageSender {
             message +=
                     "<h3>依頼番号: " + requestId + "</h3>" +
                     "<br/>" +
-//                    "<div style=\"display:none\">" +
+                    "<div style=\"display:none\">" +
                     "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
                     "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
                     "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
-//                    "</div>"+
+                    "</div>"+
                     "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">RFQを貸手に送信</h3>" +
                     "<br/>";
 
@@ -269,11 +262,14 @@ public class MessageSender {
         message +=
                  "</div>";
 
-//      Div in Right Bottom
+//      Div in Right Bottom -----------------------------------------------
+//      Div in Right Bottom -----------------------------------------------
+//      Div in Right Bottom -----------------------------------------------
         message +=
                 "<div style=\"width:50%;\">";
-
-
+                // keep Right Bottom Area empty for ergonomic purpose
+                // keep Right Bottom Area empty for ergonomic purpose
+                // keep Right Bottom Area empty for ergonomic purpose
 
         message +=
                 "</div>" +
@@ -293,10 +289,8 @@ public class MessageSender {
 //    --------------------------------------------------------------------------------------------------------------------
 
 
-    public OutboundMessage buildSendRfqFormMessage(boolean errorOnlenders, String botId, String userName, String requestId,
-                                                   String borrowerName, String lenderName, String rfqsData, String csvFullPath, boolean isSent) {
-        MessageManager messageManager = MessageManager.getInstance();
-
+    public OutboundMessage buildSendRfqFormMessage(String botId, String lenderBotInstantMessageId, String externalChatRoomId, String rfqsData, String userName, String requestId,
+                                                   String borrowerName, String lenderName, String csvFullPath, boolean isSent) {
 
         String message;
 
@@ -379,17 +373,20 @@ public class MessageSender {
             "<div style=\"display: flex;\">" +
                "<div style=\"width:50%;\">";
 
-//     Div in Left Bottom
+//     Div in Left Bottom  ------------------
+//     Div in Left Bottom  ------------------
+//     Div in Left Bottom  ------------------
+//     Div in Left Bottom  ------------------
         if (!isSent) {
 //            reserve the section for future function
-            // TODO
-
         }
 
         message +=
                 "</div>";
 
-//        Div in Right Bottom
+//        Div in Right Bottom ----------------
+//        Div in Right Bottom ----------------
+//        Div in Right Bottom ----------------
         message +=
                 "<div style=\"width:50%;\">";
 
@@ -405,9 +402,12 @@ public class MessageSender {
                     "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
                     "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" +
                     "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                    "<text-field name=\"external_chatroom_id\" required=\"false\">" + externalChatRoomId + "</text-field>" +
+                    "<text-field name=\"lenderbot_im_id\" required=\"false\">" + lenderBotInstantMessageId + "</text-field>" +
                     "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
                     "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
                     "<textarea name=\"rfqs_data\" required=\"false\">" + rfqsData + "</textarea>" +
+
 //                    "</div>"+
                     "<h3 class=\"tempo-text-color--white tempo-bg-color--blue\">貸手(" + lenderName + ")の対応</h3>" +
                     "<br/>";
@@ -425,7 +425,6 @@ public class MessageSender {
 
 
         OutboundMessage messageOut = new OutboundMessage();
-//        messageOut.setAttachment(new File(csvFullPath));
         messageOut.setMessage(message);
 
         return messageOut;
@@ -529,8 +528,6 @@ public class MessageSender {
 
 
     public OutboundMessage buildNothingMessage(String userName, String requestId, String borrowerName, String lenderName) {
-        MessageManager messageManager = MessageManager.getInstance();
-
 
         String message =
                 "<h3 class=\"tempo-text-color--black tempo-bg-color--yellow\">RFQへの回答："+ borrowerName + "[<hash tag=\"" + requestId + "\"/>]" + " ← " + lenderName + "</h3>" +
@@ -606,6 +603,13 @@ public class MessageSender {
         return messageOut;
     }
 
+    public OutboundMessage buildImToLenderBot(String userId, String botId, String externalChatRoomId, String requestId, String borrowerName, String lenderName, String rfqsData) {
+        String message = "<mention id=" + botId + "/> /acceptrfp " + requestId + " " + userId + " " + borrowerName + " " + lenderName + " " + externalChatRoomId + " " + rfqsData;
+        OutboundMessage  messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        return messageOut;
+    }
+
     
     
 //    ================================ Lender Side Forms =======================================
@@ -619,15 +623,12 @@ public class MessageSender {
 
     public OutboundMessage buildCreateQuoteFormMessage() {
         LOGGER.debug("buildCreateQuoteFormMessage returned");
-        return this.buildCreateQuoteFormMessage(false, "", "", "","", "", "", true);
+        return this.buildCreateQuoteFormMessage("", "", "","", "", "", true);
     }
 
 
 
-    public OutboundMessage buildCreateQuoteFormMessage(boolean errorOnlenders, String botId, String userName, String borrowerName, String lenderName, String lenderStatus, String csvFullPath, boolean isNew) {
-        MessageManager messageManager = MessageManager.getInstance();
-
-
+    public OutboundMessage buildCreateQuoteFormMessage(String botId, String userName, String borrowerName, String lenderName, String lenderStatus, String csvFullPath, boolean isNew) {
         String message;
         String titleForm;
 
@@ -777,13 +778,6 @@ public class MessageSender {
         }
         if (!isNew) {
 
-            if (errorOnlenders) {
-                message +=
-                        "<span class=\"tempo-text-color--cyan\">" +
-                                "You need to choose a least on lender1 before to submit your RFQ form." +
-                                "</span>" ;
-            }
-
             message +=
                     "<form id=\"submit-quote-form\">"+
 //                     "<div style=\"display:none\">" +
@@ -827,9 +821,7 @@ public class MessageSender {
     }
 
 
-    public OutboundMessage buildSendQuoteFormMessage(boolean errorOnlenders, String botId, String userName, String borrowerName, String lenderName, String lenderStatus, String quoteData, boolean isNew) {
-        MessageManager messageManager = MessageManager.getInstance();
-
+    public OutboundMessage buildSendQuoteFormMessage(String botId, String userName, String borrowerName, String lenderName, String lenderStatus, String quoteData, boolean isNew) {
 
         String message;
         String titleForm;
@@ -932,14 +924,6 @@ public class MessageSender {
         message +=
                 "<div style=\"width:50%;\">";
 
-
-            if (errorOnlenders) {
-                message +=
-                        "<span class=\"tempo-text-color--cyan\">" +
-                                "You need to choose a least on lender1 before to submit your RFQ form." +
-                                "</span>" ;
-            }
-
             message +=
                     "<form id=\"receive-quote-form\">" +
 //                    "<div style=\"display:none\">" +
@@ -998,13 +982,12 @@ public class MessageSender {
 //    ======================= templates =========================
 //    ======================= templates =========================
 
-    public OutboundMessage template(String requestId, String borrowerName, String lenderName) {
-        MessageManager messageManager = MessageManager.getInstance();
+    public OutboundMessage template(String requestId, String userName, String borrowerName, String lenderName) {
         String message;
 
         message =
                 "<h3 class=\"tempo-text-color-white tempo-bg-color--yellow\">RFQへの回答：" + borrowerName + "[<hash tag=\"" + requestId + "\"/>]" + " ← " + lenderName + "</h3>" +
-                        "<h4>回答者： " + messageManager.getborrowerName() + "</h4>" +
+                        "<h4>回答者： " + userName + "</h4>" +
                         "<br/>" +
                         "<div style=\"display: flex;\">";
 

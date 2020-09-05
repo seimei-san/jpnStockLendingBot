@@ -410,6 +410,7 @@ public class DataServices {
             tmpArray[2] = resultSet.getString(3);  //counterPartyType
             tmpArray[3] = resultSet.getString(4);  //counterPartyBotName
             tmpArray[4] = Miscellaneous.convertRoomId(resultSet.getString(5));  //extChatRoomId
+            tmpArray[5] = resultSet.getString(6);
 //            tmpArray[5] = rs.getString(6);  //isActive
 
         } catch (ClassNotFoundException e) {
