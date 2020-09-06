@@ -2,6 +2,7 @@ import clients.SymBotClient;
 import dataservices.*;
 import model.InboundMessage;
 import model.OutboundMessage;
+import model.User;
 import model.UserInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,16 +27,9 @@ public class MessageProcessor {
 
         if (mentions.contains(botUserInfo.getId())) {
             String[] commandMessage = MessageHelper.clean(inboundMessage.getMessage());
-            String cleanMessage = commandMessage[0];
-            System.out.println("command=" + commandMessage[0]);
-            System.out.println("requestId=" + commandMessage[1]);
-            System.out.println("usrId=" + commandMessage[2]);
-            System.out.println("borrowerName=" + commandMessage[3]);
-            System.out.println("lenderName=" + commandMessage[4]);
-            System.out.println("extChatRoomId=" + commandMessage[5]);
-            System.out.println("data" + commandMessage[6]);
-
-            //String message = "<mention id=" + botId + "/> /acceptrfp " + requestId + " " + userId + " " + borrowerName + " " + lenderName + " " + externalChatRoomId + " " + rfqsData;
+            String cleanMessage;
+            cleanMessage = commandMessage[0].trim();
+            System.out.println("commandMessage1=" + cleanMessage);
 
             boolean sendHelpMessage = false;
             String[] msgs;
@@ -107,6 +101,22 @@ public class MessageProcessor {
                         break;
                     }
 
+                    case "/botcmd1" : {
+                        // This command is given by IM from Borrower Bot with the 7 parameters
+                        System.out.println("HIT HIT HIT HIT HIT");
+
+                        String requestId = commandMessage[1];
+                        String userId = commandMessage[2];
+                        String borrowerName = commandMessage[3];
+                        String lenderName = commandMessage[4];
+                        String extChatRoomId = Miscellaneous.convertRoomId(commandMessage[5]);
+                        String rfqsData = commandMessage[6];
+                        DataServices.getInsertRfqsIntoTargetCounterParty(rfqsData, userId);
+                        String userName = MessageManager.getInstance().getUserName();
+                        this.notifyAcceptanceRfqByLender(inboundMessage, requestId, userId, userName, borrowerName, lenderName, extChatRoomId);
+                        break;
+                    }
+
                     case "/newquote" : {
                         if (Miscellaneous.checkRoomId(streamId)) {
                             this.notifyNotInRoom(inboundMessage,"/newquote");
@@ -148,16 +158,18 @@ public class MessageProcessor {
     }
 
     public void createRfqForm(InboundMessage inboundMessage) {
-        OutboundMessage messageOut = MessageSender.getInstance().buildCreateRequestFormMessage();
+        String userId = inboundMessage.getUser().getUserId().toString();
+        OutboundMessage messageOut = MessageSender.getInstance().buildCreateRequestFormMessage(userId);
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.createRfqForm executed");
     }
     public void createQuoteForm(InboundMessage inboundMessage, String lenderStatus) {
         String csvFilePath = DataExports.exportRfqsTolender(ConfigLoader.myCounterPartyName,"YET");
         String botId = String.valueOf(botClient.getBotUserId());
+        String userId = inboundMessage.getUser().getUserId().toString();
 //        DataUpdate.updateLenderStatus("YET", "EXPT");
         String userName = inboundMessage.getUser().getDisplayName();
-        OutboundMessage messageOut = MessageSender.getInstance().buildCreateQuoteFormMessage(botId, userName, "", ConfigLoader.myCounterPartyName, lenderStatus, csvFilePath, true);
+        OutboundMessage messageOut = MessageSender.getInstance().buildCreateQuoteFormMessage(botId, userId, userName, "", ConfigLoader.myCounterPartyName, lenderStatus, csvFilePath, true);
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.createQuoteForm executed");
     }
@@ -165,9 +177,16 @@ public class MessageProcessor {
     public void submitQuoteForm(InboundMessage inboundMessage, String lenderStatus) {
         String userName = inboundMessage.getUser().getDisplayName();
         String botId = String.valueOf(botClient.getBotUserId());
-        OutboundMessage messageOut = MessageSender.getInstance().buildCreateQuoteFormMessage(botId, userName, "", ConfigLoader.myCounterPartyName, lenderStatus, "", false);
+        String userId = inboundMessage.getUser().getUserId().toString();
+        OutboundMessage messageOut = MessageSender.getInstance().buildCreateQuoteFormMessage(botId, userId, userName, "", ConfigLoader.myCounterPartyName, lenderStatus, "", false);
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.submitQuoteForm executed");
+    }
+
+    public void notifyAcceptanceRfqByLender(InboundMessage inboundMessage, String requestId, String userId, String userName, String borrowerName, String lenderName, String extChatRoomId) {
+        OutboundMessage messageOut = MessageSender.getInstance().buildAcceptQuoteMessage(requestId, userId, userName, borrowerName, lenderName);
+        MessageSender.getInstance().sendMessage(extChatRoomId, messageOut);
+
     }
 
     public void notifyNotInRoom(InboundMessage inboundMessage, String commandText) {

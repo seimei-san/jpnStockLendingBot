@@ -1,6 +1,7 @@
 import listeners.RoomListener;
 import model.InboundMessage;
 import model.Stream;
+import model.User;
 import model.events.*;
 
 public class RoomListenerImpl implements RoomListener {

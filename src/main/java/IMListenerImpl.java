@@ -1,6 +1,7 @@
 import listeners.IMListener;
 import model.InboundMessage;
 import model.Stream;
+import model.User;
 
 public class IMListenerImpl implements IMListener {
     private MessageProcessor messageProcessor;

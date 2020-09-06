@@ -74,13 +74,14 @@ public class MessageSender {
 //    --------------------------------------------------------------------------------------------------------------------
 
 
-    public OutboundMessage buildCreateRequestFormMessage() {
+    public OutboundMessage buildCreateRequestFormMessage(String userId) {
         LOGGER.debug("buildCreateRequestFormMessage returned");
-        return this.buildCreateRequestFormMessage("", "", "", "", "", false, true);
+
+        return this.buildCreateRequestFormMessage("", userId, "", "", "", "", false, true);
     }
 
 
-    public OutboundMessage buildCreateRequestFormMessage(String botId, String userName, String requestId, String borrowerName, String lenderName, boolean isInserted, boolean isNew) {
+    public OutboundMessage buildCreateRequestFormMessage(String botId, String userId, String userName, String requestId, String borrowerName, String lenderName, boolean isInserted, boolean isNew) {
 
         String message;
         StringBuilder messageOptions = new StringBuilder();
@@ -114,7 +115,8 @@ public class MessageSender {
 
 
         message +=
-                "<h4>作成者： " + userName + "</h4>" +
+                "<h4>作成者： <mention uid='" + userId + "'/></h4>" +
+//                "<h4>作成者： " + userName + "</h4>" +
                 "<br/>" +
                 "<table style='table-layout:fixed;width:800px'>" +
                     "<thead>" +
@@ -182,13 +184,14 @@ public class MessageSender {
                 message +=
                         "<h3>依頼番号: " + requestId + "</h3>" +
                         "<br/>" +
-                        "<div style=\"display:none\">" +
-                        "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
-                        "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" +
-                        "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
-                        "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
-                        "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>"+
-                        "</div>";
+//                        "<div style=\"display:none\">" +
+                        "botId: <text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                        "userId: <text-field name=\"user_id\" required=\"false\">" + userId + "</text-field>" +
+                        "userName: <text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" +
+                        "requestId: <text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
+                        "borrowerName: <text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                        "lenderName: <text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>";
+//                        "</div>";
             }
 
             message +=
@@ -220,11 +223,11 @@ public class MessageSender {
             message +=
                     "<h3>依頼番号: " + requestId + "</h3>" +
                     "<br/>" +
-                    "<div style=\"display:none\">" +
-                    "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
-                    "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
-                    "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
-                    "</div>"+
+//                    "<div style=\"display:none\">" +
+                    "requestId: <text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
+                    "botId: <text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                    "borrowerName: <text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+//                    "</div>"+
                     "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">RFQを貸手に送信</h3>" +
                     "<br/>";
 
@@ -289,7 +292,7 @@ public class MessageSender {
 //    --------------------------------------------------------------------------------------------------------------------
 
 
-    public OutboundMessage buildSendRfqFormMessage(String botId, String lenderBotInstantMessageId, String externalChatRoomId, String rfqsData, String userName, String requestId,
+    public OutboundMessage buildSendRfqFormMessage(String botId, String userId, String lenderBotInstantMessageId, String externalChatRoomId, String rfqsData, String userName, String requestId,
                                                    String borrowerName, String lenderName, String csvFullPath, boolean isSent) {
 
         String message;
@@ -298,6 +301,7 @@ public class MessageSender {
                 "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">QUOTEの依頼："+ borrowerName + "[<hash tag=\"" + requestId + "\"/>]" + " → " + lenderName + "</h3>";
 
         message +=
+                "<h4>依頼者： <mention uid='" + userId + "'/></h4>" +
                 "<h4>依頼者： " + userName + "</h4>" +
                 "<br/>" +
                 "<table style='table-layout:fixed;width:1200px'>" +
@@ -407,7 +411,6 @@ public class MessageSender {
                     "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
                     "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
                     "<textarea name=\"rfqs_data\" required=\"false\">" + rfqsData + "</textarea>" +
-
 //                    "</div>"+
                     "<h3 class=\"tempo-text-color--white tempo-bg-color--blue\">貸手(" + lenderName + ")の対応</h3>" +
                     "<br/>";
@@ -429,6 +432,8 @@ public class MessageSender {
 
         return messageOut;
     }
+
+
 
 
 
@@ -461,8 +466,9 @@ public class MessageSender {
     }
 
 
-    public OutboundMessage buildAcceptQuoteMessage(String requestId, String userName, String borrowerName, String lenderName) {
+    public OutboundMessage buildAcceptQuoteMessage(String requestId, String userId, String userName, String borrowerName, String lenderName) {
         String message =
+                "<h5>依頼番号[<hash tag=\"" + requestId + "\"/>] " + borrowerName + "からの<b>QUOTE依頼</b>は、<mention uid='" + userId + "'/> に受付されました。</h5>" +
                 "<h5>依頼番号[<hash tag=\"" + requestId + "\"/>] " + borrowerName + "からの<b>QUOTE依頼</b>は、" + userName + "に受付されました。</h5>" +
                         "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.rfqHashTag + "\"/></p>";
         OutboundMessage messageOut = new OutboundMessage();
@@ -527,10 +533,11 @@ public class MessageSender {
     }
 
 
-    public OutboundMessage buildNothingMessage(String userName, String requestId, String borrowerName, String lenderName) {
+    public OutboundMessage buildNothingMessage(String userId, String userName, String requestId, String borrowerName, String lenderName) {
 
         String message =
                 "<h3 class=\"tempo-text-color--black tempo-bg-color--yellow\">RFQへの回答："+ borrowerName + "[<hash tag=\"" + requestId + "\"/>]" + " ← " + lenderName + "</h3>" +
+                "<h4>回答者： <mention uid='" + userId + "'/></h4>" +
                 "<h4>回答者： " + userName + "</h4>" +
                 "<br/>" +
                 "<div style=\"display: flex;\">";
@@ -539,9 +546,9 @@ public class MessageSender {
                     "<div style=\"width:50%;\">" +
                         "<form id=\"notify-nothing-form\">" +
 //                            "<div style=\"display:none\">" +
-                            "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
-                            "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
-                            "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                            "RequestID: <text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
+                            "BorrowerName: <text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                            "LenderName: <text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
 //                            "</div>"+
                             "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">借手(" + borrowerName + ")の対応</h3>" +
                             "<br/>" +
@@ -566,6 +573,7 @@ public class MessageSender {
         LOGGER.debug("buildNothingMessage returned");
         return messageOut;
     }
+
 
 
 
@@ -604,7 +612,9 @@ public class MessageSender {
     }
 
     public OutboundMessage buildImToLenderBot(String userId, String botId, String externalChatRoomId, String requestId, String borrowerName, String lenderName, String rfqsData) {
-        String message = "<mention id=" + botId + "/> /acceptrfp " + requestId + " " + userId + " " + borrowerName + " " + lenderName + " " + externalChatRoomId + " " + rfqsData;
+        System.out.println("UserID=" + userId);
+        String message = "<mention uid='" + botId + "'/> /botcmd1 " + requestId + " " + userId + " " + borrowerName + " " + lenderName + " " + externalChatRoomId + " " + rfqsData;
+
         OutboundMessage  messageOut = new OutboundMessage();
         messageOut.setMessage(message);
         return messageOut;
@@ -623,12 +633,12 @@ public class MessageSender {
 
     public OutboundMessage buildCreateQuoteFormMessage() {
         LOGGER.debug("buildCreateQuoteFormMessage returned");
-        return this.buildCreateQuoteFormMessage("", "", "","", "", "", true);
+        return this.buildCreateQuoteFormMessage("", "", "", "","", "", "", true);
     }
 
 
 
-    public OutboundMessage buildCreateQuoteFormMessage(String botId, String userName, String borrowerName, String lenderName, String lenderStatus, String csvFullPath, boolean isNew) {
+    public OutboundMessage buildCreateQuoteFormMessage(String botId, String userId, String userName, String borrowerName, String lenderName, String lenderStatus, String csvFullPath, boolean isNew) {
         String message;
         String titleForm;
 
@@ -644,7 +654,8 @@ public class MessageSender {
 
 
         message +=
-                "<h4>回答者： " + userName + "</h4>" +
+                "<h4>回答者： <mention uid='" + userId + "'/></h4>" +
+                "<h4>回答者： " + userId + "</h4>" +
                         "<br/>" +
                         "<table style='table-layout:fixed;width:1300px'>" +
                         "<thead>" +
@@ -740,10 +751,10 @@ public class MessageSender {
             message +=
                     "<form id=\"create-quote-form\">"+
 //                    "<div style=\"display:none\">" +
-                    "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
-                    "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
-                    "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
-                    "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" ;
+                    "botId: <text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                    "borrowerName: <text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                    "lenderName: <text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                    "userName: <text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" ;
 //                    "</div>";
 
 //            if (!isInserted) {
@@ -781,9 +792,9 @@ public class MessageSender {
             message +=
                     "<form id=\"submit-quote-form\">"+
 //                     "<div style=\"display:none\">" +
-                    "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
-                    "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
-                    "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" ;
+                    "borrowerName: <text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                    "lenderName: <text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                    "userName: <text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" ;
 //                    "</div>";
 
             message +=
@@ -821,7 +832,7 @@ public class MessageSender {
     }
 
 
-    public OutboundMessage buildSendQuoteFormMessage(String botId, String userName, String borrowerName, String lenderName, String lenderStatus, String quoteData, boolean isNew) {
+    public OutboundMessage buildSendQuoteFormMessage(String botId, String userId, String userName, String borrowerName, String lenderName, String lenderStatus, String quoteData, boolean isNew) {
 
         String message;
         String titleForm;
@@ -838,6 +849,7 @@ public class MessageSender {
 
 
         message +=
+                "<h4>回答者： <mention uid='" + userId + "'/></h4>" +
                 "<h4>回答者： " + userName + "</h4>" +
                         "<br/>" +
                         "<table style='table-layout:fixed;width:1300px'>" +
@@ -927,11 +939,11 @@ public class MessageSender {
             message +=
                     "<form id=\"receive-quote-form\">" +
 //                    "<div style=\"display:none\">" +
-                    "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" +
-                    "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
-                    "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
-                    "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
-                    "<textarea name=\"quote_data\" required=\"false\">" + quoteData + "</textarea>";
+                    "userName: <text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" +
+                    "botId: <text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                    "borrowerName: <text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                    "lenderName: <text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                    "quoteData: <textarea name=\"quote_data\" required=\"false\">" + quoteData + "</textarea>";
 //                    "</div>";
 
             message +=
@@ -1012,5 +1024,13 @@ public class MessageSender {
         return messageOut;
 
     }
+
+    public OutboundMessage buildTestMessage() {
+        String message = "<mention uid='349026222350969'/> /newrfq 123,123,123,123\n345,345,345,345\n456,456,456,456";
+        OutboundMessage messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        return messageOut;
+    }
+
 }
 

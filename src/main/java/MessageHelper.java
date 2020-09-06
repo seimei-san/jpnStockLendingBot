@@ -17,7 +17,7 @@ public class MessageHelper {
 
         cleanMessage = cleanMessage.trim();
 
-        String[] commandMessage = new String[2];
+        String[] commandMessage = new String[6];
 
         // 1st work expects command and rest of text expects the data
         commandMessage = cleanMessage.split(" ", 7);
