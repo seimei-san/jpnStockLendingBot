@@ -17,10 +17,10 @@ public class MessageHelper {
 
         cleanMessage = cleanMessage.trim();
 
-        String[] commandMessage = new String[6];
+        String[] commandMessage = new String[7];
 
         // 1st work expects command and rest of text expects the data
-        commandMessage = cleanMessage.split(" ", 7);
+        commandMessage = cleanMessage.split(" ", 8);
 
 //        return commandMessage;
         LOGGER.debug("MessageHelp.clean returned clean command and data");

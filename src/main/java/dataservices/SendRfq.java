@@ -13,7 +13,6 @@ public class SendRfq {
     private String borrowerEnd;
     private double borrowerRate;
     private String borrowerCondition;
-    private String borrowerStatus;
     private int lenderNo;
     private String lenderName;
     private int lenderQty;
@@ -21,15 +20,16 @@ public class SendRfq {
     private String lenderEnd;
     private double lenderRate;
     private String lenderCondition;
-    private String lenderStatus;
+    private int price;
+    private String status;
     private String timeStamp;
     private String updatedBy;
 
 
     public SendRfq(String type, int lotNo, String requestId, int versionNo, int lineNo, String stockCode, String borrowerName,
                    int borrowerQty, String borrowerStart, String borrowerEnd, double borrowerRate, String borrowerCondition,
-                   String borrowerStatus, int lenderNo, String lenderName, int lenderQty, String lenderStart, String lenderEnd,
-                   double lenderRate, String lenderCondition, String lenderStatus, String timeStamp, String updatedBy
+                   int lenderNo, String lenderName, int lenderQty, String lenderStart, String lenderEnd,
+                   double lenderRate, String lenderCondition, int price, String status, String timeStamp, String updatedBy
     ) {
 
         this.type = type;
@@ -44,7 +44,6 @@ public class SendRfq {
         this.borrowerEnd = borrowerEnd;
         this.borrowerRate = borrowerRate;
         this.borrowerCondition = borrowerCondition;
-        this.borrowerStatus = borrowerStatus;
         this.lenderNo = lenderNo;
         this.lenderName = lenderName;
         this.lenderQty = lenderQty;
@@ -52,7 +51,8 @@ public class SendRfq {
         this.lenderEnd = lenderEnd;
         this.lenderRate = lenderRate;
         this.lenderCondition = lenderCondition;
-        this.lenderStatus = lenderStatus;
+        this.price = price;
+        this.status = status;
         this.timeStamp = timeStamp;
         this.updatedBy = updatedBy;
 
@@ -70,7 +70,6 @@ public class SendRfq {
     public String getBorrowerEnd() {return this.borrowerEnd;}
     public double getBorrowerRate() {return this.borrowerRate;}
     public String getBorrowerCondition() {return this.borrowerCondition;}
-    public String getBorrowerStatus() {return this.borrowerStatus;}
     public int getlenderNo() {return this.lenderNo;}
     public String getLenderName() {return this.lenderName;}
     public int getLenderQty() {return this.lenderQty;}
@@ -78,8 +77,9 @@ public class SendRfq {
     public String getLenderEnd() {return this.lenderEnd;}
     public double getLenderRate() {return this.lenderRate;}
     public String getLenderCondition() {return this.lenderCondition;}
-    public String getTimeStamp() {return this.lenderStatus;}
-    public String timeStamp() {return this.timeStamp;}
+    public int getPrice() {return this.price;}
+    public String getStatus() {return this.status;}
+    public String getTimeStamp() {return this.timeStamp;}
     public String updatedBy() {return this.updatedBy;}
 
 

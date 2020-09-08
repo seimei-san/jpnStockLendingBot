@@ -11,6 +11,7 @@ import scripts.Miscellaneous;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.*;
@@ -35,7 +36,7 @@ public class DataExports {
             String sqlCollectRfqsForTargetlender =
                     "SELECT type as 種別, borrowerName as 依頼元, stockCode as 銘柄, borrowerQty as 依頼数,  borrowerStart as 開始日, borrowerEnd as 終了期間, " +
                             "lenderName as 依頼先_C, requestId as 依頼番号_C, lineNo as 行番_C, lenderQty as 可能数_C, lenderStart as 可能開始_C, " +
-                            "lenderEnd as 可能終了期間_C, lenderRate as 利率_C, lenderCondition as 条件_C FROM " +
+                            "lenderEnd as 可能終了期間_C, lenderRate as 利率_C, lenderCondition as 条件_C, lenderStatus as 状況_C FROM " +
                             ConfigLoader.transactionTable + " WHERE requestId=? AND borrowerName=? AND lenderName=?;";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlCollectRfqsForTargetlender);
             preparedStatement.setString(1, requestId);
@@ -51,8 +52,8 @@ public class DataExports {
 
             try {
                 ResultSet resultSet = preparedStatement.executeQuery();
-                BufferedWriter writer = Files.newBufferedWriter(Paths.get(fileFullPath));
-                CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(resultSet.getMetaData()).withQuoteMode(QuoteMode.ALL));
+                BufferedWriter writer = Files.newBufferedWriter(Paths.get(fileFullPath), Charset.forName("Shift_JIS"));
+                CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.EXCEL.withHeader(resultSet.getMetaData()).withQuoteMode(QuoteMode.ALL));
 
                 while (resultSet.next()) {
                     csvPrinter.printRecord(
@@ -69,7 +70,8 @@ public class DataExports {
                             resultSet.getString(11), //lenderStart 見積開始
                             resultSet.getString(12), //lenderEnd 見積返却
                             resultSet.getString(13), //lenderRate 見積利率
-                            resultSet.getString(14) //lenderCondition 見積条件
+                            resultSet.getString(14), //lenderCondition 見積条件
+                            resultSet.getString(15) //lenderStatus 状況
 
                     );
                 }
@@ -121,7 +123,7 @@ public class DataExports {
     }
 
 
-    public static String exportRfqsTolender(String lenderName, String lenderStatus) {
+    public static String exportRfqsTolender(String lenderName, String status) {
         String fileFullPath = "";
         Connection connection = null;
         Statement statement = null;
@@ -138,10 +140,10 @@ public class DataExports {
             String sqlCollectRfqsTolender =
                     "SELECT type as 種別, borrowerName as 依頼元, stockCode as 銘柄, borrowerQty as 依頼数,  borrowerStart as 開始日, borrowerEnd as 終了期間, " +
                             "lenderName as 依頼先_C, requestId as 依頼番号_c, lineNo as 行番_c, lenderQty as 可能数_c, lenderStart as 可能開始_c, " +
-                            "lenderEnd as 可能終了_c, lenderRate as 利率_c, lenderCondition as 条件_c, price as 価格_c FROM " +
-                            ConfigLoader.transactionTable + " WHERE type='QUO' AND lenderStatus=?";
+                            "lenderEnd as 可能終了_c, lenderRate as 利率_c, lenderCondition as 条件_c, price as 価格_c, status as 状況_c FROM " +
+                            ConfigLoader.transactionTable + " WHERE type='QUO' AND status=?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlCollectRfqsTolender);
-            preparedStatement.setString(1, lenderStatus);
+            preparedStatement.setString(1, status);
 
 
             File exportDir = new File(ConfigLoader.sendRfqCsvPath);
@@ -153,8 +155,8 @@ public class DataExports {
 
             try {
                 ResultSet resultSet = preparedStatement.executeQuery();
-                BufferedWriter writer = Files.newBufferedWriter(Paths.get(fileFullPath));
-                CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader(resultSet.getMetaData()).withQuoteMode(QuoteMode.ALL));
+                BufferedWriter writer = Files.newBufferedWriter(Paths.get(fileFullPath), Charset.forName("Shift_JIS"));
+                CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.EXCEL.withHeader(resultSet.getMetaData()).withQuoteMode(QuoteMode.ALL));
 
                 while (resultSet.next()) {
                     csvPrinter.printRecord(
@@ -171,7 +173,9 @@ public class DataExports {
                             resultSet.getString(11), //lenderStart 可能開始
                             resultSet.getString(12), //lenderEnd 可能終了・期間
                             resultSet.getString(13), //lenderRate 利率
-                            resultSet.getString(14) //lenderCondition 条件
+                            resultSet.getString(14), //lenderCondition 条件
+                            resultSet.getString(15), //price 価格
+                            resultSet.getString(16) //status 状況
 
                     );
                 }

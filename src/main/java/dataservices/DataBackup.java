@@ -96,7 +96,6 @@ public class DataBackup {
                                 resultSet.getString("borrowerEnd"),
                                 resultSet.getString("borrowerRate"),
                                 resultSet.getString("borrowerCondition"),
-                                resultSet.getString("borrowerStatus"),
                                 resultSet.getString("lenderNo"),
                                 resultSet.getString("lenderName"),
                                 resultSet.getInt("lenderQty"),
@@ -104,8 +103,8 @@ public class DataBackup {
                                 resultSet.getString("lenderEnd"),
                                 resultSet.getDouble("lenderRate"),
                                 resultSet.getString("lenderCondition"),
-                                resultSet.getString("lenderStatus"),
                                 resultSet.getString("price"),
+                                resultSet.getString("status"),
                                 resultSet.getString("timeStamp"),
                                 resultSet.getString("updatedBy")
 

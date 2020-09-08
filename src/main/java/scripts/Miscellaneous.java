@@ -105,4 +105,12 @@ public class Miscellaneous {
         }
         return hitRoomId;
     }
+    public static String convertUserName(String userName, boolean replaceSpace) {
+        if (replaceSpace) {
+            userName = userName.replace(" ", "_");
+        } else {
+            userName = userName.replace("_", " ");
+        }
+        return userName;
+    }
 }

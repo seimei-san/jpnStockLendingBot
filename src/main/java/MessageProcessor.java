@@ -103,17 +103,41 @@ public class MessageProcessor {
 
                     case "/botcmd1" : {
                         // This command is given by IM from Borrower Bot with the 7 parameters
-                        System.out.println("HIT HIT HIT HIT HIT");
-
                         String requestId = commandMessage[1];
                         String userId = commandMessage[2];
-                        String borrowerName = commandMessage[3];
-                        String lenderName = commandMessage[4];
-                        String extChatRoomId = Miscellaneous.convertRoomId(commandMessage[5]);
-                        String rfqsData = commandMessage[6];
-                        DataServices.getInsertRfqsIntoTargetCounterParty(rfqsData, userId);
-                        String userName = MessageManager.getInstance().getUserName();
+                        String userName = Miscellaneous.convertUserName(commandMessage[3], false);
+                        String borrowerName = commandMessage[4];
+                        String lenderName = commandMessage[5];
+                        String extChatRoomId = Miscellaneous.convertRoomId(commandMessage[6]);
+                        String rfqsData = commandMessage[7];
+                        DataServices.getInsertRfqsIntoTargetCounterParty(rfqsData, userName);
                         this.notifyAcceptanceRfqByLender(inboundMessage, requestId, userId, userName, borrowerName, lenderName, extChatRoomId);
+                        break;
+                    }
+
+                    case "/botcmd2" : {
+                        // This command is given by IM from Lender Bot with the 7 parameters
+                        String requestId = commandMessage[1];
+                        String userId = commandMessage[2];
+                        String userName = Miscellaneous.convertUserName(commandMessage[3], false);
+                        String borrowerName = commandMessage[4];
+                        String lenderName = commandMessage[5];
+                        String extChatRoomId = Miscellaneous.convertRoomId(commandMessage[6]);
+                        String quoteData = commandMessage[7];
+                        DataUpdate.getUpdateQuoteStatus(quoteData, userName, "REJECT");
+                        break;
+                    }
+
+                    case "/botcmd3" : {
+                        // This command is given by IM from Lender Bot with the 7 parameters
+                        String requestId = commandMessage[1];
+                        String userId = commandMessage[2];
+                        String userName = Miscellaneous.convertUserName(commandMessage[3], false);
+                        String borrowerName = commandMessage[4];
+                        String lenderName = commandMessage[5];
+                        String extChatRoomId = Miscellaneous.convertRoomId(commandMessage[6]);
+                        String quoteData = commandMessage[7];
+                        DataUpdate.getUpdateQuoteByLender(quoteData, userName, "NEW");
                         break;
                     }
 

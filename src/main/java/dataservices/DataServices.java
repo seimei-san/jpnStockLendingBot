@@ -223,7 +223,7 @@ public class DataServices {
     }
 
     public static void insertRfq(String borrowerName, String type, int lotNo, String requestId, int versionNo,
-                                int lineNo, String stockCode, int borrowerQty, String borrowerStart, String borrowerEnd, int lenderNo,  String timeStamp) {
+                                int lineNo, String stockCode, int borrowerQty, String borrowerStart, String borrowerEnd, int lenderNo,  String timeStamp, String userName) {
         Connection connection = null;
         Statement statement = null;
 
@@ -239,7 +239,7 @@ public class DataServices {
 //            String timeStamp = Miscellaneous.getTimeStamp("transaction");
 
             String sqlReserveRequest = "insert into " + ConfigLoader.transactionTable + "(borrowerName, type, lotNo, requestId, " +
-                    "versionNo, lineNo, stockCode, borrowerQty, borrowerStart, borrowerEnd, lenderNo, timeStamp) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
+                    "versionNo, lineNo, stockCode, borrowerQty, borrowerStart, borrowerEnd, lenderNo, timeStamp, status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
             PreparedStatement preStatement = connection.prepareStatement(sqlReserveRequest);
             preStatement.setString(1,borrowerName);
@@ -254,6 +254,7 @@ public class DataServices {
             preStatement.setString(10,Miscellaneous.fourDigitDate(borrowerEnd));
             preStatement.setInt(11, lenderNo);
             preStatement.setString(12,timeStamp);
+            preStatement.setString(13,userName);
 
             preStatement.executeUpdate();
 
@@ -440,7 +441,7 @@ public class DataServices {
         return tmpArray;
     }
 
-    public static String insertGetRfqsForTargetCounterParty(String type, String requestId, String lenderName, int lenderNo) {
+    public static String insertGetRfqsForTargetCounterParty(String type, String userName, String requestId, String lenderName, int lenderNo) {
         Connection connection = null;
         Statement statement = null;
         String rfqsData = "";
@@ -466,7 +467,7 @@ public class DataServices {
 
             String sqlInsertRfqForTargetCounterParty = "insert into " + ConfigLoader.transactionTable +
                     " (type, lotNo, requestId, versionNo, lineNo, stockCode, borrowerName, borrowerQty, " +
-                    "borrowerStart, borrowerEnd, lenderNo, lenderName, timeStamp, price) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                    "borrowerStart, borrowerEnd, lenderNo, lenderName, timeStamp, price, updatedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             PreparedStatement preparedStatementInsert = connection.prepareStatement(sqlInsertRfqForTargetCounterParty);
 
             String timeStamp = Miscellaneous.getTimeStamp("transaction");
@@ -500,6 +501,7 @@ public class DataServices {
                 preparedStatementInsert.setString(12, lenderName); // lenderName
                 preparedStatementInsert.setString(13, timeStamp); // timeStamp
                 preparedStatementInsert.setInt(14, 0); // price
+                preparedStatementInsert.setString(15, userName); // userName
 
                 preparedStatementInsert.executeUpdate();
 
@@ -551,6 +553,8 @@ public class DataServices {
 
     }
 
+
+
     public static void getInsertRfqsIntoTargetCounterParty(String rfqData, String userName) {
         Connection connection = null;
         Statement statement = null;
@@ -570,7 +574,7 @@ public class DataServices {
 
             String sqlInsertRfqForTargetCounterParty = "insert into " + ConfigLoader.transactionTable +
                     " (type, lotNo, requestId, versionNo, lineNo, stockCode, borrowerName, borrowerQty, " +
-                    "borrowerStart, borrowerEnd, lenderNo, lenderName, timeStamp, price, lenderStatus, updatedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                    "borrowerStart, borrowerEnd, lenderNo, lenderName, timeStamp, price, status, updatedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             PreparedStatement preparedStatementInsert = connection.prepareStatement(sqlInsertRfqForTargetCounterParty);
 
             String timeStamp = Miscellaneous.getTimeStamp("transaction");
@@ -603,7 +607,7 @@ public class DataServices {
                         preparedStatementInsert.setString(12, tmpArray[12]); // lenderName
                         preparedStatementInsert.setString(13, timeStamp); // timeStamp
                         preparedStatementInsert.setInt(14, 0); // price
-                        preparedStatementInsert.setString(15, "YET"); // price
+                        preparedStatementInsert.setString(15, "YET"); // status
                         preparedStatementInsert.setString(16, userName); // userName
                         preparedStatementInsert.executeUpdate();
                         countItem = 1;
@@ -683,7 +687,6 @@ public class DataServices {
                         resultSet.getString("borrowerEnd"),
                         resultSet.getDouble("borrowerRate"),
                         resultSet.getString("borrowerCondition"),
-                        resultSet.getString("borrowerStatus"),
                         resultSet.getInt("lenderNo"),
                         resultSet.getString("lenderName"),
                         resultSet.getInt("lenderQty"),
@@ -691,7 +694,8 @@ public class DataServices {
                         resultSet.getString("lenderEnd"),
                         resultSet.getDouble("lenderRate"),
                         resultSet.getString("lenderCondition"),
-                        resultSet.getString("lenderStatus"),
+                        resultSet.getInt("price"),
+                        resultSet.getString("status"),
                         resultSet.getString("timeStamp"),
                         resultSet.getString("updatedBy")
 
@@ -727,7 +731,7 @@ public class DataServices {
     }
 
 
-    public ArrayList<ReceivedRfq> getReceivedRfqs(String lenderStatus) {
+    public ArrayList<ReceivedRfq> getReceivedRfqs(String status) {
 
         Connection connection = null;
         Statement statement = null;
@@ -738,11 +742,11 @@ public class DataServices {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sqlSelectReceivedRfqs = "SELECT * FROM " + ConfigLoader.transactionTable + " WHERE type=? AND lenderStatus=?";
+            String sqlSelectReceivedRfqs = "SELECT * FROM " + ConfigLoader.transactionTable + " WHERE type=? AND status=?";
 //            ResultSet resultSet = statement.executeQuery(sql);
             PreparedStatement preStatementSelect = connection.prepareStatement(sqlSelectReceivedRfqs);
             preStatementSelect.setString(1, "QUO");
-            preStatementSelect.setString(2, lenderStatus);
+            preStatementSelect.setString(2, status);
 //            preStatementSelect.setString(2, requestId);
             ResultSet resultSet = preStatementSelect.executeQuery();
 
@@ -762,7 +766,6 @@ public class DataServices {
                         resultSet.getString("borrowerEnd"),
                         resultSet.getDouble("borrowerRate"),
                         resultSet.getString("borrowerCondition"),
-                        resultSet.getString("borrowerStatus"),
                         resultSet.getInt("lenderNo"),
                         resultSet.getString("lenderName"),
                         resultSet.getInt("lenderQty"),
@@ -770,8 +773,8 @@ public class DataServices {
                         resultSet.getString("lenderEnd"),
                         resultSet.getDouble("lenderRate"),
                         resultSet.getString("lenderCondition"),
-                        resultSet.getString("lenderStatus"),
                         resultSet.getInt("price"),
+                        resultSet.getString("status"),
                         resultSet.getString("timeStamp"),
                         resultSet.getString("updatedBy")
 
@@ -816,7 +819,7 @@ public class DataServices {
             connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
-            String sqlListTargetBorrowers = "select borrowerName from " + ConfigLoader.transactionTable + " where type='QUO' AND (lenderStatus='NEW' OR lenderStatus='UPDATE') GROUP By borrowerName";
+            String sqlListTargetBorrowers = "select borrowerName from " + ConfigLoader.transactionTable + " where type='QUO' AND (status='NEW' OR status='UPDATE') GROUP By borrowerName";
             ResultSet borrowerList = statement.executeQuery(sqlListTargetBorrowers);
             while (borrowerList.next()) {
                 String listBorrowerName = borrowerList.getString("borrowerName");
@@ -863,7 +866,7 @@ public class DataServices {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sqlSelectQuoteToBorrower = "select * from " + ConfigLoader.transactionTable + " where type='QUO' AND (lenderStatus='NEW' OR lenderStatus='UPDATE') AND borrowerName=?";
+            String sqlSelectQuoteToBorrower = "select * from " + ConfigLoader.transactionTable + " where type='QUO' AND (status='NEW' OR status='UPDATE') AND borrowerName=?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectQuoteToBorrower);
             preparedStatement.setString(1, borrowerName);
             ResultSet quotesForBorrower = preparedStatement.executeQuery();
@@ -884,7 +887,6 @@ public class DataServices {
                         quotesForBorrower.getString("borrowerEnd"),
                         quotesForBorrower.getDouble("borrowerRate"),
                         quotesForBorrower.getString("borrowerCondition"),
-                        quotesForBorrower.getString("borrowerStatus"),
                         quotesForBorrower.getInt("lenderNo"),
                         quotesForBorrower.getString("lenderName"),
                         quotesForBorrower.getInt("lenderQty"),
@@ -892,9 +894,9 @@ public class DataServices {
                         quotesForBorrower.getString("lenderEnd"),
                         quotesForBorrower.getDouble("lenderRate"),
                         quotesForBorrower.getString("lenderCondition"),
-//                        quotesForBorrower.getString("lenderStatus"),
-                        toLenderStatus,
                         quotesForBorrower.getInt("price"),
+//                        quotesForBorrower.getString("status"),
+                        toLenderStatus,
                         quotesForBorrower.getString("timeStamp"),
                         quotesForBorrower.getString("updatedBy")
                 );
@@ -944,7 +946,7 @@ public class DataServices {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sqlSelectQuoteToBorrower = "select * from " + ConfigLoader.transactionTable + " where type='QUO' AND (lenderStatus=? OR lenderStatus='UPDATE') AND borrowerName=?";
+            String sqlSelectQuoteToBorrower = "select * from " + ConfigLoader.transactionTable + " where type='QUO' AND (status=? OR status='UPDATE') AND borrowerName=?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectQuoteToBorrower);
             preparedStatement.setString(1, fromLenderStatus);
             preparedStatement.setString(2, borrowerName);
@@ -963,7 +965,6 @@ public class DataServices {
                 quoteData += quotesForBorrower.getString("borrowerEnd") + ",";
                 quoteData += quotesForBorrower.getDouble("borrowerRate") + ",";
                 quoteData += quotesForBorrower.getString("borrowerCondition") + ",";
-                quoteData += quotesForBorrower.getString("borrowerStatus") + ",";
                 quoteData += quotesForBorrower.getInt("lenderNo") + ",";
                 quoteData += quotesForBorrower.getString("lenderName") + ",";
                 quoteData += quotesForBorrower.getInt("lenderQty") + ",";
@@ -971,9 +972,9 @@ public class DataServices {
                 quoteData += quotesForBorrower.getString("lenderEnd") + ",";
                 quoteData += quotesForBorrower.getDouble("lenderRate") + ",";
                 quoteData += quotesForBorrower.getString("lenderCondition") + ",";
-//                quoteData += quotesForBorrower.getString("lenderStatus") + ",";
-                quoteData += toLenderStatus + ",";
+//                quoteData += quotesForBorrower.getString("status") + ",";
                 quoteData += quotesForBorrower.getInt("price") + ",";
+                quoteData += toLenderStatus + ",";
                 quoteData += quotesForBorrower.getString("timeStamp") + ",";
                 quoteData += quotesForBorrower.getString("updatedBy");
                 quoteData += "\r";
