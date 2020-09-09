@@ -30,6 +30,7 @@ public class DataServices {
     private ArrayList<SendRfq> targetSendRfqs;
     private ArrayList<ReceivedRfq> targetReceivedRfqs;
     private ArrayList<SendQuote> targetSendingQuote;
+    private ArrayList<ViewRfqQuote> targetViewingRfqs;
 
 
     public static String getCounterPartyList() {
@@ -96,6 +97,57 @@ public class DataServices {
         }
         LOGGER.debug("DataServices.getCounterPartyList completed");
         return JOB_NAME + "Successful";
+    }
+
+    public static ArrayList<String> getRequestIdList() {
+
+//        Get Request ID List into the public static RequestID to list the options in Lender
+        final String JOB_NAME = "Request ID List Update: ";
+        final String COLUMN_REQUESTID_LIST = "requestId";
+
+        Connection connection = null;
+        Statement statement = null;
+
+        ArrayList<String> requestIdList = new ArrayList<String>();
+        try {
+            Class.forName("org.sqlite.JDBC");
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String sql = "select " + COLUMN_REQUESTID_LIST + " from " + ConfigLoader.transactionTable + " GROUP BY " + COLUMN_REQUESTID_LIST;
+
+            ResultSet rs = statement.executeQuery(sql);
+            while (rs.next()) {
+                requestIdList.add(rs.getString(COLUMN_REQUESTID_LIST));
+            }
+
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getRequestIdList.ClassException", e);
+        } catch (SQLException e) {
+            LOGGER.error("DataServices.getRequestIdList.SQLException", e);
+            e.printStackTrace();
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+
+            }
+        }
+        LOGGER.debug("DataServices.getRequestIdList completed");
+        return requestIdList;
     }
 
     public static String getExtRoomIdList() {
@@ -343,6 +395,64 @@ public class DataServices {
         return targetCreateRfqs;
     }
 
+    public ArrayList<ViewRfq> viewTargetRfqs() {
+
+        Connection connection = null;
+        Statement statement = null;
+        ArrayList<ViewRfq> targetViewRfqs = new ArrayList<>();
+        try {
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String sql = "SELECT requestId, type, lineNo, stockCode, borrowerQty, borrowerStart, borrowerEnd, lenderNo FROM "
+                    + ConfigLoader.transactionTable + " WHERE lenderNo=0;";
+            ResultSet resultSet = statement.executeQuery(sql);
+
+
+
+            while (resultSet.next()) {
+                ViewRfq newViewRfq = new ViewRfq(
+                        resultSet.getString("requestId"),
+                        resultSet.getString("type"),
+                        resultSet.getInt("lineNo"),
+                        resultSet.getString("stockCode"),
+                        resultSet.getInt("borrowerQty"),
+                        resultSet.getString("borrowerStart"),
+                        resultSet.getString("borrowerEnd"));
+                targetViewRfqs.add(newViewRfq);
+
+            }
+        }catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getTargetRfqs.ClassException", e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getTargetRfqs.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+
+            }
+        }
+        LOGGER.debug("DataServices.viewTargetRfqs Completed");
+        return targetViewRfqs;
+    }
+    
+    
     public static boolean deleteRfqsByRequestId(String requestId) {
         Connection connection = null;
         Statement statement = null;
@@ -1009,7 +1119,81 @@ public class DataServices {
         return quoteData;
     }
 
+    public ArrayList<ViewRfqQuote> viewRfqUpdatedByLender(String lenderName, String toLenderStatus) {
 
+        Connection connection = null;
+        Statement statement = null;
+
+        try {
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String sqlSelectRfqUpdatedByLender = "select * from " + ConfigLoader.transactionTable + " where lenderNo!=0";
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectRfqUpdatedByLender);
+            ResultSet rfqsUpdatedByLender = preparedStatement.executeQuery();
+
+            this.targetViewingRfqs = new ArrayList<>();
+
+            while (rfqsUpdatedByLender.next()) {
+                ViewRfqQuote newViewRfqQuote = new ViewRfqQuote(
+                        rfqsUpdatedByLender.getString("type"),
+                        rfqsUpdatedByLender.getInt("lotNo"),
+                        rfqsUpdatedByLender.getString("requestId"),
+                        rfqsUpdatedByLender.getInt("versionNo"),
+                        rfqsUpdatedByLender.getInt("lineNo"),
+                        rfqsUpdatedByLender.getString("stockCode"),
+                        rfqsUpdatedByLender.getString("borrowerName"),
+                        rfqsUpdatedByLender.getInt("borrowerQty"),
+                        rfqsUpdatedByLender.getString("borrowerStart"),
+                        rfqsUpdatedByLender.getString("borrowerEnd"),
+                        rfqsUpdatedByLender.getDouble("borrowerRate"),
+                        rfqsUpdatedByLender.getString("borrowerCondition"),
+                        rfqsUpdatedByLender.getInt("lenderNo"),
+                        rfqsUpdatedByLender.getString("lenderName"),
+                        rfqsUpdatedByLender.getInt("lenderQty"),
+                        rfqsUpdatedByLender.getString("lenderStart"),
+                        rfqsUpdatedByLender.getString("lenderEnd"),
+                        rfqsUpdatedByLender.getDouble("lenderRate"),
+                        rfqsUpdatedByLender.getString("lenderCondition"),
+                        rfqsUpdatedByLender.getInt("price"),
+                        rfqsUpdatedByLender.getString("status"),
+                        rfqsUpdatedByLender.getString("timeStamp"),
+                        rfqsUpdatedByLender.getString("updatedBy")
+                );
+                targetViewingRfqs.add(newViewRfqQuote);
+            }
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.viewRfqUpdatedByLender.ClassException", e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.viewRfqUpdatedByLender.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+
+            }
+
+        }
+        LOGGER.debug("DataServices.viewRfqUpdatedByLender completed");
+//        System.out.println("Size of Array=" + targetSendingQuote.size());
+        return targetViewingRfqs;
+    }
 
 
 }

@@ -165,6 +165,18 @@ public class MessageProcessor {
                         break;
                     }
 
+                    case "/viewrfq" : {
+                        if (Miscellaneous.checkRoomId(streamId)) {
+                            this.notifyNotInRoom(inboundMessage,"/submitquote");
+                            LOGGER.debug("/viewrfq executed from not proper room");
+
+                        } else {
+                            this.viewRfqUpdatedByLender(inboundMessage);
+                            LOGGER.debug("MessageProcessor.Commend=viewrfq evoked");
+                        }
+                        break;
+                    }
+
 
                     default: {
                         this.notifyNotUnderStandCommand(inboundMessage);
@@ -196,6 +208,13 @@ public class MessageProcessor {
         OutboundMessage messageOut = MessageSender.getInstance().buildCreateQuoteFormMessage(botId, userId, userName, "", ConfigLoader.myCounterPartyName, lenderStatus, csvFilePath, true);
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.createQuoteForm executed");
+    }
+    public void viewRfqUpdatedByLender(InboundMessage inboundMessage) {
+        String csvFilePath = DataExports.exportRfqsUpdatedByLender("","");
+        String userName = inboundMessage.getUser().getDisplayName();
+        OutboundMessage messageOut = MessageSender.getInstance().buildViewRfqFormMessage(userName, "", "", "", csvFilePath);
+        MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
+        LOGGER.debug("MessageProcessor.viewRfqUpdatedByLender executed");
     }
 
     public void submitQuoteForm(InboundMessage inboundMessage, String lenderStatus) {

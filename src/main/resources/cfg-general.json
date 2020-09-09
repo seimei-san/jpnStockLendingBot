@@ -1,5 +1,5 @@
 {
-  "env": "dev",
+  "env": "prod",
   "maxCounterParty": 5,
   "maxRfqDay": 99,
   "maxIoiDay": 99,

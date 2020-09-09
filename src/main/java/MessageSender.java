@@ -523,12 +523,12 @@ public class MessageSender {
                         "<p>チャットボット「@" + botUserInfo.getDisplayName() + "」に続けて以下の命令を指定してメッセージを送ってください。</p>" +
                         "<br/>" +
                         "<p style=\"color:#0000FF;\"> ============= 業務関連用の命令 ==============</p>" +
-                        "<p><b>/createrfq</b>：   [借手用] 新規RFQ（見積依頼）の作成</p>" +
-                        "<p><b>/quoterfq</b>：    [貸手用] RFQ（見積依頼）への見積回答</p>" +
-                        "<p><b>/viewrfq</b>：     [借手用] RFQ（見積依頼）とQUOTE（見積回答）の状況を表示</p>" +
-                        "<p><b>/createioi</b>：   [貸手用] 新規IOI（貸株掲示）の作成</p>" +
-                        "<p><b>/responseioi</b>： [借手用] 新規IOI（貸株掲示）への回答</p>" +
-                        "<p><b>/createroll</b>：  [貸手用] 貸出中の株式を借手に確認</p>" +
+                        "<p><b>/newrfq</b>：   [借手用] 新規RFQ（見積依頼）の作成</p>" +
+                        "<p><b>/newrfq</b>：   [貸手用] RFQ（見積依頼）への見積回答</p>" +
+                        "<p><b>/viewrfq</b>：  [借手用] RFQ（見積依頼）とQUOTE（見積回答）の状況を表示</p>" +
+                        "<p><b>/newioi</b>：   [貸手用] 新規IOI（貸株掲示）の作成</p>" +
+                        "<p><b>/replyioi</b>： [借手用] 新規IOI（貸株掲示）への回答</p>" +
+                        "<p><b>/newroll</b>：  [貸手用] 貸出中の株式を借手に確認</p>" +
                         "<br/>" +
                         "<p style=\"color:#FF0000;\">======= チャットボットメンテナンス用の命令 =======</p>" +
                         "<p><b>/initializesod</b>： 日次業務開始前の初期化</p>" +
@@ -644,7 +644,273 @@ public class MessageSender {
         return messageOut;
     }
 
-    
+
+//  ===========================================================================================================
+//  ===========================================================================================================
+//  ===========================================================================================================
+//  ===========================================================================================================
+//  ================= Viewing RFQ updated by Lenders and providing the decision to Lenders ====================
+//  ===========================================================================================================
+//  ===========================================================================================================
+//  ===========================================================================================================
+//  ===========================================================================================================
+
+    public OutboundMessage buildViewRfqFormMessage(String userName, String borrowerName, String lenderName, String status, String csvFullPath) {
+
+        String message;
+        StringBuilder messageOptionsForLenders = new StringBuilder();
+        StringBuilder messageOptionsForRequestId = new StringBuilder();
+        for (int i = 0; DataServices.counterPartiesList.length > i; i++) {
+            messageOptionsForLenders.append("<option value=\"").append(DataServices.counterPartiesList[i]).append("\">").append(DataServices.counterPartiesList[i]).append("</option>");
+        }
+        for (String requestId : DataServices.getRequestIdList()) {
+            messageOptionsForRequestId.append("<option value=\"").append(requestId).append("\">").append(requestId).append("</option>");
+        }
+
+        message =
+            "<h4>担当者： " + userName + "</h4>" +
+            "<br/>";
+        message +=
+                "<div style=\"display: flex;\">";
+        // div for top left vvvvvvvvvvv
+        // div for top left vvvvvvvvvvv
+        // div for top left vvvvvvvvvvv
+        message +=
+                "<div style=\"width:35%;\">";
+        message +=
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--purple\">RFQの表示</h3>";
+
+        message +=
+                "<table style='table-layout:fixed;width:550px'>" +
+                        "<thead>" +
+                        "<tr>" +
+                        "<td style='width:4%;font-weight:bold'>種別</td>" +
+    //                        "<td style='width:6%;font-weight:bold'>依頼元</td>" +
+                        "<td style='width:5%;font-weight:bold'>銘柄</td>" +
+                            "<td style='width:6%;font-weight:bold'>株数</td>" +
+                            "<td style='width:6%;font-weight:bold'>開始日</td>" +
+                            "<td style='width:8%;font-weight:bold'>返却日/期間</td>" +
+//                        "<td style='width:6%;font-weight:bold'>依頼先</td>" +
+                        "<td style='width:7%;font-weight:bold'>依頼番号</td>" +
+                        "<td style='width:3%;font-weight:bold'>行番</td>" +
+//                        "<td style='width:7%;font-weight:bold'>見積株数</td>" +
+//                        "<td style='width:6%;font-weight:bold'>見積開始</td>" +
+//                        "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
+//                        "<td style='width:6%;font-weight:bold'>見積利率</td>" +
+//                        "<td style='width:7%;font-weight:bold'>見積条件</td>" +
+//                        "<td style='width:5%;font-weight:bold'>価格</td>" +
+//                        "<td style='width:4%;font-weight:bold'>状況</td>" +
+                        "</tr>" +
+                        "</thead>" +
+                        "<tbody>";
+
+
+
+        DataServices dataServices = DataServices.getInstance();
+        int totalQtyborrower = 0;
+        for (ViewRfq viewRfq : dataServices.viewTargetRfqs()) {
+            totalQtyborrower += viewRfq.getBorrowerQty();
+
+            message +=
+                    "<tr>" +
+                        "<td>" + viewRfq.getType() + "</td>" +
+//                        "<td class='tempo-text-color--green'>" + viewRfqQuote.getBorrowerName() + "</td>" +
+                        "<td>" + viewRfq.getStockCode() + "</td>" +
+                        "<td style='text-align:right'>" + String.format("%,d", viewRfq.getBorrowerQty()) + "</td>" +
+                        "<td>" + viewRfq.getBorrowerStart() + "</td>" +
+                        "<td>" + viewRfq.getBorrowerEnd() + "</td>" +
+//                            "<td class='tempo-text-color--blue'>" + viewRfqQuote.getLenderName() + "</td>" +
+                        "<td >" + viewRfq.getRequestId() + "</td>" +
+                        "<td style='text-align:right'>" + viewRfq.getLineNo() + "</td>" +
+//                            "<td style='text-align:right'>" + String.format("%,d", viewRfqQuote.getLenderQty()) + "</td>" +
+//                            "<td>" + viewRfqQuote.getLenderStart() + "</td>" +
+//                            "<td>" + viewRfqQuote.getLenderEnd() + "</td>" +
+//                            "<td style='text-align:right'>" + viewRfqQuote.getLenderRate() + "</td>" +
+//                            "<td>" + viewRfqQuote.getLenderCondition() + "</td>" +
+//                            "<td style='text-align:right'>" + String.format("%,d", viewRfqQuote.getPrice()) + "</td>" +
+//                            "<td>" + viewRfqQuote.getStatus() + "</td>" +
+                    "</tr>";
+        }
+
+        message +=
+                "</tbody>" +
+                        "<tfoot>" +
+                        "<tr>" +
+                        "<td></td>" +
+//                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計：</td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+//                        "<td></td>" +
+                        "<td></td>" +
+//                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+//                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
+//                        "<td></td>" +
+//                        "<td></td>" +
+//                        "<td></td>" +
+//                        "<td></td>" +
+                        "</tr>" +
+                        "</tfoot>" +
+                        "</table>" +
+
+                "</div>";
+        // div for top left ^^^^^^^^^^^^
+        // div for top left ^^^^^^^^^^^^
+        // div for top left ^^^^^^^^^^^^
+
+        // div for top right vvvvvvvvvv
+        // div for top right vvvvvvvvvv
+        // div for top right vvvvvvvvvv
+        message +=
+                "<div style=\"width:65%;\">";
+        message +=
+                "<h3 class=\"tempo-text-color--black tempo-bg-color--yellow\">QUOTEの表示</h3>";
+        message +=
+                "<table style='table-layout:fixed;width:1000px' class='tempo-ui--background'>" +
+                    "<thead>" +
+                    "<tr>" +
+                        "<td style='width:4%;font-weight:bold'>種別</td>" +
+//                        "<td style='width:6%;font-weight:bold'>依頼元</td>" +
+                        "<td style='width:5%;font-weight:bold'>銘柄</td>" +
+//                        "<td style='width:8%;font-weight:bold'>株数</td>" +
+//                        "<td style='width:6%;font-weight:bold'>開始日</td>" +
+//                        "<td style='width:7%;font-weight:bold'>返却日/期間</td>" +
+                        "<td style='width:6%;font-weight:bold'>依頼先</td>" +
+                        "<td style='width:8%;font-weight:bold'>依頼番号</td>" +
+                        "<td style='width:3%;font-weight:bold'>行番</td>" +
+                        "<td style='width:7%;font-weight:bold'>見積株数</td>" +
+                        "<td style='width:6%;font-weight:bold'>見積開始</td>" +
+                        "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
+                        "<td style='width:6%;font-weight:bold'>見積利率</td>" +
+                        "<td style='width:7%;font-weight:bold'>見積条件</td>" +
+                        "<td style='width:5%;font-weight:bold'>価格</td>" +
+                        "<td style='width:4%;font-weight:bold'>状況</td>" +
+                    "</tr>" +
+                    "</thead>" +
+                    "<tbody>";
+
+
+
+//        DataServices dataServices = DataServices.getInstance();
+        int totalQtylender = 0;
+        for (ViewRfqQuote viewRfqQuote : dataServices.viewRfqUpdatedByLender(lenderName, "SEND")) {
+            totalQtyborrower += viewRfqQuote.getBorrowerQty();
+            totalQtylender += viewRfqQuote.getLenderQty();
+
+            message +=
+                    "<tr>" +
+                        "<td>" + viewRfqQuote.getType() + "</td>" +
+//                        "<td class='tempo-text-color--green'>" + viewRfqQuote.getBorrowerName() + "</td>" +
+                        "<td>" + viewRfqQuote.getStockCode() + "</td>" +
+//                        "<td style='text-align:right'>" + String.format("%,d", viewRfqQuote.getBorrowerQty()) + "</td>" +
+//                        "<td>" + viewRfqQuote.getBorrowerStart() + "</td>" +
+//                        "<td>" + viewRfqQuote.getBorrowerEnd() + "</td>" +
+                        "<td class='tempo-text-color--blue'>" + viewRfqQuote.getLenderName() + "</td>" +
+                        "<td >" + viewRfqQuote.getRequestId() + "</td>" +
+                        "<td style='text-align:right'>" + viewRfqQuote.getLineNo() + "</td>" +
+                        "<td style='text-align:right'>" + String.format("%,d", viewRfqQuote.getLenderQty()) + "</td>" +
+                        "<td>" + viewRfqQuote.getLenderStart() + "</td>" +
+                        "<td>" + viewRfqQuote.getLenderEnd() + "</td>" +
+                        "<td style='text-align:right'>" + viewRfqQuote.getLenderRate() + "</td>" +
+                        "<td>" + viewRfqQuote.getLenderCondition() + "</td>" +
+                        "<td style='text-align:right'>" + String.format("%,d", viewRfqQuote.getPrice()) + "</td>" +
+                        "<td>" + viewRfqQuote.getStatus() + "</td>" +
+                    "</tr>";
+        }
+
+        message +=
+                "</tbody>" +
+                "<tfoot>" +
+                    "<tr>" +
+                        "<td></td>" +
+//                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'></td>" +
+//                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
+//                        "<td></td>" +
+//                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                    "</tr>" +
+                "</tfoot>" +
+                "</table>" +
+                "<br/>" +
+            "</div>";
+        // div for top right ^^^^^^^^^
+        // div for top right ^^^^^^^^^
+        // div for top right ^^^^^^^^^
+
+        message +=
+            "</div>";
+
+
+
+//      Lower Section ==================================
+//      Lower Section ==================================
+//      Lower Section ==================================
+        message +=
+                "<div style=\"display: flex;\">";
+
+
+
+//      Div in Left Bottom ============
+//      Div in Left Bottom ============
+//      Div in Left Bottom ============
+        message +=
+                "<div style=\"width:50%;\">";
+
+        message +=
+                "<form id=\"receive-quote-form\">";
+
+
+        message +=
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">借手の確認作業</h3>" +
+                        "<br/>";
+        message +=
+                "<select name=\"lender-select\" required=\"false\" data-placeholder=\"貸手を選択\">";
+        message += messageOptionsForLenders;
+        message +=
+                "</select>";
+        message +=
+                "<select name=\"request-id-select\" required=\"false\" data-placeholder=\"依頼番号を選択\">";
+        message += messageOptionsForRequestId;
+        message +=
+                "</select>";
+        message +=
+
+//                "<button type=\"action\" name=\"reject-quote-button\">却下</button>" +
+                        "<button type=\"action\" name=\"refresh-rfq-button\">再表示</button>" +
+                        "</form>";
+        message +=
+                "</div>" ;
+
+//       Div in Right Bottom
+        message +=
+                "<br/>" +
+                "<div style=\"width:50%;\">"+
+        "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">借手の意志決定</h3>" ;
+
+
+
+        message +=
+                "</div>"+
+            "</div>";
+
+
+        OutboundMessage messageOut = new OutboundMessage();
+        messageOut.setAttachment(new File(csvFullPath));
+        messageOut.setMessage(message);
+        LOGGER.debug("buildViewRfqFormMessage returned");
+        return messageOut;
+    }
+
+
     
 //    ================================ Lender Side Forms =======================================
 //    ================================ Lender Side Forms =======================================
