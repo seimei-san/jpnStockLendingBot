@@ -11,24 +11,26 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 
 import static org.glassfish.jersey.internal.guava.Lists.*;
 
 public class test {
 //    private Arraylist<> rfqs;
-    private SymBotClient botClient;
+//    private SymBotClient botClient;
     public static void main(String[] args) {
-
-        System.out.println(ConfigLoader.loadConfig());
-//        System.out.println(ConfigLoader.transactionSchema);
-//        System.out.println(ConfigLoader.isInitialized);
-
-//        System.out.println(DataBackup.backupTables(ConfigLoader.counterPartyTable));
-//        System.out.println(DataBackup.backupTables(ConfigLoader.transactionTable));
-        System.out.println(DataInitialize.initializeTables());
+//
+//        System.out.println(ConfigLoader.loadConfig());
+////        System.out.println(ConfigLoader.transactionSchema);
+////        System.out.println(ConfigLoader.isInitialized);
+//
+////        System.out.println(DataBackup.backupTables(ConfigLoader.counterPartyTable));
+////        System.out.println(DataBackup.backupTables(ConfigLoader.transactionTable));
+//        System.out.println(DataInitialize.initializeTables());
 //        System.out.println(DataImport.importCsv(ConfigLoader.counterPartyTable));
 //        System.out.println(DataServices.getCounterPartyList());
 //
@@ -206,10 +208,11 @@ public class test {
 //            }
 //
 //
-//
+
 //        }
 
     }
+
 
 }
 

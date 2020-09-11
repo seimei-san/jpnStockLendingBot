@@ -227,7 +227,7 @@ public class DataExports {
         }
     }
 
-    public static String exportRfqsUpdatedByLender(String lenderName, String status) {
+    public static String exportRfqsUpdatedByLender(String requestId, String lenderName, String status) {
         String fileFullPath = "";
         Connection connection = null;
         Statement statement = null;
@@ -240,12 +240,24 @@ public class DataExports {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
+            String sqlSuffix = "";
+
+            if (requestId!=null && requestId!="") {
+                sqlSuffix = " AND requestId='" + requestId + "'";
+            }
+            if (lenderName!=null && lenderName!="") {
+                sqlSuffix += " AND lenderName='" + lenderName + "'";
+            }
+            if (status!=null && status!="") {
+                sqlSuffix += " AND status='" + status + "'";
+            }
+
 
             String sqlCollectRfqsUpdatedByLender =
                     "SELECT type as 種別, borrowerName as 依頼元, stockCode as 銘柄, borrowerQty as 依頼数,  borrowerStart as 開始日, borrowerEnd as 終了期間, " +
                             "lenderName as 依頼先_C, requestId as 依頼番号_c, lineNo as 行番_c, lenderQty as 可能数_c, lenderStart as 可能開始_c, " +
                             "lenderEnd as 可能終了_c, lenderRate as 利率_c, lenderCondition as 条件_c, price as 価格_c, status as 状況_c FROM " +
-                            ConfigLoader.transactionTable + " WHERE lenderNo!=0";
+                            ConfigLoader.transactionTable + " WHERE lenderNo!=0" + sqlSuffix;
             PreparedStatement preparedStatement = connection.prepareStatement(sqlCollectRfqsUpdatedByLender);
 //            preparedStatement.setString(1, status);
 
@@ -254,7 +266,7 @@ public class DataExports {
 
             if (!exportDir.exists()) exportDir.mkdirs();
 
-            String exportCsvName = lenderName + "_" + Miscellaneous.getTimeStamp("fileName") + ".csv";
+            String exportCsvName = "RFQ_" + Miscellaneous.getTimeStamp("fileName") + ".csv";
             fileFullPath = exportDir.toString() + File.separator + exportCsvName;
 
             try {

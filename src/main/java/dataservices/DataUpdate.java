@@ -212,6 +212,69 @@ public class DataUpdate {
 
     }
 
+//    ================ working ===================
+//    ================ working ===================
+//    ================ working ===================
+//    ================ working ===================
+//    ================ working ===================
+public static boolean updateSelection (String userName, String lenderName, String requestId, int lineNo, String status) {
+    Connection connection = null;
+    Statement statement = null;
+    boolean result = true;
+    try {
+        Class.forName("org.sqlite.JDBC");
+
+        connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+        statement = connection.createStatement();
+        statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+        String timeStamp = Miscellaneous.getTimeStamp("transaction");
+
+        String sql = "UPDATE " + ConfigLoader.transactionTable +
+                " SET status=?, timeStamp=?, updatedBy=? WHERE lenderName=? AND requestId=? AND lineNo=?";
+        PreparedStatement preStatementSelect = connection.prepareStatement(sql);
+        preStatementSelect.setString(1, status);
+        preStatementSelect.setString(2, timeStamp);
+        preStatementSelect.setString(3, userName);
+        preStatementSelect.setString(4, lenderName);
+        preStatementSelect.setString(5, requestId);
+        preStatementSelect.setInt(6, lineNo);
+
+        preStatementSelect.executeUpdate();
+
+        LOGGER.debug("DataUpdate.updateSelection completed");
+
+    }catch (ClassNotFoundException e) {
+        e.printStackTrace();
+        result = false;
+        LOGGER.error("DataUpdate.updateSelection.ClassException", e);
+    } catch (SQLException e) {
+        LOGGER.error("DataUpdate.updateSelection.SQLException", e);
+        result = false;
+        e.printStackTrace();
+    } finally {
+        try {
+            if (statement != null) {
+                statement.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    return result;
+}
+
+//    ================ working ===================
+//    ================ working ===================
+//    ================ working ===================
+
     public static boolean updateQuote (String userName, String fromStatus, String lenderName, String requestId,
                                        int lineNo, int lenderQty, String lenderStart, String lenderEnd, double lenderRate,
                                        String lenderCondition, int price, String toStatus) {

@@ -395,7 +395,7 @@ public class DataServices {
         return targetCreateRfqs;
     }
 
-    public ArrayList<ViewRfq> viewTargetRfqs() {
+    public ArrayList<ViewRfq> viewTargetRfqs(String requestId) {
 
         Connection connection = null;
         Statement statement = null;
@@ -407,11 +407,14 @@ public class DataServices {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
+            String sqlSuffix = "";
+            if (requestId!=null && !requestId.equals("")) {
+                sqlSuffix = " AND requestId='" + requestId + "'";
+            }
+
             String sql = "SELECT requestId, type, lineNo, stockCode, borrowerQty, borrowerStart, borrowerEnd, lenderNo FROM "
-                    + ConfigLoader.transactionTable + " WHERE lenderNo=0;";
+                    + ConfigLoader.transactionTable + " WHERE lenderNo=0" + sqlSuffix;
             ResultSet resultSet = statement.executeQuery(sql);
-
-
 
             while (resultSet.next()) {
                 ViewRfq newViewRfq = new ViewRfq(
@@ -1119,19 +1122,31 @@ public class DataServices {
         return quoteData;
     }
 
-    public ArrayList<ViewRfqQuote> viewRfqUpdatedByLender(String lenderName, String toLenderStatus) {
+    public ArrayList<ViewRfqQuote> viewRfqUpdatedByLender(String requestId, String lenderName, String status) {
 
         Connection connection = null;
         Statement statement = null;
 
+
         try {
             Class.forName("org.sqlite.JDBC");
+
+            String sqlSuffix = "";
+            if (requestId!=null && !requestId.equals("")) {
+                sqlSuffix = " AND requestId='" + requestId + "'";
+            }
+            if (lenderName!=null && !lenderName.equals("")) {
+                sqlSuffix += " AND lenderName='" + lenderName + "'";
+            }
+            if (status!=null && !status.equals("")) {
+                sqlSuffix += " AND status='" + status + "'";
+            }
 
             connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sqlSelectRfqUpdatedByLender = "select * from " + ConfigLoader.transactionTable + " where lenderNo!=0";
+            String sqlSelectRfqUpdatedByLender = "select * from " + ConfigLoader.transactionTable + " where lenderNo!=0" + sqlSuffix;
             PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectRfqUpdatedByLender);
             ResultSet rfqsUpdatedByLender = preparedStatement.executeQuery();
 

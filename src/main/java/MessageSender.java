@@ -1,4 +1,5 @@
 import clients.SymBotClient;
+import com.sun.org.apache.bcel.internal.generic.NEW;
 import dataservices.*;
 import model.OutboundMessage;
 import model.UserInfo;
@@ -122,7 +123,7 @@ public class MessageSender {
                     "<thead>" +
                         "<tr>" +
                             "<td style='width:5%;font-weight:bold'>種別</td>" +
-                            "<td style='width:5%;font-weight:bold'>行番</td>" +
+                            "<td style='width:5%;font-weight:bold'>枝番</td>" +
                             "<td style='width:10%;font-weight:bold'>銘柄</td>" +
                             "<td style='width:15%;font-weight:bold'>株数</td>" +
                             "<td style='width:10%;font-weight:bold'>開始日</td>" +
@@ -322,7 +323,7 @@ public class MessageSender {
                         "<tr>" +
                         "<td style='width:5%;font-weight:bold'>種別</td>" +
                         "<td style='width:7%;font-weight:bold'>依頼元</td>" +
-                        "<td style='width:4%;font-weight:bold'>行番</td>" +
+                        "<td style='width:4%;font-weight:bold'>枝番</td>" +
                         "<td style='width:6%;font-weight:bold'>銘柄</td>" +
                         "<td style='width:9%;font-weight:bold'>株数</td>" +
                         "<td style='width:8%;font-weight:bold'>開始日</td>" +
@@ -655,7 +656,7 @@ public class MessageSender {
 //  ===========================================================================================================
 //  ===========================================================================================================
 
-    public OutboundMessage buildViewRfqFormMessage(String userName, String borrowerName, String lenderName, String status, String csvFullPath) {
+    public OutboundMessage buildViewRfqFormMessage(String userName, String requestId, String borrowerName, String lenderName, String status, String csvFullPath, boolean isSelected) {
 
         String message;
         StringBuilder messageOptionsForLenders = new StringBuilder();
@@ -663,8 +664,8 @@ public class MessageSender {
         for (int i = 0; DataServices.counterPartiesList.length > i; i++) {
             messageOptionsForLenders.append("<option value=\"").append(DataServices.counterPartiesList[i]).append("\">").append(DataServices.counterPartiesList[i]).append("</option>");
         }
-        for (String requestId : DataServices.getRequestIdList()) {
-            messageOptionsForRequestId.append("<option value=\"").append(requestId).append("\">").append(requestId).append("</option>");
+        for (String optionRequestId : DataServices.getRequestIdList()) {
+            messageOptionsForRequestId.append("<option value=\"").append(optionRequestId).append("\">").append(optionRequestId).append("</option>");
         }
 
         message =
@@ -692,7 +693,7 @@ public class MessageSender {
                             "<td style='width:8%;font-weight:bold'>返却日/期間</td>" +
 //                        "<td style='width:6%;font-weight:bold'>依頼先</td>" +
                         "<td style='width:7%;font-weight:bold'>依頼番号</td>" +
-                        "<td style='width:3%;font-weight:bold'>行番</td>" +
+                        "<td style='width:3%;font-weight:bold'>枝番</td>" +
 //                        "<td style='width:7%;font-weight:bold'>見積株数</td>" +
 //                        "<td style='width:6%;font-weight:bold'>見積開始</td>" +
 //                        "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
@@ -708,7 +709,7 @@ public class MessageSender {
 
         DataServices dataServices = DataServices.getInstance();
         int totalQtyborrower = 0;
-        for (ViewRfq viewRfq : dataServices.viewTargetRfqs()) {
+        for (ViewRfq viewRfq : dataServices.viewTargetRfqs(requestId)) {
             totalQtyborrower += viewRfq.getBorrowerQty();
 
             message +=
@@ -770,7 +771,7 @@ public class MessageSender {
                 "<table style='table-layout:fixed;width:1000px' class='tempo-ui--background'>" +
                     "<thead>" +
                     "<tr>" +
-                        "<td style='width:4%;font-weight:bold'>種別</td>" +
+//                        "<td style='width:4%;font-weight:bold'>種別</td>" +
 //                        "<td style='width:6%;font-weight:bold'>依頼元</td>" +
                         "<td style='width:5%;font-weight:bold'>銘柄</td>" +
 //                        "<td style='width:8%;font-weight:bold'>株数</td>" +
@@ -778,14 +779,14 @@ public class MessageSender {
 //                        "<td style='width:7%;font-weight:bold'>返却日/期間</td>" +
                         "<td style='width:6%;font-weight:bold'>依頼先</td>" +
                         "<td style='width:8%;font-weight:bold'>依頼番号</td>" +
-                        "<td style='width:3%;font-weight:bold'>行番</td>" +
+                        "<td style='width:3%;font-weight:bold'>枝番</td>" +
                         "<td style='width:7%;font-weight:bold'>見積株数</td>" +
                         "<td style='width:6%;font-weight:bold'>見積開始</td>" +
                         "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
-                        "<td style='width:6%;font-weight:bold'>見積利率</td>" +
+                        "<td style='width:5%;font-weight:bold'>見積利率</td>" +
                         "<td style='width:7%;font-weight:bold'>見積条件</td>" +
-                        "<td style='width:5%;font-weight:bold'>価格</td>" +
-                        "<td style='width:4%;font-weight:bold'>状況</td>" +
+                        "<td style='width:4%;font-weight:bold'>価格</td>" +
+                        "<td style='width:6%;font-weight:bold'>状況</td>" +
                     "</tr>" +
                     "</thead>" +
                     "<tbody>";
@@ -794,13 +795,13 @@ public class MessageSender {
 
 //        DataServices dataServices = DataServices.getInstance();
         int totalQtylender = 0;
-        for (ViewRfqQuote viewRfqQuote : dataServices.viewRfqUpdatedByLender(lenderName, "SEND")) {
+        for (ViewRfqQuote viewRfqQuote : dataServices.viewRfqUpdatedByLender(requestId, lenderName, status)) {
             totalQtyborrower += viewRfqQuote.getBorrowerQty();
             totalQtylender += viewRfqQuote.getLenderQty();
 
             message +=
                     "<tr>" +
-                        "<td>" + viewRfqQuote.getType() + "</td>" +
+//                        "<td>" + viewRfqQuote.getType() + "</td>" +
 //                        "<td class='tempo-text-color--green'>" + viewRfqQuote.getBorrowerName() + "</td>" +
                         "<td>" + viewRfqQuote.getStockCode() + "</td>" +
 //                        "<td style='text-align:right'>" + String.format("%,d", viewRfqQuote.getBorrowerQty()) + "</td>" +
@@ -823,7 +824,7 @@ public class MessageSender {
                 "</tbody>" +
                 "<tfoot>" +
                     "<tr>" +
-                        "<td></td>" +
+//                        "<td></td>" +
 //                        "<td></td>" +
                         "<td style='text-align:right;font-weight:bold'></td>" +
 //                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
@@ -866,40 +867,106 @@ public class MessageSender {
                 "<div style=\"width:50%;\">";
 
         message +=
-                "<form id=\"receive-quote-form\">";
-
+                "<form id=\"view-quote-form\">";
 
         message +=
                 "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">借手の確認作業</h3>" +
-                        "<br/>";
+                "<h3>QUOTEのデータの絞り込み</h3>" +
+                "<br/>";
         message +=
                 "<select name=\"lender-select\" required=\"false\" data-placeholder=\"貸手を選択\">";
         message += messageOptionsForLenders;
         message +=
                 "</select>";
+
         message +=
                 "<select name=\"request-id-select\" required=\"false\" data-placeholder=\"依頼番号を選択\">";
         message += messageOptionsForRequestId;
         message +=
                 "</select>";
-        message +=
 
+        message +=
+                "<select name=\"status-select\" required=\"false\" data-placeholder=\"状況を選択\">";
+        message +=
+                "<option value=\"NEW\">NEW</option><option value=\"REJECT\">REJECT</option><option value=\"SELECT\">SELECT</option><option value=\"DONE\">DONE</option>";
+        message +=
+                "</select>";
+
+        message +=
 //                "<button type=\"action\" name=\"reject-quote-button\">却下</button>" +
-                        "<button type=\"action\" name=\"refresh-rfq-button\">再表示</button>" +
-                        "</form>";
+                "<button type=\"action\" name=\"refresh-rfq-button\">再表示</button>" +
+                "</form>";
         message +=
                 "</div>" ;
 
-//       Div in Right Bottom
+//       Div in Right Bottom  -------------------
+//       Div in Right Bottom  -------------------
+//       Div in Right Bottom  -------------------
+        if (isSelected) {
+            message +=
+                    "<br/>" +
+                            "<div style=\"width:50%;\">"+
+                            "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">意志決定の送信</h3>" +
+                            "<h5>[送信]を選択すると、状況＝SELECTのQUOTEが全てDONEとなります。</h5>" +
+                            "<h5>[取消]を選択すると、状況＝SELECTのQUOTEが全てNEWとなります。</h5>" ;
+
+
+                    message +=
+                    "<form id=\"send-selection-form\">";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "<div style=\"display:none\">";
+            }
+            message +=
+                    "<p>botId: borrowerName: lenderName: userName: </p>" +
+//                        "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+//                        "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+//                        "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                            "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "</div>";
+            }
+            message +=
+                            "<button type=\"action\" name=\"cancel-selection-button\">取消</button><button type=\"action\" name=\"send-selection-button\">送信</button>";
+            message +=
+                    "</form>" +
+                            "</div>";
+
+
+
+        } else {
+            message +=
+                    "<br/>" +
+                            "<div style=\"width:50%;\">"+
+                            "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">借手の意志決定</h3>" ;
+
+            message +=
+                    "<form id=\"import-selection-form\">";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "<div style=\"display:none\">";
+            }
+            message +=
+                    "<p>botId: borrowerName: lenderName: userName: </p>" +
+//                        "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+//                        "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+//                        "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                            "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "</div>";
+            }
+
+            message +=
+                    "<h3>DONEのデータの入力</h3>" +
+                            "<br/>" +
+                            "<textarea name=\"inputSelection\" placeholder=\"ここにコピーしたDONEデータを貼付てください。 " +
+                            "&#13;" +
+                            "コピー範囲は、エクセルで開いたCSVファイルの先頭列（列名：種別）から最終列（列名：状況）を含めてください。\" required=\"false\"></textarea>" +
+                            "<button type=\"reset\">消去</button><button type=\"action\" name=\"import-selection-button\">取込</button><button type=\"action\" name=\"proceed-selection-button\">送信へ</button>";
+            message +=
+                    "</form>" +
+                            "</div>";
+        }
+
         message +=
-                "<br/>" +
-                "<div style=\"width:50%;\">"+
-        "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">借手の意志決定</h3>" ;
-
-
-
-        message +=
-                "</div>"+
             "</div>";
 
 
@@ -927,7 +994,6 @@ public class MessageSender {
     }
 
 
-
     public OutboundMessage buildCreateQuoteFormMessage(String botId, String userId, String userName, String borrowerName, String lenderName, String lenderStatus, String csvFullPath, boolean isNew) {
         String message;
         String titleForm;
@@ -940,8 +1006,6 @@ public class MessageSender {
 
         message =
                 "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">" + titleForm + "依頼者（一社／数社）← " + lenderName + "</h3>";
-
-
 
         message +=
                 "<h4>回答者： <mention uid='" + userId + "'/></h4>" +
@@ -958,7 +1022,7 @@ public class MessageSender {
                         "<td style='width:7%;font-weight:bold'>返却日/期間</td>" +
                         "<td style='width:6%;font-weight:bold'>依頼先</td>" +
                         "<td style='width:8%;font-weight:bold'>依頼番号</td>" +
-                        "<td style='width:3%;font-weight:bold'>行番</td>" +
+                        "<td style='width:3%;font-weight:bold'>枝番</td>" +
                         "<td style='width:7%;font-weight:bold'>見積株数</td>" +
                         "<td style='width:6%;font-weight:bold'>見積開始</td>" +
                         "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
@@ -969,7 +1033,6 @@ public class MessageSender {
                         "</tr>" +
                         "</thead>" +
                         "<tbody>";
-
 
 
         DataServices dataServices = DataServices.getInstance();
@@ -1145,7 +1208,7 @@ public class MessageSender {
                         "<td style='width:7%;font-weight:bold'>返却日/期間</td>" +
                         "<td style='width:6%;font-weight:bold'>依頼先</td>" +
                         "<td style='width:8%;font-weight:bold'>依頼番号</td>" +
-                        "<td style='width:3%;font-weight:bold'>行番</td>" +
+                        "<td style='width:3%;font-weight:bold'>枝番</td>" +
                         "<td style='width:7%;font-weight:bold'>見積株数</td>" +
                         "<td style='width:6%;font-weight:bold'>見積開始</td>" +
                         "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
@@ -1214,7 +1277,9 @@ public class MessageSender {
                 "<div style=\"display: flex;\">";
 
 
-//      Div in Left Bottom
+//      Div in Left Bottom -----------------
+//      Div in Left Bottom -----------------
+//      Div in Left Bottom -----------------
         message +=
                 "<div style=\"width:50%;\">";
 

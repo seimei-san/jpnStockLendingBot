@@ -3,6 +3,7 @@ import com.sun.corba.se.impl.protocol.MinimalServantCacheLocalCRDImpl;
 import dataservices.DataServices;
 import dataservices.DataExports;
 import dataservices.DataUpdate;
+import model.InboundMessage;
 import model.OutboundMessage;
 import model.User;
 import model.events.SymphonyElementsAction;
@@ -214,8 +215,6 @@ public class ActionProcessor {
                         // Borrower rejects quote provided by Lender in EXT Chat Room
                         // update LenderStatus from SEND to REJECT by the Lender's bot listening EXT Chat room
 
-
-
                     } else if (formValues.get("action").equals("accept-quote-button")) {
 
                     }
@@ -225,6 +224,35 @@ public class ActionProcessor {
                     noticeNotAllowYou(action, borrowerName);
                 }
                 break;
+            }
+
+            case "view-quote-form" : {
+                String requestId = (String)formValues.get("request-id-select");
+                String lenderName = (String)formValues.get("lender-select");
+                String status = (String)formValues.get("status-select");
+                if (formValues.get("action").equals("refresh-rfq-button")) {
+                    this.viewRfqUpdatedByLender(action, user, requestId, lenderName, status);
+                }
+                break;
+            }
+            case "import-selection-form" : {
+                String userName = user.getDisplayName();
+                String userId = user.getUserId().toString();
+                if (formValues.get("action").equals("import-selection-button")) {
+                    this.manageImportSelectForm(action, userId, userName,"SELECT");
+
+                } else if (formValues.get("action").equals("proceed-selection-button")) {
+                    this.manageSelectionForm(action, userId, userName, "SELECT");
+                }
+                break;
+            }
+
+            case "send-selection-form" : {
+                if (formValues.get("action").equals("send-selection-button")) {
+
+                } else if (formValues.get("action").equals("cancel-selection-button")) {
+
+                }
             }
 
 
@@ -326,6 +354,65 @@ public class ActionProcessor {
         }
 
     }
+
+// ======== working =====================
+// ======== working =====================
+// ======== working =====================
+// ======== working =====================
+// ======== working =====================
+// ======== working =====================
+
+    public void manageImportSelectForm(SymphonyElementsAction action, String userId, String userName, String status) {
+
+        Map<String, Object> formValues = action.getFormValues();
+        String selectData = (String) formValues.get("inputSelection");
+
+        boolean notError = true;
+
+        try (BufferedReader reader = new BufferedReader(new StringReader(selectData))) {
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                String[] items = new String[3];
+                String[] quote = line.split("\t", 0);
+                items[0] = quote[6]; // lenderName
+                items[1] = quote[7]; // requestId
+                items[2] = quote[8]; // lineNo
+                DataUpdate.updateSelection(userName, items[0], items[1], Integer.parseInt(items[2]), "SELECT") ;
+            }
+            if (notError) {
+                String botId = String.valueOf(botClient.getBotUserId());
+                String csvFilePath = DataExports.exportRfqsUpdatedByLender(null,null, "SELECT");
+                OutboundMessage messageOut = MessageSender.getInstance().buildViewRfqFormMessage(userName, "", "", "", "SELECT", csvFilePath, true);
+                MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
+                LOGGER.debug("ActionProcessor.manageAddQuoteForm completed");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            LOGGER.error("ActionProcessor.manageAddQuoteForm.Exception", e);
+            notError = false;
+            this.noticeDoubtInput(action);
+        }
+    }
+
+    public void manageSelectionForm(SymphonyElementsAction action, String userId, String userName, String status) {
+        String csvFilePath = DataExports.exportRfqsUpdatedByLender(null,null, "SELECT");
+        OutboundMessage messageOut = MessageSender.getInstance().buildViewRfqFormMessage(userName, "", "", "", "SELECT", csvFilePath, true);
+        MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
+        LOGGER.debug("ActionProcessor.manageSelectionForm completed");
+
+    }
+
+
+// ======== working ====================
+// ======== working =====================
+// ======== working =====================
+// ======== working =====================
+// ======== working =====================
+// ======== working =====================
+// ======== working =====================
+// ======== working =====================
+
 
 
     public void manageAddQuoteForm(SymphonyElementsAction action, String userId, String userName, String fromStatus, String toStatus, String csvFilePath) {
@@ -478,6 +565,13 @@ public class ActionProcessor {
         userName = Miscellaneous.convertUserName(userName, true);
         OutboundMessage messageOut = MessageSender.getInstance().buildImToBorrowerBotForAccept(userId, userName, botId, externalChatRoomId, borrowerName, lenderName, quoteData);
         MessageSender.getInstance().sendMessage(Miscellaneous.convertRoomId(borrowerBotInstantMessageId), messageOut);
+    }
+
+    public void viewRfqUpdatedByLender(SymphonyElementsAction action, User user, String requestId, String lenderName, String status) {
+        String csvFilePath = DataExports.exportRfqsUpdatedByLender(requestId,lenderName, status);
+        String userName = user.getDisplayName();
+        OutboundMessage messageOut = MessageSender.getInstance().buildViewRfqFormMessage(userName, requestId, "", lenderName, status, csvFilePath, false);
+        MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
     }
 
     public void noticeError(SymphonyElementsAction action) {

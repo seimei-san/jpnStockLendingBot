@@ -210,9 +210,9 @@ public class MessageProcessor {
         LOGGER.debug("MessageProcessor.createQuoteForm executed");
     }
     public void viewRfqUpdatedByLender(InboundMessage inboundMessage) {
-        String csvFilePath = DataExports.exportRfqsUpdatedByLender("","");
+        String csvFilePath = DataExports.exportRfqsUpdatedByLender("","", "");
         String userName = inboundMessage.getUser().getDisplayName();
-        OutboundMessage messageOut = MessageSender.getInstance().buildViewRfqFormMessage(userName, "", "", "", csvFilePath);
+        OutboundMessage messageOut = MessageSender.getInstance().buildViewRfqFormMessage(userName, "", "", "", "", csvFilePath, false);
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.viewRfqUpdatedByLender executed");
     }
