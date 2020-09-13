@@ -33,6 +33,7 @@ public class DataServices {
     private ArrayList<ViewRfqQuote> targetViewingRfqs;
 
 
+
     public static String getCounterPartyList() {
 
 //        Get Counter Party List into the public static counterPartiesList to list the options in Lender
@@ -216,10 +217,6 @@ public class DataServices {
         return JOB_NAME + "Successful";
     }
 
-
-    /**
-     * Create a new RequestID for a transaction type
-     */
     public static String[] createRequestId(String type) {
         Connection connection = null;
         Statement statement = null;
@@ -455,7 +452,6 @@ public class DataServices {
         return targetViewRfqs;
     }
     
-    
     public static boolean deleteRfqsByRequestId(String requestId) {
         Connection connection = null;
         Statement statement = null;
@@ -500,7 +496,6 @@ public class DataServices {
         LOGGER.debug("DataService.deleteRfqsByRequestId completed");
         return true;
     }
-    
     
     public static String[] getCounterPartyInfo(String counterPartyName) {
         Connection connection = null;
@@ -666,8 +661,6 @@ public class DataServices {
 
     }
 
-
-
     public static void getInsertRfqsIntoTargetCounterParty(String rfqData, String userName) {
         Connection connection = null;
         Statement statement = null;
@@ -706,7 +699,7 @@ public class DataServices {
 
                     if (countItem==noOfFields) {
 //                preparedStatementInsert.setString(1,  tmpArray[1]); // type
-                        preparedStatementInsert.setString(1,  "QUO"); // type
+                        preparedStatementInsert.setString(1,  "RFQ"); // type
                         preparedStatementInsert.setInt(2, Integer.parseInt( tmpArray[2])); // lotNo
                         preparedStatementInsert.setString(3,  tmpArray[3]); // requestId
                         preparedStatementInsert.setInt(4, Integer.parseInt( tmpArray[4])); // versionNo
@@ -761,9 +754,6 @@ public class DataServices {
         LOGGER.debug("DataServices.getInsertRfqsIntoTargetCounterParty completed");
 
     }
-
-
-
 
     public ArrayList<SendRfq> getSendRfqs(String requestId, String lenderName) {
 
@@ -843,7 +833,6 @@ public class DataServices {
         return targetSendRfqs;
     }
 
-
     public ArrayList<ReceivedRfq> getReceivedRfqs(String status) {
 
         Connection connection = null;
@@ -858,7 +847,7 @@ public class DataServices {
             String sqlSelectReceivedRfqs = "SELECT * FROM " + ConfigLoader.transactionTable + " WHERE type=? AND status=?";
 //            ResultSet resultSet = statement.executeQuery(sql);
             PreparedStatement preStatementSelect = connection.prepareStatement(sqlSelectReceivedRfqs);
-            preStatementSelect.setString(1, "QUO");
+            preStatementSelect.setString(1, "RFQ");
             preStatementSelect.setString(2, status);
 //            preStatementSelect.setString(2, requestId);
             ResultSet resultSet = preStatementSelect.executeQuery();
@@ -932,7 +921,7 @@ public class DataServices {
             connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
-            String sqlListTargetBorrowers = "select borrowerName from " + ConfigLoader.transactionTable + " where type='QUO' AND (status='NEW' OR status='UPDATE') GROUP By borrowerName";
+            String sqlListTargetBorrowers = "select borrowerName from " + ConfigLoader.transactionTable + " where type='RFQ' AND (status='NEW' OR status='UPDATE') GROUP By borrowerName";
             ResultSet borrowerList = statement.executeQuery(sqlListTargetBorrowers);
             while (borrowerList.next()) {
                 String listBorrowerName = borrowerList.getString("borrowerName");
@@ -965,7 +954,49 @@ public class DataServices {
 
     }
 
+    public ArrayList<String> listLenderNames(String status) {
+        Connection connection = null;
+        Statement statement = null;
+        ArrayList<String> listLenderNames = new ArrayList<>();
+        try {
+            Class.forName("org.sqlite.JDBC");
 
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+            String sqlListTargetLenders = "select lenderName from " + ConfigLoader.transactionTable + " where lenderNo!=0 AND status='" + status + "' GROUP By lenderName";
+
+            ResultSet lenderList = statement.executeQuery(sqlListTargetLenders);
+            while (lenderList.next()) {
+                String listLenderName = lenderList.getString("lenderName");
+                listLenderNames.add(listLenderName);
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.listLenderNames.ClassException", e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.listLenderNames.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        LOGGER.debug("DataServices.listLenderNames completed");
+        return listLenderNames;
+
+    }
 
     public ArrayList<SendQuote> getQuoteForBorrower(String borrowerName, String toLenderStatus) {
 
@@ -979,7 +1010,7 @@ public class DataServices {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sqlSelectQuoteToBorrower = "select * from " + ConfigLoader.transactionTable + " where type='QUO' AND (status='NEW' OR status='UPDATE') AND borrowerName=?";
+            String sqlSelectQuoteToBorrower = "select * from " + ConfigLoader.transactionTable + " where type='RFQ' AND (status='NEW' OR status='UPDATE') AND borrowerName=?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectQuoteToBorrower);
             preparedStatement.setString(1, borrowerName);
             ResultSet quotesForBorrower = preparedStatement.executeQuery();
@@ -1045,7 +1076,6 @@ public class DataServices {
         return targetSendingQuote;
     }
 
-
     public String getQuoteForBorrowerToTextarea(String borrowerName, String fromLenderStatus, String toLenderStatus) {
 
         Connection connection = null;
@@ -1059,7 +1089,7 @@ public class DataServices {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sqlSelectQuoteToBorrower = "select * from " + ConfigLoader.transactionTable + " where type='QUO' AND (status=? OR status='UPDATE') AND borrowerName=?";
+            String sqlSelectQuoteToBorrower = "select * from " + ConfigLoader.transactionTable + " where type='RFQ' AND (status=? OR status='UPDATE') AND borrowerName=?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectQuoteToBorrower);
             preparedStatement.setString(1, fromLenderStatus);
             preparedStatement.setString(2, borrowerName);
@@ -1121,6 +1151,81 @@ public class DataServices {
         LOGGER.debug("DataServices.getQuoteForBorrowerToTextarea completed");
         return quoteData;
     }
+
+    public String getSelectionForLenderToTextarea(String lenderName, String fromLenderStatus, String toLenderStatus) {
+
+    Connection connection = null;
+    Statement statement = null;
+    String selectionData = "";
+
+    try {
+        Class.forName("org.sqlite.JDBC");
+
+        connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+        statement = connection.createStatement();
+        statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+        String sqlSelectQuoteToLender = "select * from " + ConfigLoader.transactionTable + " where lenderName=? AND lenderNo!=0 AND status=?";
+        PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectQuoteToLender);
+        preparedStatement.setString(1, lenderName);
+        preparedStatement.setString(2, fromLenderStatus);
+        ResultSet quotesForLender = preparedStatement.executeQuery();
+
+        while (quotesForLender.next()) {
+            selectionData += quotesForLender.getString("type") + ",";
+            selectionData += quotesForLender.getInt("lotNo") + ",";
+            selectionData += quotesForLender.getString("requestId") + ",";
+            selectionData += quotesForLender.getInt("versionNo") + ",";
+            selectionData += quotesForLender.getInt("lineNo") + ",";
+            selectionData += quotesForLender.getString("stockCode") + ",";
+            selectionData += quotesForLender.getString("borrowerName") + ",";
+            selectionData += quotesForLender.getInt("borrowerQty") + ",";
+            selectionData += quotesForLender.getString("borrowerStart") + ",";
+            selectionData += quotesForLender.getString("borrowerEnd") + ",";
+            selectionData += quotesForLender.getDouble("borrowerRate") + ",";
+            selectionData += quotesForLender.getString("borrowerCondition") + ",";
+            selectionData += quotesForLender.getInt("lenderNo") + ",";
+            selectionData += quotesForLender.getString("lenderName") + ",";
+            selectionData += quotesForLender.getInt("lenderQty") + ",";
+            selectionData += quotesForLender.getString("lenderStart") + ",";
+            selectionData += quotesForLender.getString("lenderEnd") + ",";
+            selectionData += quotesForLender.getDouble("lenderRate") + ",";
+            selectionData += quotesForLender.getString("lenderCondition") + ",";
+            selectionData += quotesForLender.getInt("price") + ",";
+            selectionData += toLenderStatus + ",";
+            selectionData += quotesForLender.getString("timeStamp") + ",";
+            selectionData += quotesForLender.getString("updatedBy");
+            selectionData += "\r";
+
+        }
+
+    } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+        LOGGER.error("DataServices.getSelectionForLenderToTextarea.ClassException", e);
+    } catch (SQLException e) {
+        e.printStackTrace();
+        LOGGER.error("DataServices.getSelectionForLenderToTextarea.SQLException", e);
+    } finally {
+        try {
+            if (statement != null) {
+                statement.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+        }
+
+    }
+    LOGGER.debug("DataServices.getSelectionForLenderToTextarea completed");
+    return selectionData;
+}    
 
     public ArrayList<ViewRfqQuote> viewRfqUpdatedByLender(String requestId, String lenderName, String status) {
 
@@ -1209,6 +1314,172 @@ public class DataServices {
 //        System.out.println("Size of Array=" + targetSendingQuote.size());
         return targetViewingRfqs;
     }
+
+    public ArrayList<ViewRfqQuote> viewReceivedRfqs(String requestId, String borrowerName, String status) {
+
+        Connection connection = null;
+        Statement statement = null;
+
+
+        try {
+            Class.forName("org.sqlite.JDBC");
+
+            String sqlSuffix = "";
+            if (requestId!=null && !requestId.equals("")) {
+                sqlSuffix = " AND requestId='" + requestId + "'";
+            }
+            if (borrowerName!=null && !borrowerName.equals("")) {
+                sqlSuffix += " AND borrowerName='" + borrowerName + "'";
+            }
+            if (status!=null && !status.equals("")) {
+                sqlSuffix += " AND status='" + status + "'";
+            }
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String sqlViewingRfqs = "select * from " + ConfigLoader.transactionTable + " where lenderNo!=0" + sqlSuffix;
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlViewingRfqs);
+            ResultSet viewingRfqs = preparedStatement.executeQuery();
+
+            this.targetViewingRfqs = new ArrayList<>();
+
+            while (viewingRfqs.next()) {
+                ViewRfqQuote newViewRfqQuote = new ViewRfqQuote(
+                        viewingRfqs.getString("type"),
+                        viewingRfqs.getInt("lotNo"),
+                        viewingRfqs.getString("requestId"),
+                        viewingRfqs.getInt("versionNo"),
+                        viewingRfqs.getInt("lineNo"),
+                        viewingRfqs.getString("stockCode"),
+                        viewingRfqs.getString("borrowerName"),
+                        viewingRfqs.getInt("borrowerQty"),
+                        viewingRfqs.getString("borrowerStart"),
+                        viewingRfqs.getString("borrowerEnd"),
+                        viewingRfqs.getDouble("borrowerRate"),
+                        viewingRfqs.getString("borrowerCondition"),
+                        viewingRfqs.getInt("lenderNo"),
+                        viewingRfqs.getString("lenderName"),
+                        viewingRfqs.getInt("lenderQty"),
+                        viewingRfqs.getString("lenderStart"),
+                        viewingRfqs.getString("lenderEnd"),
+                        viewingRfqs.getDouble("lenderRate"),
+                        viewingRfqs.getString("lenderCondition"),
+                        viewingRfqs.getInt("price"),
+                        viewingRfqs.getString("status"),
+                        viewingRfqs.getString("timeStamp"),
+                        viewingRfqs.getString("updatedBy")
+                );
+                targetViewingRfqs.add(newViewRfqQuote);
+            }
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.viewReceivedRfqs.ClassException", e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.viewReceivedRfqs.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+
+            }
+
+        }
+        LOGGER.debug("DataServices.viewReceivedRfqs completed");
+        return targetViewingRfqs;
+    }
+
+    public ArrayList<ViewRfqQuote> viewSendSelectionFromBorrowerToLender(String lenderName, String status) {
+
+    Connection connection = null;
+    Statement statement = null;
+
+
+    try {
+        Class.forName("org.sqlite.JDBC");
+
+        connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+        statement = connection.createStatement();
+        statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+        String sqlSelectionFromBrowkerToLender = "select * from " + ConfigLoader.transactionTable + " where lenderNo!=0 AND lenderName=? AND status=?";
+        PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectionFromBrowkerToLender);
+        preparedStatement.setString(1, lenderName);
+        preparedStatement.setString(2, status);
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        this.targetViewingRfqs = new ArrayList<>();
+
+        while (resultSet.next()) {
+            ViewRfqQuote newViewRfqQuote = new ViewRfqQuote(
+                    resultSet.getString("type"),
+                    resultSet.getInt("lotNo"),
+                    resultSet.getString("requestId"),
+                    resultSet.getInt("versionNo"),
+                    resultSet.getInt("lineNo"),
+                    resultSet.getString("stockCode"),
+                    resultSet.getString("borrowerName"),
+                    resultSet.getInt("borrowerQty"),
+                    resultSet.getString("borrowerStart"),
+                    resultSet.getString("borrowerEnd"),
+                    resultSet.getDouble("borrowerRate"),
+                    resultSet.getString("borrowerCondition"),
+                    resultSet.getInt("lenderNo"),
+                    resultSet.getString("lenderName"),
+                    resultSet.getInt("lenderQty"),
+                    resultSet.getString("lenderStart"),
+                    resultSet.getString("lenderEnd"),
+                    resultSet.getDouble("lenderRate"),
+                    resultSet.getString("lenderCondition"),
+                    resultSet.getInt("price"),
+                    resultSet.getString("status"),
+                    resultSet.getString("timeStamp"),
+                    resultSet.getString("updatedBy")
+            );
+            targetViewingRfqs.add(newViewRfqQuote);
+        }
+
+    } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+        LOGGER.error("DataServices.viewSendSelectionFromBorrowerToLender.ClassException", e);
+    } catch (SQLException e) {
+        e.printStackTrace();
+        LOGGER.error("DataServices.viewSendSelectionFromBorrowerToLender.SQLException", e);
+    } finally {
+        try {
+            if (statement != null) {
+                statement.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (connection != null) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+
+        }
+
+    }
+    LOGGER.debug("DataServices.viewSendSelectionFromBorrowerToLender completed");
+    return targetViewingRfqs;
+}
+
 
 
 }

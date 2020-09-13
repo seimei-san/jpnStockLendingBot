@@ -59,6 +59,7 @@ public class MessageProcessor {
                         break;
 
                     }
+
                     case "/initializesod" : {
                         if (Miscellaneous.checkRoomId(streamId)) {
                             this.notifyNotInRoom(inboundMessage,"/initializesod");
@@ -87,6 +88,7 @@ public class MessageProcessor {
                         }
                         break;
                     }
+
                     case "/newrfq" : {
                         // this command should not be executed in EXT chat rooms which are shared with lender.
                         // To avoid not unexpected command, check the current chat room is not EXT chat room or not.
@@ -141,6 +143,19 @@ public class MessageProcessor {
                         break;
                     }
 
+                    case "/botcmd4" : {
+                        // This command is given by IM from Lender Bot with the 7 parameters
+                        String requestId = commandMessage[1];
+                        String userId = commandMessage[2];
+                        String userName = Miscellaneous.convertUserName(commandMessage[3], false);
+                        String borrowerName = commandMessage[4];
+                        String lenderName = commandMessage[5];
+                        String extChatRoomId = Miscellaneous.convertRoomId(commandMessage[6]);
+                        String selectionData = commandMessage[7];
+                        DataUpdate.updateSelectionStatusByData(userName, "DONE", selectionData);
+                        break;
+                    }
+
                     case "/newquote" : {
                         if (Miscellaneous.checkRoomId(streamId)) {
                             this.notifyNotInRoom(inboundMessage,"/newquote");
@@ -149,6 +164,18 @@ public class MessageProcessor {
                         } else {
                             this.createQuoteForm(inboundMessage, "YET");
                             LOGGER.debug("MessageProcessor.Commend=newquote evoked");
+                        }
+                        break;
+                    }
+
+                    case "/viewquote" : {
+                        if (Miscellaneous.checkRoomId(streamId)) {
+                            this.notifyNotInRoom(inboundMessage,"/viewquote");
+                            LOGGER.debug("/viewquote executed from not proper room");
+
+                        } else {
+                            this.viewRfqUpdatedByBorrower(inboundMessage);
+                            LOGGER.debug("MessageProcessor.Commend=viewquote evoked");
                         }
                         break;
                     }
@@ -177,7 +204,6 @@ public class MessageProcessor {
                         break;
                     }
 
-
                     default: {
                         this.notifyNotUnderStandCommand(inboundMessage);
                         LOGGER.debug("MessageProcessor.Commend=DONT_KNOW evoked");
@@ -199,6 +225,7 @@ public class MessageProcessor {
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.createRfqForm executed");
     }
+
     public void createQuoteForm(InboundMessage inboundMessage, String lenderStatus) {
         String csvFilePath = DataExports.exportRfqsTolender(ConfigLoader.myCounterPartyName,"YET");
         String botId = String.valueOf(botClient.getBotUserId());
@@ -209,12 +236,21 @@ public class MessageProcessor {
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.createQuoteForm executed");
     }
+
     public void viewRfqUpdatedByLender(InboundMessage inboundMessage) {
         String csvFilePath = DataExports.exportRfqsUpdatedByLender("","", "");
         String userName = inboundMessage.getUser().getDisplayName();
         OutboundMessage messageOut = MessageSender.getInstance().buildViewRfqFormMessage(userName, "", "", "", "", csvFilePath, false);
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.viewRfqUpdatedByLender executed");
+    }
+
+    public void viewRfqUpdatedByBorrower(InboundMessage inboundMessage) {
+        String csvFilePath = DataExports.exportRfqsUpdatedByBorrower("","", "");
+        String userName = inboundMessage.getUser().getDisplayName();
+        OutboundMessage messageOut = MessageSender.getInstance().buildViewQuoteFormMessage(userName, "", "", "", "", csvFilePath);
+        MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
+        LOGGER.debug("MessageProcessor.viewRfqUpdatedByBorrower executed");
     }
 
     public void submitQuoteForm(InboundMessage inboundMessage, String lenderStatus) {

@@ -35,8 +35,6 @@ public class Miscellaneous {
         return newRequestId;
     }
 
-
-
     public static String getTimeStamp(String type) {
         //get TimeStamp in Tokyo Time Zone
 
@@ -68,13 +66,13 @@ public class Miscellaneous {
         return sdf.format(timestamp);
     }
 
-
     public static String convertRoomId(String roomId) {
         // update RoomID (StreamID) for 64Base
         String convertedRoomId = StringUtils.remove(roomId, "=");
         convertedRoomId = StringUtils.replace(convertedRoomId, "/","_");
         return convertedRoomId;
     }
+
     public String getPersonName() {
         return  personName;
     }
@@ -87,6 +85,7 @@ public class Miscellaneous {
             return false;
         }
     }
+
     public static String fourDigitDate(String strDate) {
         try {
             Integer.parseInt(strDate);
@@ -95,6 +94,7 @@ public class Miscellaneous {
             return strDate;
         }
     }
+
     public static boolean checkRoomId(String streamId) {
         boolean hitRoomId = false;
         for (int i = 0; i < DataServices.extRoomIdList.length; i++) {
@@ -105,6 +105,7 @@ public class Miscellaneous {
         }
         return hitRoomId;
     }
+
     public static String convertUserName(String userName, boolean replaceSpace) {
         if (replaceSpace) {
             userName = userName.replace(" ", "_");

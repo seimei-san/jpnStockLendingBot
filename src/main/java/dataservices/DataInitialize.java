@@ -7,11 +7,6 @@ import scripts.ConfigLoader;
 import java.sql.*;
 
 
-/**
- * Code for initializing Tables in the database for Japan Lending Bot
- * Masaaki Kurosawa 2020-08-10
- */
-
 public class DataInitialize {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataInitialize.class);
 

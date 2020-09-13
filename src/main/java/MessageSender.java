@@ -1,5 +1,4 @@
 import clients.SymBotClient;
-import com.sun.org.apache.bcel.internal.generic.NEW;
 import dataservices.*;
 import model.OutboundMessage;
 import model.UserInfo;
@@ -27,11 +26,13 @@ public class MessageSender {
             throw new RuntimeException("MessageSender needs to be initialized at startup");
         }
     }
+
     public static void createInstance(SymBotClient botClient) {
         if (messageSender == null) {
             messageSender = new MessageSender(botClient);
         }
     }
+
     public void sendMessage(String streamId, OutboundMessage messageOut) {
         try {
             this.botClient.getMessagesClient().sendMessage(streamId, messageOut);
@@ -64,9 +65,6 @@ public class MessageSender {
 //    ===================================== Borrower Side Forms ==================================================================
 //    ===================================== Borrower Side Forms ==================================================================
 //    ===================================== Borrower Side Forms ==================================================================
-//    ===================================== Borrower Side Forms ==================================================================
-//    ===================================== Borrower Side Forms ==================================================================
-
 
 //    --------------------------------------------------------------------------------------------------------------------
 //    --------------------------------------------------------------------------------------------------------------------
@@ -452,11 +450,6 @@ public class MessageSender {
         return messageOut;
     }
 
-
-
-
-
-
     public OutboundMessage buildCancelMessage(String requestId, String userId, String userName) {
         UserInfo botUserInfo = this.botClient.getBotUserInfo();
         String message =
@@ -475,6 +468,7 @@ public class MessageSender {
         messageOut.setMessage(message);
         return messageOut;
     }
+
     public OutboundMessage buildAcceptNothingMessage(String requestId, String userName, String borrowerName, String lenderName) {
         String message =
                 "<h5>依頼番号[<hash tag=\"" + requestId + "\"/>] " + lenderName + "からの<b>在庫無し連絡</b>は、" + borrowerName + "(" + userName + ")に承諾されました。</h5>" +
@@ -483,7 +477,6 @@ public class MessageSender {
         messageOut.setMessage(message);
         return messageOut;
     }
-
 
     public OutboundMessage buildAcceptQuoteMessage(String requestId, String userId, String userName, String borrowerName, String lenderName) {
         String message =
@@ -505,7 +498,6 @@ public class MessageSender {
         messageOut.setMessage(message);
         return messageOut;
     }
-
 
     public OutboundMessage buildNotInRoomMessage(String commandText) {
         String message =
@@ -550,7 +542,6 @@ public class MessageSender {
         LOGGER.debug("buildAccpetRfqMessageForlender returned");
         return messageOut;
     }
-
 
     public OutboundMessage buildNothingMessage(String userId, String userName, String requestId, String borrowerName, String lenderName) {
 
@@ -601,10 +592,6 @@ public class MessageSender {
         return messageOut;
     }
 
-
-
-
-
     public OutboundMessage buildNotUnderstandMessage() {
         UserInfo botUserInfo = this.botClient.getBotUserInfo();
         String message =
@@ -617,6 +604,7 @@ public class MessageSender {
         LOGGER.debug("buildNotUnderstandMessage returned");
         return messageOut;
     }
+
     public OutboundMessage buildNoCounterPartyMessage() {
         String message =
                 "<h3>貸手1が選ばれていません！</h3>" +
@@ -626,6 +614,7 @@ public class MessageSender {
         LOGGER.debug("buildNoCounterPartyMessage returned");
         return messageOut;
     }
+
     public OutboundMessage buildDoubtMessage() {
         UserInfo botUserInfo = this.botClient.getBotUserInfo();
         String message =
@@ -635,24 +624,20 @@ public class MessageSender {
         OutboundMessage messageOut = new OutboundMessage();
         messageOut.setMessage(message);
         LOGGER.debug("buildDoubtMessage returned");
+        System.out.println("test");
         return messageOut;
     }
 
-    public OutboundMessage buildImToLenderBot(String userId, String userName, String botId, String externalChatRoomId, String requestId, String borrowerName, String lenderName, String rfqsData) {
-        String message = "<mention uid='" + botId + "'/> /botcmd1 " + requestId + " " + userId + " " + userName + " " + borrowerName + " " + lenderName + " " + externalChatRoomId + " " + rfqsData;
+    public OutboundMessage buildImToLenderBot(String cmd, String userId, String userName, String botId, String externalChatRoomId, String requestId, String borrowerName, String lenderName, String rfqsData) {
+        String message = "<mention uid='" + botId + "'/> " + cmd + " " + requestId + " " + userId + " " + userName + " " + borrowerName + " " + lenderName + " " + externalChatRoomId + " " + rfqsData;
         OutboundMessage  messageOut = new OutboundMessage();
         messageOut.setMessage(message);
         return messageOut;
     }
 
-
-//  ===========================================================================================================
-//  ===========================================================================================================
 //  ===========================================================================================================
 //  ===========================================================================================================
 //  ================= Viewing RFQ updated by Lenders and providing the decision to Lenders ====================
-//  ===========================================================================================================
-//  ===========================================================================================================
 //  ===========================================================================================================
 //  ===========================================================================================================
 
@@ -867,7 +852,7 @@ public class MessageSender {
                 "<div style=\"width:50%;\">";
 
         message +=
-                "<form id=\"view-quote-form\">";
+                "<form id=\"view-rfq-form\">";
 
         message +=
                 "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">借手の確認作業</h3>" +
@@ -888,7 +873,7 @@ public class MessageSender {
         message +=
                 "<select name=\"status-select\" required=\"false\" data-placeholder=\"状況を選択\">";
         message +=
-                "<option value=\"NEW\">NEW</option><option value=\"REJECT\">REJECT</option><option value=\"SELECT\">SELECT</option><option value=\"DONE\">DONE</option>";
+                "<option value=\"NEW\">NEW</option><option value=\"REJECT\">REJECT</option><option value=\"SELECT\">SELECT</option><option value=\"SEND\">SEND</option><option value=\"DONE\">DONE</option>";
         message +=
                 "</select>";
 
@@ -907,7 +892,7 @@ public class MessageSender {
                     "<br/>" +
                             "<div style=\"width:50%;\">"+
                             "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">意志決定の送信</h3>" +
-                            "<h5>[送信]を選択すると、状況＝SELECTのQUOTEが全てDONEとなります。</h5>" +
+                            "<h5>[送信]を選択すると、状況＝SELECTのQUOTEが全てSENDとなります。</h5>" +
                             "<h5>[取消]を選択すると、状況＝SELECTのQUOTEが全てNEWとなります。</h5>" ;
 
 
@@ -977,22 +962,173 @@ public class MessageSender {
         return messageOut;
     }
 
+//    ================================ Lender Side Forms =======================================
+//    ================================ Lender Side Forms =======================================
+//    ================================ Lender Side Forms ==================================
 
-    
-//    ================================ Lender Side Forms =======================================
-//    ================================ Lender Side Forms =======================================
-//    ================================ Lender Side Forms =======================================
-//    ================================ Lender Side Forms =======================================
-//    ================================ Lender Side Forms =======================================
-//    ================================ Lender Side Forms =======================================
+    public OutboundMessage buildViewQuoteFormMessage(String userName, String requestId, String borrowerName, String lenderName, String status, String csvFullPath) {
+        String message;
+        String titleForm;
+        StringBuilder messageOptionsForBorrowers = new StringBuilder();
+        StringBuilder messageOptionsForRequestId = new StringBuilder();
+        for (int i = 0; DataServices.counterPartiesList.length > i; i++) {
+            messageOptionsForBorrowers.append("<option value=\"").append(DataServices.counterPartiesList[i]).append("\">").append(DataServices.counterPartiesList[i]).append("</option>");
+        }
+        for (String optionRequestId : DataServices.getRequestIdList()) {
+            messageOptionsForRequestId.append("<option value=\"").append(optionRequestId).append("\">").append(optionRequestId).append("</option>");
+        }
 
+        titleForm = "QUOTEの一覧 ";
+
+        message =
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">" + titleForm + "</h3>";
+
+        message +=
+                "<h4>閲覧者： " + userName + "</h4>" +
+                        "<br/>" +
+                        "<table style='table-layout:fixed;width:1300px'>" +
+                        "<thead>" +
+                        "<tr>" +
+                        "<td style='width:4%;font-weight:bold'>種別</td>" +
+                        "<td style='width:6%;font-weight:bold'>依頼元</td>" +
+                        "<td style='width:5%;font-weight:bold'>銘柄</td>" +
+                        "<td style='width:8%;font-weight:bold'>株数</td>" +
+                        "<td style='width:6%;font-weight:bold'>開始日</td>" +
+                        "<td style='width:7%;font-weight:bold'>返却日/期間</td>" +
+                        "<td style='width:6%;font-weight:bold'>依頼先</td>" +
+                        "<td style='width:8%;font-weight:bold'>依頼番号</td>" +
+                        "<td style='width:3%;font-weight:bold'>枝番</td>" +
+                        "<td style='width:7%;font-weight:bold'>見積株数</td>" +
+                        "<td style='width:6%;font-weight:bold'>見積開始</td>" +
+                        "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
+                        "<td style='width:6%;font-weight:bold'>見積利率</td>" +
+                        "<td style='width:7%;font-weight:bold'>見積条件</td>" +
+                        "<td style='width:5%;font-weight:bold'>価格</td>" +
+                        "<td style='width:4%;font-weight:bold'>状況</td>" +
+                        "</tr>" +
+                        "</thead>" +
+                        "<tbody>";
+
+
+        DataServices dataServices = DataServices.getInstance();
+        int totalQtyborrower = 0;
+        int totalQtylender = 0;
+        for (ViewRfqQuote receivedRfq : dataServices.viewReceivedRfqs(requestId, borrowerName, status)) {
+            totalQtyborrower += receivedRfq.getBorrowerQty();
+            totalQtylender += receivedRfq.getLenderQty();
+
+            message +=
+                    "<tr>" +
+                            "<td>" + receivedRfq.getType() + "</td>" +
+                            "<td class='tempo-text-color--green'>" + receivedRfq.getBorrowerName() + "</td>" +
+                            "<td>" + receivedRfq.getStockCode() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", receivedRfq.getBorrowerQty()) + "</td>" +
+                            "<td>" + receivedRfq.getBorrowerStart() + "</td>" +
+                            "<td>" + receivedRfq.getBorrowerEnd() + "</td>" +
+                            "<td class='tempo-text-color--blue'>" + receivedRfq.getLenderName() + "</td>" +
+                            "<td >" + receivedRfq.getRequestId() + "</td>" +
+                            "<td style='text-align:right'>" + receivedRfq.getLineNo() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", receivedRfq.getLenderQty()) + "</td>" +
+                            "<td>" + receivedRfq.getLenderStart() + "</td>" +
+                            "<td>" + receivedRfq.getLenderEnd() + "</td>" +
+                            "<td style='text-align:right'>" + receivedRfq.getLenderRate() + "</td>" +
+                            "<td>" + receivedRfq.getLenderCondition() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", receivedRfq.getPrice()) + "</td>" +
+                            "<td>" + receivedRfq.getStatus() + "</td>" +
+                            "</tr>";
+        }
+
+        message +=
+                "</tbody>" +
+                        "<tfoot>" +
+                        "<tr>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "</tr>" +
+                        "</tfoot>" +
+                        "</table>" +
+                        "<br/>" ;
+
+        message +=
+            "<div style=\"display: flex;\">";
+
+//      Div in Left Bottom ---------------------
+//      Div in Left Bottom ---------------------
+//      Div in Left Bottom ---------------------
+        message +=
+                "<div style=\"width:50%;\">"+
+                "</div>" ;
+
+//       Div in Right Bottom -------------------
+//       Div in Right Bottom -------------------
+//       Div in Right Bottom -------------------
+        message +=
+                "<br/>" +
+                "<div style=\"width:50%;\">";
+        message +=
+                "<form id=\"view-quote-form\">";
+
+        message +=
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">貸手の操作</h3>" +
+                        "<h3>QUOTEのデータの絞り込み</h3>" +
+                        "<br/>";
+        message +=
+                "<select name=\"borrower-select\" required=\"false\" data-placeholder=\"借手を選択\">";
+        message += messageOptionsForBorrowers;
+        message +=
+                "</select>";
+
+        message +=
+                "<select name=\"request-id-select\" required=\"false\" data-placeholder=\"依頼番号を選択\">";
+        message += messageOptionsForRequestId;
+        message +=
+                "</select>";
+
+        message +=
+                "<select name=\"status-select\" required=\"false\" data-placeholder=\"状況を選択\">";
+        message +=
+                "<option value=\"NEW\">NEW</option><option value=\"REJECT\">REJECT</option><option value=\"SELECT\">SELECT</option><option value=\"SEND\">SEND</option><option value=\"DONE\">DONE</option>";
+        message +=
+                "</select>";
+
+        message +=
+//                "<button type=\"action\" name=\"reject-quote-button\">却下</button>" +
+                "<button type=\"action\" name=\"refresh-quote-button\">再表示</button>" +
+                "</form>";
+//        message +=
+//                "</div>" ;
+
+        message +=
+            "</div>"+
+            "</div>";
+
+
+        OutboundMessage messageOut = new OutboundMessage();
+        if (!csvFullPath.equals("")) {
+            messageOut.setAttachment(new File(csvFullPath));
+        }
+        messageOut.setMessage(message);
+        LOGGER.debug("buildCreateQuoteFormMessage returned");
+        return messageOut;
+    }
 
 
     public OutboundMessage buildCreateQuoteFormMessage() {
         LOGGER.debug("buildCreateQuoteFormMessage returned");
         return this.buildCreateQuoteFormMessage("", "", "", "","", "", "", true);
     }
-
 
     public OutboundMessage buildCreateQuoteFormMessage(String botId, String userId, String userName, String borrowerName, String lenderName, String lenderStatus, String csvFullPath, boolean isNew) {
         String message;
@@ -1176,6 +1312,159 @@ public class MessageSender {
     }
 
 
+    public OutboundMessage buildSendSelectionFormMessage(String botId, String userId, String userName, String externalChatRoomId,
+                                                     String lenderBotInstantMessageId, String borrowerName, String lenderName, String status, String selectionData) {
+
+        String message;
+        String titleForm;
+
+        titleForm = "RESULTSの返信: ";
+
+        message =
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">" + titleForm + borrowerName+ " → " + lenderName + "</h3>";
+
+
+
+        message +=
+    //                "<h4>回答者： <mention uid='" + userId + "'/></h4>" +
+                "<h4>回答者： " + userName + "</h4>" +
+                        "<br/>" +
+                        "<table style='table-layout:fixed;width:1300px'>" +
+                        "<thead>" +
+                        "<tr>" +
+                        "<td style='width:4%;font-weight:bold'>種別</td>" +
+                        "<td style='width:6%;font-weight:bold'>依頼元</td>" +
+                        "<td style='width:5%;font-weight:bold'>銘柄</td>" +
+                        "<td style='width:7%;font-weight:bold'>株数</td>" +
+                        "<td style='width:6%;font-weight:bold'>開始日</td>" +
+                        "<td style='width:7%;font-weight:bold'>返却日/期間</td>" +
+                        "<td style='width:6%;font-weight:bold'>依頼先</td>" +
+                        "<td style='width:7%;font-weight:bold'>依頼番号</td>" +
+                        "<td style='width:3%;font-weight:bold'>枝番</td>" +
+                        "<td style='width:7%;font-weight:bold'>見積株数</td>" +
+                        "<td style='width:6%;font-weight:bold'>見積開始</td>" +
+                        "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
+                        "<td style='width:6%;font-weight:bold'>見積利率</td>" +
+                        "<td style='width:7%;font-weight:bold'>見積条件</td>" +
+                        "<td style='width:5%;font-weight:bold'>価格</td>" +
+                        "<td style='width:6%;font-weight:bold'>状況</td>" +
+                        "</tr>" +
+                        "</thead>" +
+                        "<tbody>";
+
+
+
+        DataServices dataServices = DataServices.getInstance();
+        int totalQtyborrower = 0;
+        int totalQtylender = 0;
+        for (ViewRfqQuote viewRfqQuote : dataServices.viewSendSelectionFromBorrowerToLender(lenderName, status)) {
+            totalQtyborrower += viewRfqQuote.getBorrowerQty();
+            totalQtylender += viewRfqQuote.getLenderQty();
+
+            message +=
+                    "<tr>" +
+                            "<td>" + viewRfqQuote.getType() + "</td>" +
+                            "<td class='tempo-text-color--green'>" + viewRfqQuote.getBorrowerName() + "</td>" +
+                            "<td>" + viewRfqQuote.getStockCode() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewRfqQuote.getBorrowerQty()) + "</td>" +
+                            "<td>" + viewRfqQuote.getBorrowerStart() + "</td>" +
+                            "<td>" + viewRfqQuote.getBorrowerEnd() + "</td>" +
+                            "<td class='tempo-text-color--blue'>" + viewRfqQuote.getLenderName() + "</td>" +
+                            "<td >" + viewRfqQuote.getRequestId() + "</td>" +
+                            "<td style='text-align:right'>" + viewRfqQuote.getLineNo() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewRfqQuote.getLenderQty()) + "</td>" +
+                            "<td>" + viewRfqQuote.getLenderStart() + "</td>" +
+                            "<td>" + viewRfqQuote.getLenderEnd() + "</td>" +
+                            "<td style='text-align:right'>" + viewRfqQuote.getLenderRate() + "</td>" +
+                            "<td>" + viewRfqQuote.getLenderCondition() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewRfqQuote.getPrice()) + "</td>" +
+                            "<td>" + viewRfqQuote.getStatus() + "</td>" +
+                            "</tr>";
+        }
+
+        message +=
+                "</tbody>" +
+                        "<tfoot>" +
+                        "<tr>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "</tr>" +
+                        "</tfoot>" +
+                        "</table>" +
+                        "<br/>" ;
+
+        message +=
+                "<div style=\"display: flex;\">";
+
+
+    //      Div in Left Bottom -----------------
+    //      Div in Left Bottom -----------------
+    //      Div in Left Bottom -----------------
+        message +=
+                "<div style=\"width:50%;\">";
+
+
+        message +=
+                "</div>" ;
+
+    //       Div in Right Bottom -----------------
+    //       Div in Right Bottom -----------------
+    //       Div in Right Bottom -----------------
+        message +=
+                "<br/>" +
+                        "<div style=\"width:50%;\">";
+
+        message +=
+                "<form id=\"confirm-selection-form\">";
+        if (ConfigLoader.env.equals("prod")) {
+            message += "<div style=\"display:none\">";
+        }
+        message +=
+                "<p>userName: botId: externalChatRoomId: borrowerBotInstantMessageId: borrowerName: lenderName: quoteData: </p>" +
+                        "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" +
+                        "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                        "<text-field name=\"external_chatroom_id\" required=\"false\">" + externalChatRoomId + "</text-field>" +
+                        "<text-field name=\"lenderbot_im_id\" required=\"false\">" + lenderBotInstantMessageId + "</text-field>" +
+                        "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                        "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                        "<textarea name=\"selection_data\" required=\"false\">" + selectionData + "</textarea>";
+        if (ConfigLoader.env.equals("prod")) {
+            message += "</div>";
+        }
+
+        message +=
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--blue\">貸手(" + lenderName + ")の対応</h3>" +
+                        "<br/>";
+
+        message +=
+
+                "<button type=\"action\" name=\"confirm-selection-button\">確認</button>" +
+                        "</form>";
+
+        message +=
+                "</div>"+
+                        "</div>";
+
+
+        OutboundMessage messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        LOGGER.debug("buildSendQuoteFormMessage returned");
+        return messageOut;
+    }
+
+
     public OutboundMessage buildSendQuoteFormMessage(String botId, String userId, String userName, String externalChatRoomId,
                                                      String borrowerBotInstantMessageId, String borrowerName, String lenderName, String lenderStatus, String quoteData, boolean isNew) {
 
@@ -1331,8 +1620,6 @@ public class MessageSender {
         return messageOut;
     }
     
-    
-    
     public OutboundMessage buildNotifyRejectMessage(String userId, String userName, String borrowerName, String lenderName) {
         String message =
                 "<h5>" + lenderName + "からの<b>QUOTEの返信</b>は、" + borrowerName + "(" + userName + ")に却下されました。</h5>" +
@@ -1362,6 +1649,16 @@ public class MessageSender {
         return messageOut;
     }
 
+    public OutboundMessage buildNotifyAcceptSelectionMessage(String userId, String userName, String borrowerName, String lenderName) {
+        String message =
+                "<h5>" + borrowerName + "からの<b>RESULTSの送信</b>は、" + lenderName + "(" + userName + ")に確認されました。</h5>" +
+                        "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.rfqHashTag + "\"/></p>";
+        OutboundMessage messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        LOGGER.debug("buildNotifyAcceptSelectionMessage returned");
+        return messageOut;
+    }
+
     public OutboundMessage buildImToBorrowerBotForAccept(String userId, String userName, String botId, String externalChatRoomId, String borrowerName, String lenderName, String quoteData) {
         String message = "<mention uid='" + botId + "'/> /botcmd3 DUMMY " + userId + " " + userName + " " + borrowerName + " " + lenderName + " " + externalChatRoomId + " " + quoteData;
         OutboundMessage  messageOut = new OutboundMessage();
@@ -1370,43 +1667,7 @@ public class MessageSender {
 
         return messageOut;
     }
-//    ======================= templates =========================
-//    ======================= templates =========================
-//    ======================= templates =========================
-//    ======================= templates =========================
-//    ======================= templates =========================
-//    ======================= templates =========================
 
-    public OutboundMessage template(String requestId, String userName, String borrowerName, String lenderName) {
-        String message;
-
-        message =
-                "<h3 class=\"tempo-text-color-white tempo-bg-color--yellow\">RFQへの回答：" + borrowerName + "[<hash tag=\"" + requestId + "\"/>]" + " ← " + lenderName + "</h3>" +
-                        "<h4>回答者： " + userName + "</h4>" +
-                        "<br/>" +
-                        "<div style=\"display: flex;\">";
-
-        message +=
-                "<div style=\"width:50%;\">" +
-                        "<form id=\"create-rfq-form\">" +
-                        "</form>" +
-                        "</div>";
-
-        message +=
-                "<div style=\"width:50%;\">" +
-                        "<form id=\"create-rfq-form\">" +
-                        "</form>" +
-                        "</div>";
-
-        message +=
-                "</div>";
-
-        OutboundMessage messageOut = new OutboundMessage();
-        messageOut.setMessage(message);
-        LOGGER.debug("buildDoubtMessage returned");
-        return messageOut;
-
-    }
 
     public OutboundMessage buildTestMessage() {
         String message = "<mention uid='349026222350969'/> /newrfq 123,123,123,123\n345,345,345,345\n456,456,456,456";
