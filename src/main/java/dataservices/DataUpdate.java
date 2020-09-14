@@ -21,11 +21,11 @@ public class DataUpdate {
         boolean result = true;
         try {
             Class.forName("org.sqlite.JDBC");
-    
+
             connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
-    
+
             String sql = "UPDATE " + ConfigLoader.transactionTable + " SET status=?, timeStamp=?, updatedBy=? WHERE lenderNo!=0 AND status=?";
             PreparedStatement preStatementSelect = connection.prepareStatement(sql);
             preStatementSelect.setString(1, toStatus);
@@ -33,9 +33,9 @@ public class DataUpdate {
             preStatementSelect.setString(3, userName);
             preStatementSelect.setString(4, fromStatus);
             preStatementSelect.executeUpdate();
-    
+
             LOGGER.debug("DataUpdate.updateSelectionStatus completed");
-    
+
         }catch (ClassNotFoundException e) {
             e.printStackTrace();
             result = false;
@@ -61,7 +61,7 @@ public class DataUpdate {
             }
         }
         return result;
-    
+
     }
 
 
@@ -75,7 +75,7 @@ public class DataUpdate {
             connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
-            
+
             String timeStamp = Miscellaneous.getTimeStamp("transaction");
             String sql = "UPDATE " + ConfigLoader.transactionTable + " SET status=?, timeStamp=?, updatedBy=? WHERE requestId=? AND  lineNo=? AND borrowerName=? AND lenderName=? AND lenderNo!=0";
             PreparedStatement preStatementSelect = connection.prepareStatement(sql);
@@ -467,20 +467,20 @@ public class DataUpdate {
         boolean result = true;
         try {
             Class.forName("org.sqlite.JDBC");
-    
+
             connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
-    
+
             String sql = "UPDATE " + ConfigLoader.transactionTable + " SET status = '" + toStatus + "' WHERE lenderNo!=0 AND status=? AND lenderName=?";
             PreparedStatement preStatementSelect = connection.prepareStatement(sql);
             preStatementSelect.setString(1, fromStatus);
             preStatementSelect.setString(2, lenderName);
-    
+
             preStatementSelect.executeUpdate();
-    
+
             LOGGER.debug("DataUpdate.updateStatusAfterSentSelection completed");
-    
+
         }catch (ClassNotFoundException e) {
             e.printStackTrace();
             result = false;
@@ -506,7 +506,7 @@ public class DataUpdate {
             }
         }
         return result;
-    
+
     }
 
 
@@ -516,13 +516,13 @@ public class DataUpdate {
         boolean result = true;
         try {
             Class.forName("org.sqlite.JDBC");
-    
+
             connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
-    
+
             String timeStamp = Miscellaneous.getTimeStamp("transaction");
-    
+
             String sql = "UPDATE " + ConfigLoader.transactionTable +
                     " SET status=?, timeStamp=?, updatedBy=? WHERE lenderName=? AND requestId=? AND lineNo=?";
             PreparedStatement preStatementSelect = connection.prepareStatement(sql);
@@ -532,11 +532,11 @@ public class DataUpdate {
             preStatementSelect.setString(4, lenderName);
             preStatementSelect.setString(5, requestId);
             preStatementSelect.setInt(6, lineNo);
-    
+
             preStatementSelect.executeUpdate();
-    
+
             LOGGER.debug("DataUpdate.updateSelection completed");
-    
+
         }catch (ClassNotFoundException e) {
             e.printStackTrace();
             result = false;
@@ -582,7 +582,7 @@ public class DataUpdate {
 
             String sql = "UPDATE " + ConfigLoader.transactionTable +
                     " SET lenderQty=?, lenderStart=?, lenderEnd=?, lenderRate=?, lenderCondition=?, price=?, status=?, timeStamp=?, updatedBy=? " +
-                    " WHERE status=? AND borrowName=? AND lenderName=? AND requestId=? AND lineNo=?";
+                    " WHERE status=? AND borrowerName=? AND lenderName=? AND requestId=? AND lineNo=?";
             System.out.println("Four Digit Date = " + Miscellaneous.fourDigitDate(lenderStart.trim()) + "LEN=" + lenderStart.length());
             PreparedStatement preStatementSelect = connection.prepareStatement(sql);
             preStatementSelect.setInt(1, lenderQty);
@@ -631,8 +631,8 @@ public class DataUpdate {
         return result;
 
     }
-    
-    
+
+
     public static void getUpdateQuoteStatus(String quoteData, String userName, String toStatus) {
         Connection connection = null;
         Statement statement = null;

@@ -50,7 +50,7 @@ public class ActionProcessor {
                     } else {
                         // if not new RFQ (normally re-create RFQ with existing Request ID, extra LineNo from Request ID
                         requestId = (String)formValues.get("request_id");
-                        lotNo = Integer.parseInt(requestId.substring(requestId.length()-2));    
+                        lotNo = Integer.parseInt(requestId.substring(requestId.length()-2));
                     }
                     this.manageAddRfqForm(action, userId, userName, requestId, lotNo);
 //                    this.sendTestMessage(action);
@@ -91,7 +91,7 @@ public class ActionProcessor {
                     String lenderName3 = (String)formValues.get("lender3-select");
                     String lenderName4 = (String)formValues.get("lender4-select");
                     String lenderName5 = (String)formValues.get("lender5-select");
-                    
+
                     // send RFQ to each selected Lender
                     if (lenderName1!=null) {
                         requestId = (String)formValues.get("request_id");
@@ -236,7 +236,7 @@ public class ActionProcessor {
             case "send-selection-form" : {
                 String botId = "";
                 String userId = user.getUserId().toString();
-                
+
                 String userName = user.getDisplayName();
                 String timeStamp = Miscellaneous.getTimeStamp("transaction");
                 if (formValues.get("action").equals("send-selection-button")) {
@@ -428,7 +428,7 @@ public class ActionProcessor {
         LOGGER.debug("ActionProcessor.manageSelectionForm completed");
 
     }
-    
+
     public void manageSelectionToLenderForm(SymphonyElementsAction action, String userId, String userName, String fromStatus, String toStatus) {
 
         String selectionData;
@@ -469,14 +469,22 @@ public class ActionProcessor {
                 items[4] = quote[9]; // lenderQty
                 items[5] = quote[10];    // lenderStart
                 items[6] = quote[11];    // lenderEnd
-                items[7] = quote[12];    // lenderRate
+                if (quote[12]==null || quote[12].isEmpty()) {
+                    items[7] = "0.0";
+                } else {
+                    items[7] = quote[12]; // lenderRate
+                }
                 items[8] = quote[13];    // lenderCondition
-                items[9] = quote[14];    // price
+                if (quote[14]==null || quote[14].isEmpty()) {
+                    items[9] = "0";
+                } else {
+                    items[9] = quote[14];    // price
+                }
                 items[10] = quote[15];    // Status
 
                 DataUpdate.updateQuote(userName, fromStatus, items[0], items[1], items[2],
                         Integer.parseInt(items[3]), Integer.parseInt(items[4]), items[5], items[6],
-                                Double.parseDouble(items[7]),items[8],Integer.parseInt(items[9]), toStatus) ;
+                        Double.parseDouble(items[7]),items[8],Integer.parseInt(items[9]), toStatus) ;
             }
             if (notError) {
                 String botId = String.valueOf(botClient.getBotUserId());
