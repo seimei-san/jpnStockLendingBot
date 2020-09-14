@@ -565,7 +565,7 @@ public class DataUpdate {
     }
 
 
-    public static boolean updateQuote (String userName, String fromStatus, String lenderName, String requestId,
+    public static boolean updateQuote (String userName, String fromStatus, String borrowerName, String lenderName, String requestId,
                                        int lineNo, int lenderQty, String lenderStart, String lenderEnd, double lenderRate,
                                        String lenderCondition, int price, String toStatus) {
         Connection connection = null;
@@ -582,7 +582,7 @@ public class DataUpdate {
 
             String sql = "UPDATE " + ConfigLoader.transactionTable +
                     " SET lenderQty=?, lenderStart=?, lenderEnd=?, lenderRate=?, lenderCondition=?, price=?, status=?, timeStamp=?, updatedBy=? " +
-                    " WHERE status=? AND lenderName=? AND requestId=? AND lineNo=?";
+                    " WHERE status=? AND borrowName=? AND lenderName=? AND requestId=? AND lineNo=?";
             System.out.println("Four Digit Date = " + Miscellaneous.fourDigitDate(lenderStart.trim()) + "LEN=" + lenderStart.length());
             PreparedStatement preStatementSelect = connection.prepareStatement(sql);
             preStatementSelect.setInt(1, lenderQty);
@@ -595,9 +595,10 @@ public class DataUpdate {
             preStatementSelect.setString(8, timeStamp);
             preStatementSelect.setString(9, userName);
             preStatementSelect.setString(10, fromStatus);
-            preStatementSelect.setString(11, lenderName);
-            preStatementSelect.setString(12, requestId);
-            preStatementSelect.setInt(13, lineNo);
+            preStatementSelect.setString(11, borrowerName);
+            preStatementSelect.setString(12, lenderName);
+            preStatementSelect.setString(13, requestId);
+            preStatementSelect.setInt(14, lineNo);
 
             preStatementSelect.executeUpdate();
 

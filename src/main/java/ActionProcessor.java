@@ -410,12 +410,12 @@ public class ActionProcessor {
                 String csvFilePath = DataExports.exportRfqsUpdatedByLender(null,null, "SELECT");
                 OutboundMessage messageOut = MessageSender.getInstance().buildViewRfqFormMessage(userName, "", "", "", "SELECT", csvFilePath, true);
                 MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
-                LOGGER.debug("ActionProcessor.manageAddQuoteForm completed");
+                LOGGER.debug("ActionProcessor.manageImportSelectForm completed");
             }
 
         } catch (IOException e) {
             e.printStackTrace();
-            LOGGER.error("ActionProcessor.manageAddQuoteForm.Exception", e);
+            LOGGER.error("ActionProcessor.manageImportSelectForm.Exception", e);
             notError = false;
             this.noticeDoubtInput(action);
         }
@@ -460,22 +460,23 @@ public class ActionProcessor {
         try (BufferedReader reader = new BufferedReader(new StringReader(quoteData))) {
             String line = null;
             while ((line = reader.readLine()) != null) {
-                String[] items = new String[10];
+                String[] items = new String[11];
                 String[] quote = line.split("\t", 0);
-                items[0] = quote[6]; // lenderName
-                items[1] = quote[7]; // requestId
-                items[2] = quote[8]; // lineNo
-                items[3] = quote[9]; // lenderQty
-                items[4] = quote[10];    // lenderStart
-                items[5] = quote[11];    // lenderEnd
-                items[6] = quote[12];    // lenderRate
-                items[7] = quote[13];    // lenderCondition
-                items[8] = quote[14];    // price
-                items[9] = quote[15];    // Status
+                items[0] = quote[1]; // borrowerName
+                items[1] = quote[6]; // lenderName
+                items[2] = quote[7]; // requestId
+                items[3] = quote[8]; // lineNo
+                items[4] = quote[9]; // lenderQty
+                items[5] = quote[10];    // lenderStart
+                items[6] = quote[11];    // lenderEnd
+                items[7] = quote[12];    // lenderRate
+                items[8] = quote[13];    // lenderCondition
+                items[9] = quote[14];    // price
+                items[10] = quote[15];    // Status
 
-                DataUpdate.updateQuote(userName, fromStatus, items[0], items[1],
-                        Integer.parseInt(items[2]), Integer.parseInt(items[3]), items[4], items[5],
-                                Double.parseDouble(items[6]),items[7],Integer.parseInt(items[8]), toStatus) ;
+                DataUpdate.updateQuote(userName, fromStatus, items[0], items[1], items[2],
+                        Integer.parseInt(items[3]), Integer.parseInt(items[4]), items[5], items[6],
+                                Double.parseDouble(items[7]),items[8],Integer.parseInt(items[9]), toStatus) ;
             }
             if (notError) {
                 String botId = String.valueOf(botClient.getBotUserId());
