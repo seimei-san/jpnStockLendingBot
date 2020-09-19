@@ -32,6 +32,7 @@ public class ConfigLoader {
     public static String databasePath = "";
     public static String tableBackUpPath = "";
     public static String importCsvPath = "";
+    public static String uploadCsvPath = "";
     public static String sendRfqCsvPath = "";
     public static String database = "";
     public static String transactionSchema = "";
@@ -64,6 +65,7 @@ public class ConfigLoader {
             databasePath = node.get("databasePath").asText();
             tableBackUpPath = node.get("tableBackUpPath").asText();
             importCsvPath = node.get("importCsvPath").asText();
+            uploadCsvPath = node.get("uploadCsvPath").asText();
             sendRfqCsvPath = node.get("sendRfqCsvPath").asText();
             database = node.get("database").asText();
             transactionSchema = node.get("transactionSchema").asText();

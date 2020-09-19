@@ -77,7 +77,7 @@ public class DataUpdate {
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
             String timeStamp = Miscellaneous.getTimeStamp("transaction");
-            String sql = "UPDATE " + ConfigLoader.transactionTable + " SET status=?, timeStamp=?, updatedBy=? WHERE requestId=? AND  lineNo=? AND borrowerName=? AND lenderName=? AND lenderNo!=0";
+            String sql = "UPDATE " + ConfigLoader.transactionTable + " SET lenderQty=?, status=?, timeStamp=?, updatedBy=? WHERE requestId=? AND  lineNo=? AND borrowerName=? AND lenderName=? AND lenderNo!=0";
             PreparedStatement preStatementSelect = connection.prepareStatement(sql);
 
             List<String> selectionLine;
@@ -95,13 +95,13 @@ public class DataUpdate {
 //                        tmpArray[1] // type
 //                        tmpArray[2] // lotNo
 //                        tmpArray[3] // requestId
-                        preStatementSelect.setString(4, tmpArray[3]); // requestId
+                        preStatementSelect.setString(5, tmpArray[3]); // requestId
 //                        tmpArray[4] // versionNo
 //                        tmpArray[5] // LineNo
-                        preStatementSelect.setInt(5, Integer.parseInt(tmpArray[5])); // lineNo
+                        preStatementSelect.setInt(6, Integer.parseInt(tmpArray[5])); // lineNo
 //                        tmpArray[6] // stockCode
 //                        tmpArray[7] // borrowerName
-                        preStatementSelect.setString(6, tmpArray[7]); // borrowerName
+                        preStatementSelect.setString(7, tmpArray[7]); // borrowerName
 //                        tmpArray[8] // borrowerQty
 //                        tmpArray[9] // borrowerStart
 //                        tmpArray[10] // borrowerEnd
@@ -109,19 +109,20 @@ public class DataUpdate {
 //                        tmpArray[12] // borrowerCondition
 //                        tmpArray[13] // provideNo
 //                        tmpArray[14] // lenderName
-                        preStatementSelect.setString(7, tmpArray[14]); // lenderName
+                        preStatementSelect.setString(8, tmpArray[14]); // lenderName
 //                        tmpArray[15] // lenderQty
+                        preStatementSelect.setInt(1, Integer.parseInt(tmpArray[15]));
 //                        tmpArray[16] // lenderStart
 //                        tmpArray[17] // lenderEnd
 //                        tmpArray[18] // lenderRate
 //                        tmpArray[19] // lenderCondition
 //                        tmpArray[20] // price
 //                        tmpArray[21] // status
-                        preStatementSelect.setString(1, toStatus); // status
+                        preStatementSelect.setString(2, toStatus); // status
 //                        tmpArray[22] // timStamp
-                        preStatementSelect.setString(2, timeStamp); // timeStamp
+                        preStatementSelect.setString(3, timeStamp); // timeStamp
 //                        tmpArray[23] // updateBy
-                        preStatementSelect.setString(3, userName); // updateBy
+                        preStatementSelect.setString(4, userName); // updateBy
 
                         preStatementSelect.executeUpdate();
                         countItem = 1;
@@ -357,61 +358,6 @@ public class DataUpdate {
         return result;
     }
 
-
-    public ArrayList<CreateRfq> updateTargetRfqForAllNothing(String type, String requestId, String lenderName) {
-
-        Connection connection = null;
-        Statement statement = null;
-        ArrayList<CreateRfq> targetCreateRfqs = new ArrayList<>();
-        try {
-            Class.forName("org.sqlite.JDBC");
-
-            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
-            statement = connection.createStatement();
-            statement.setQueryTimeout(30);  // set timeout to 30 sec.
-
-            String sql = "SELECT requestId, type, lineNo, stockCode, borrowerQty, borrowerStart, borrowerEnd, lenderNo FROM "
-                    + ConfigLoader.transactionTable + " WHERE type = '" + type + "' AND requestId = " + "'" + requestId + "'" + " AND lenderNo = " + lenderName + ";";
-            ResultSet resultSet = statement.executeQuery(sql);
-
-
-            while (resultSet.next()) {
-                CreateRfq newCreateRfq = new CreateRfq(resultSet.getString("requestId"),resultSet.getString("type"),
-                        resultSet.getInt("lineNo"), resultSet.getString("stockCode"),
-                        resultSet.getInt("borrowerQty"), resultSet.getString("borrowerStart"), resultSet.getString("borrowerEnd"));
-                targetCreateRfqs.add(newCreateRfq);
-
-            }
-            LOGGER.debug("DataUpdate.updateTargetRfqForAllNothing completed");
-
-        }catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            LOGGER.error("DataUpdate.updateTargetRfqForAllNothing.ClassException", e);
-        } catch (SQLException e) {
-            LOGGER.error("DataUpdate.updateTargetRfqForAllNothing.SQLException", e);
-            e.printStackTrace();
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            try {
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-
-            }
-        }
-        return targetCreateRfqs;
-
-    }
-
-
     public static boolean updateLenderStatusAfterSentQuote (String borrowerName, String fromStatus, String toStatus) {
         Connection connection = null;
         Statement statement = null;
@@ -460,7 +406,6 @@ public class DataUpdate {
 
     }
 
-
     public static boolean updateStatusAfterSentSelection (String lenderName, String fromStatus, String toStatus) {
         Connection connection = null;
         Statement statement = null;
@@ -508,7 +453,6 @@ public class DataUpdate {
         return result;
 
     }
-
 
     public static boolean updateSelection (String userName, String lenderName, String requestId, int lineNo, String status) {
         Connection connection = null;
@@ -563,7 +507,6 @@ public class DataUpdate {
         }
         return result;
     }
-
 
     public static boolean updateQuote (String userName, String fromStatus, String borrowerName, String lenderName, String requestId,
                                        int lineNo, int lenderQty, String lenderStart, String lenderEnd, double lenderRate,

@@ -100,6 +100,58 @@ public class DataServices {
         return JOB_NAME + "Successful";
     }
 
+    public static String[] getCounterPartyInfo(String counterPartyName) {
+        Connection connection = null;
+        Statement statement = null;
+        try {
+
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String sqlGetCounterPartyInfo = "select * from " + ConfigLoader.counterPartyTable + " where isActive=1 AND counterPartyName=?";
+            PreparedStatement preStatement = connection.prepareStatement(sqlGetCounterPartyInfo);
+            preStatement.setString(1, counterPartyName);
+            ResultSet resultSet = preStatement.executeQuery();
+            tmpArray = new String[6];
+
+            tmpArray[0] = resultSet.getString(1);  //counterPartyId
+            tmpArray[1] = resultSet.getString(2);  //counterPartyName
+            tmpArray[2] = resultSet.getString(3);  //counterPartyType
+            tmpArray[3] = resultSet.getString(4);  //counterPartyBotName
+            tmpArray[4] = Miscellaneous.convertRoomId(resultSet.getString(5));  //extChatRoomId
+            tmpArray[5] = resultSet.getString(6);
+//            tmpArray[5] = rs.getString(6);  //isActive
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataService.getCounterPartyInfo.ClassException",e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataService.getCounterPartyInfo.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+        }
+        LOGGER.debug("DataService.getCounterPartyInfo completed");
+        return tmpArray;
+    }
+
     public static ArrayList<String> getRequestIdList() {
 
 //        Get Request ID List into the public static RequestID to list the options in Lender
@@ -497,58 +549,6 @@ public class DataServices {
         return true;
     }
     
-    public static String[] getCounterPartyInfo(String counterPartyName) {
-        Connection connection = null;
-        Statement statement = null;
-        try {
-
-            Class.forName("org.sqlite.JDBC");
-
-            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
-            statement = connection.createStatement();
-            statement.setQueryTimeout(30);  // set timeout to 30 sec.
-
-            String sqlGetCounterPartyInfo = "select * from " + ConfigLoader.counterPartyTable + " where isActive=1 AND counterPartyName=?";
-            PreparedStatement preStatement = connection.prepareStatement(sqlGetCounterPartyInfo);
-            preStatement.setString(1, counterPartyName);
-            ResultSet resultSet = preStatement.executeQuery();
-            tmpArray = new String[6];
-
-            tmpArray[0] = resultSet.getString(1);  //counterPartyId
-            tmpArray[1] = resultSet.getString(2);  //counterPartyName
-            tmpArray[2] = resultSet.getString(3);  //counterPartyType
-            tmpArray[3] = resultSet.getString(4);  //counterPartyBotName
-            tmpArray[4] = Miscellaneous.convertRoomId(resultSet.getString(5));  //extChatRoomId
-            tmpArray[5] = resultSet.getString(6);
-//            tmpArray[5] = rs.getString(6);  //isActive
-
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            LOGGER.error("DataService.getCounterPartyInfo.ClassException",e);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            LOGGER.error("DataService.getCounterPartyInfo.SQLException", e);
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            try {
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-
-        }
-        LOGGER.debug("DataService.getCounterPartyInfo completed");
-        return tmpArray;
-    }
-
     public static String insertGetRfqsForTargetCounterParty(String type, String userName, String requestId, String lenderName, int lenderNo) {
         Connection connection = null;
         Statement statement = null;
@@ -575,7 +575,7 @@ public class DataServices {
 
             String sqlInsertRfqForTargetCounterParty = "insert into " + ConfigLoader.transactionTable +
                     " (type, lotNo, requestId, versionNo, lineNo, stockCode, borrowerName, borrowerQty, " +
-                    "borrowerStart, borrowerEnd, lenderNo, lenderName, timeStamp, price, updatedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                    "borrowerStart, borrowerEnd, borrowerRate, borrowerCondition, lenderNo, lenderName, timeStamp, price, updatedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             PreparedStatement preparedStatementInsert = connection.prepareStatement(sqlInsertRfqForTargetCounterParty);
 
             String timeStamp = Miscellaneous.getTimeStamp("transaction");
@@ -594,6 +594,8 @@ public class DataServices {
                 tmpArray[8] = resultSet.getString(8); // borrowerQty
                 tmpArray[9] = resultSet.getString(9); // borrowerStart
                 tmpArray[10] = resultSet.getString(10); // borrowerEnd
+                tmpArray[11] = resultSet.getString(11); // borrowerRate
+                tmpArray[12] = resultSet.getString(12); // borrowerCondition
 
                 preparedStatementInsert.setString(1,  tmpArray[1]); // type
                 preparedStatementInsert.setInt(2, Integer.parseInt( tmpArray[2])); // lotNo
@@ -605,11 +607,14 @@ public class DataServices {
                 preparedStatementInsert.setInt(8, Integer.parseInt( tmpArray[8])); // borrowerQty
                 preparedStatementInsert.setString(9,  tmpArray[9]); // borrowerStart
                 preparedStatementInsert.setString(10,  tmpArray[10]); // borrowerEnd
-                preparedStatementInsert.setInt(11, lenderNo); // lenderNo
-                preparedStatementInsert.setString(12, lenderName); // lenderName
-                preparedStatementInsert.setString(13, timeStamp); // timeStamp
-                preparedStatementInsert.setInt(14, 0); // price
-                preparedStatementInsert.setString(15, userName); // userName
+//                preparedStatementInsert.setDouble(11,  tmpArray[11]); // borrowerRate
+                preparedStatementInsert.setDouble(11,  0.0); // borrowerRate
+                preparedStatementInsert.setString(12,  tmpArray[12]); // borrowerCondition
+                preparedStatementInsert.setInt(13, lenderNo); // lenderNo
+                preparedStatementInsert.setString(14, lenderName); // lenderName
+                preparedStatementInsert.setString(15, timeStamp); // timeStamp
+                preparedStatementInsert.setInt(16, 0); // price
+                preparedStatementInsert.setString(17, userName); // userName
 
                 preparedStatementInsert.executeUpdate();
 
@@ -623,6 +628,9 @@ public class DataServices {
                 rfqsData += Integer.parseInt( tmpArray[8]) + ","; // borrowerQty
                 rfqsData += tmpArray[9] + ","; // borrowerStart
                 rfqsData += tmpArray[10] + ","; // borrowerEnd
+//                rfqsData += tmpArray[11] + ","; // borrowerRate
+                rfqsData += "0.0,"; // borrowerRate
+                rfqsData += tmpArray[12] + ","; // borrowerCondition
                 rfqsData += lenderNo + ","; // lenderNo
                 rfqsData += lenderName + ","; // lenderName
                 rfqsData += timeStamp + "\r"; // timeStamp
@@ -676,11 +684,10 @@ public class DataServices {
 
 //           while (rs.next()) failed into Loop so that limit loop by the count of results
 
-
-
             String sqlInsertRfqForTargetCounterParty = "insert into " + ConfigLoader.transactionTable +
                     " (type, lotNo, requestId, versionNo, lineNo, stockCode, borrowerName, borrowerQty, " +
-                    "borrowerStart, borrowerEnd, lenderNo, lenderName, timeStamp, price, status, updatedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                    "borrowerStart, borrowerEnd, borrowerRate, borrowerCondition, lenderNo, lenderName, " +
+                    "timeStamp, price, status, updatedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
             PreparedStatement preparedStatementInsert = connection.prepareStatement(sqlInsertRfqForTargetCounterParty);
 
             String timeStamp = Miscellaneous.getTimeStamp("transaction");
@@ -688,9 +695,9 @@ public class DataServices {
 
             List<String> rfqLine;
             rfqLine = Arrays.asList(rfqData.split(",", 0));
-            tmpArray = new String[15];
+            tmpArray = new String[16];
 
-            int noOfFields = 13;
+            int noOfFields = 15;
             int countItem = 1;
             for (String item : rfqLine) {
                 if (countItem<=noOfFields) {
@@ -709,12 +716,15 @@ public class DataServices {
                         preparedStatementInsert.setInt(8, Integer.parseInt( tmpArray[8])); // borrowerQty
                         preparedStatementInsert.setString(9,  tmpArray[9]); // borrowerStart
                         preparedStatementInsert.setString(10,  tmpArray[10]); // borrowerEnd
-                        preparedStatementInsert.setInt(11, Integer.parseInt(tmpArray[11])); // lenderNo
-                        preparedStatementInsert.setString(12, tmpArray[12]); // lenderName
-                        preparedStatementInsert.setString(13, timeStamp); // timeStamp
-                        preparedStatementInsert.setInt(14, 0); // price
-                        preparedStatementInsert.setString(15, "YET"); // status
-                        preparedStatementInsert.setString(16, userName); // userName
+//                        preparedStatementInsert.setDouble(11,  tmpArray[11]); // borrowerRate
+                        preparedStatementInsert.setDouble(11,  0.0); // borrowerRate
+                        preparedStatementInsert.setString(12,  tmpArray[12]); // borrowerCondition
+                        preparedStatementInsert.setInt(13, Integer.parseInt(tmpArray[13])); // lenderNo
+                        preparedStatementInsert.setString(14, tmpArray[14]); // lenderName
+                        preparedStatementInsert.setString(15, timeStamp); // timeStamp
+                        preparedStatementInsert.setInt(16, 0); // price
+                        preparedStatementInsert.setString(17, "YET"); // status
+                        preparedStatementInsert.setString(18, userName); // userName
                         preparedStatementInsert.executeUpdate();
                         countItem = 1;
 

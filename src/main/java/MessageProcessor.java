@@ -20,6 +20,7 @@ public class MessageProcessor {
     public MessageProcessor(SymBotClient botClient) {
         this.botClient = botClient;
     }
+
     public void process(InboundMessage inboundMessage) {
         List<Long> mentions = SymMessageParser.getMentions(inboundMessage);
         UserInfo botUserInfo = this.botClient.getBotUserInfo();
@@ -57,7 +58,6 @@ public class MessageProcessor {
 
                         }
                         break;
-
                     }
 
                     case "/initializesod" : {
@@ -273,11 +273,13 @@ public class MessageProcessor {
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.notifyNotInRoom executed");
     }
+
     public void notifyNotUnderStandCommand(InboundMessage inboundMessage) {
         OutboundMessage messageOut = MessageSender.getInstance().buildNotUnderstandMessage();
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.notifyNotInRoom executed");
     }
+
     public void sendHelp(InboundMessage inboundMessage) {
         OutboundMessage messageOut = MessageSender.getInstance().buildHelpMessage();
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);

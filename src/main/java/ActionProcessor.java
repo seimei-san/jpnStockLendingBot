@@ -326,7 +326,7 @@ public class ActionProcessor {
         int borrowerQty;
         String borrowerStart;
         String borrowerEnd;
-        final int lenderNo = 0;
+        final int lenderNo = 0;    // the original RFQ created by Borrower has LenderNo=0
 
         boolean notError = true;
 
@@ -400,9 +400,9 @@ public class ActionProcessor {
             while ((line = reader.readLine()) != null) {
                 String[] items = new String[3];
                 String[] quote = line.split("\t", 0);
-                items[0] = quote[6]; // lenderName
-                items[1] = quote[7]; // requestId
-                items[2] = quote[8]; // lineNo
+                items[0] = quote[8]; // lenderName
+                items[1] = quote[9]; // requestId
+                items[2] = quote[10]; // lineNo
                 DataUpdate.updateSelection(userName, items[0], items[1], Integer.parseInt(items[2]), "SELECT") ;
             }
             if (notError) {
@@ -463,24 +463,24 @@ public class ActionProcessor {
                 String[] items = new String[11];
                 String[] quote = line.split("\t", 0);
                 items[0] = quote[1]; // borrowerName
-                items[1] = quote[6]; // lenderName
-                items[2] = quote[7]; // requestId
-                items[3] = quote[8]; // lineNo
-                items[4] = quote[9]; // lenderQty
-                items[5] = quote[10];    // lenderStart
-                items[6] = quote[11];    // lenderEnd
-                if (quote[12]==null || quote[12].isEmpty()) {
+                items[1] = quote[8]; // lenderName
+                items[2] = quote[9]; // requestId
+                items[3] = quote[10]; // lineNo
+                items[4] = quote[11]; // lenderQty
+                items[5] = quote[12];    // lenderStart
+                items[6] = quote[13];    // lenderEnd
+                if (quote[14]==null || quote[14].isEmpty()) {
                     items[7] = "0.0";
                 } else {
-                    items[7] = quote[12]; // lenderRate
+                    items[7] = quote[14]; // lenderRate
                 }
-                items[8] = quote[13];    // lenderCondition
-                if (quote[14]==null || quote[14].isEmpty()) {
+                items[8] = quote[15];    // lenderCondition
+                if (quote[16]==null || quote[16].isEmpty()) {
                     items[9] = "0";
                 } else {
-                    items[9] = quote[14];    // price
+                    items[9] = quote[16];    // price
                 }
-                items[10] = quote[15];    // Status
+                items[10] = quote[17];    // Status
 
                 DataUpdate.updateQuote(userName, fromStatus, items[0], items[1], items[2],
                         Integer.parseInt(items[3]), Integer.parseInt(items[4]), items[5], items[6],
@@ -550,14 +550,6 @@ public class ActionProcessor {
         LOGGER.debug("ActionProcessor.manageResendRfqForm completed");
     }
 
-    public void manageCancelRfqForm(SymphonyElementsAction action, User user) {
-        Map<String, Object> formValues = action.getFormValues();
-        String userId = user.getUserId().toString();
-        OutboundMessage messageOut = MessageSender.getInstance().buildCreateRequestFormMessage(userId);
-        MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
-        LOGGER.debug("ActionProcessor.manageCancelRfqForm completed");
-    }
-
     public void reCreateRfqForm(SymphonyElementsAction action, String userId, String userName, String requestId) {
         String botId = String.valueOf(botClient.getBotUserId());
         OutboundMessage messageOut = MessageSender.getInstance().buildCreateRequestFormMessage(botId, userId,
@@ -566,22 +558,10 @@ public class ActionProcessor {
         LOGGER.debug("ActionProcessor.reCreateRfqForm completed");
     }
 
-    public void noticeNotAllowYou(SymphonyElementsAction action, String allowedCounterPartyName) {
-        OutboundMessage messageOut = MessageSender.getInstance().buildNotAllowYouMessage(allowedCounterPartyName);
-        MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
-        LOGGER.debug("ActionProcessor.noticeNowAllowYou completed");
-    }
-
     public void replyRfqNothing(SymphonyElementsAction action, String userId, String userName, String requestId, String borrowerName, String lenderName) {
         OutboundMessage messageOut = MessageSender.getInstance().buildNothingMessage(userId, userName, requestId, borrowerName, lenderName);
         MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
         LOGGER.debug("ActionProcessor.replyRfqNothing completed");
-    }
-
-    public void noticeAcceptQuote(SymphonyElementsAction action, String userId, String userName, String requestId, String borrowerName, String lenderName) {
-        OutboundMessage messageOut = MessageSender.getInstance().buildAcceptQuoteMessage(requestId, userId, userName, borrowerName, lenderName);
-        MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
-        LOGGER.debug("ActionProcessor.notifyAcceptQuote completed");
     }
 
     public void acceptRfqNothing(SymphonyElementsAction action, String userName, String requestId, String borrowerName, String lenderName) {

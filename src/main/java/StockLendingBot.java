@@ -34,6 +34,7 @@ public class StockLendingBot {
             DataImport.importCsv(ConfigLoader.counterPartyTable); LOGGER.debug("DataImport.importCsv executed");
             DataServices.getCounterPartyList(); LOGGER.debug("DataServices.getCounterPartyList executed");
             DataServices.getExtRoomIdList(); LOGGER.debug("DataServices.getExtRoomIdList executed");
+            AutoLoader.inputWatcher();
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("StockLendingBotException thrown on StockLendingBOt", e);
