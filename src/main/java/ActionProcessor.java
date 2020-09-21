@@ -398,12 +398,22 @@ public class ActionProcessor {
         try (BufferedReader reader = new BufferedReader(new StringReader(selectData))) {
             String line = null;
             while ((line = reader.readLine()) != null) {
-                String[] items = new String[3];
+                String[] items = new String[9];
                 String[] quote = line.split("\t", 0);
-                items[0] = quote[8]; // lenderName
-                items[1] = quote[9]; // requestId
-                items[2] = quote[10]; // lineNo
-                DataUpdate.updateSelection(userName, items[0], items[1], Integer.parseInt(items[2]), "SELECT") ;
+                items[0] = quote[1]; // borrowerName
+                items[1] = quote[8]; // lenderName
+                items[2] = quote[9]; // requestId
+                items[3] = quote[10]; // lineNo
+                items[4] = quote[11]; // lenderQty
+                items[5] = quote[12];    // lenderStart
+                items[6] = quote[13];    // lenderEnd
+                items[7] = quote[14];  // lenderRate
+                items[8] = quote[15];  // lenderCondition
+
+//                items[0] = quote[8]; // lenderName
+//                items[1] = quote[9]; // requestId
+//                items[2] = quote[10]; // lineNo
+                DataUpdate.updateSelection(userName, items[0], items[1], items[2], Integer.parseInt(items[3]), Integer.parseInt(items[4]), items[5], items[6], Double.parseDouble(items[7]), items[8], "SELECT") ;
             }
             if (notError) {
                 String botId = String.valueOf(botClient.getBotUserId());

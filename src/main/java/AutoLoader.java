@@ -40,7 +40,11 @@ public class AutoLoader {
                 // Timer waits to copy the data file completed.
                 TimerTask task = new TimerTask() {
                     public void run() {
-                        autoLoading(read_file, target_file);
+                        try {
+                            autoLoading(read_file, target_file);
+                        } catch (Exception e) {
+                            System.out.println("autoLoading was failed");
+                        }
                     }
                 };
                 timer.schedule(task, 3000);
@@ -139,12 +143,18 @@ public class AutoLoader {
                     String line = null;
 
                     while ((line = bufferedReader.readLine()) != null) {
-                        String[] items = new String[3];
+                        String[] items = new String[9];
                         String[] quote = line.split(",", 0);
-                        items[0] = quote[8]; // lenderName
-                        items[1] = quote[9]; // requestId
-                        items[2] = quote[10]; // lineNo
-                        DataUpdate.updateSelection(userName, items[0], items[1], Integer.parseInt(items[2]), "SELECT") ;
+                        items[0] = quote[1]; // borrowerName
+                        items[1] = quote[8]; // lenderName
+                        items[2] = quote[9]; // requestId
+                        items[3] = quote[10]; // lineNo
+                        items[4] = quote[11]; // lenderQty
+                        items[5] = quote[12];    // lenderStart
+                        items[6] = quote[13];    // lenderEnd
+                        items[7] = quote[14];  // lenderRate
+                        items[8] = quote[15];  // lenderCondition
+                        DataUpdate.updateSelection(userName, items[0], items[1], items[2], Integer.parseInt(items[3]), Integer.parseInt(items[4]), items[5], items[6], Double.parseDouble(items[7]), items[8], "SELECT") ;
                     }
 
                     csvFilePath = DataExports.exportRfqsUpdatedByLender(null,null, "SELECT");

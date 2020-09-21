@@ -1410,6 +1410,8 @@ public class MessageSender {
                         "<td></td>" +
                         "<td></td>" +
                         "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
                         "<td style='text-align:right;font-weight:bold'>計: </td>" +
                         "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
                         "<td></td>" +

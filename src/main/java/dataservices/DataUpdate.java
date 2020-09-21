@@ -454,7 +454,11 @@ public class DataUpdate {
 
     }
 
-    public static boolean updateSelection (String userName, String lenderName, String requestId, int lineNo, String status) {
+    public static boolean updateSelection (String userName, String borrowerName, String lenderName, String requestId, int lineNo, int lenderQty, String lenderStart,
+                                           String lenderEnd, double lenderRate, String lenderCondition, String status) {
+        // String userName, String fromStatus, String borrowerName, String lenderName, String requestId,
+        //                                       int lineNo, int lenderQty, String lenderStart, String lenderEnd, double lenderRate,
+        //                                       String lenderCondition, int price, String toStatus
         Connection connection = null;
         Statement statement = null;
         boolean result = true;
@@ -467,15 +471,34 @@ public class DataUpdate {
 
             String timeStamp = Miscellaneous.getTimeStamp("transaction");
 
+//            String sql = "UPDATE " + ConfigLoader.transactionTable +
+//                    " SET status=?, timeStamp=?, updatedBy=? WHERE lenderName=? AND requestId=? AND lineNo=?";
+//            PreparedStatement preStatementSelect = connection.prepareStatement(sql);
+//            preStatementSelect.setString(1, status);
+//            preStatementSelect.setString(2, timeStamp);
+//            preStatementSelect.setString(3, userName);
+//            preStatementSelect.setString(4, lenderName);
+//            preStatementSelect.setString(5, requestId);
+//            preStatementSelect.setInt(6, lineNo);
+
+
+
             String sql = "UPDATE " + ConfigLoader.transactionTable +
-                    " SET status=?, timeStamp=?, updatedBy=? WHERE lenderName=? AND requestId=? AND lineNo=?";
+                    " SET lenderQty=?, lenderStart=?, lenderEnd=?, lenderRate=?, lenderCondition=?, status=?, timeStamp=?, updatedBy=? " +
+                    " WHERE lenderNo!=0 AND borrowerName=? AND lenderName=? AND requestId=? AND lineNo=?";
             PreparedStatement preStatementSelect = connection.prepareStatement(sql);
-            preStatementSelect.setString(1, status);
-            preStatementSelect.setString(2, timeStamp);
-            preStatementSelect.setString(3, userName);
-            preStatementSelect.setString(4, lenderName);
-            preStatementSelect.setString(5, requestId);
-            preStatementSelect.setInt(6, lineNo);
+            preStatementSelect.setInt(1, lenderQty);
+            preStatementSelect.setString(2, Miscellaneous.fourDigitDate(lenderStart.trim()));
+            preStatementSelect.setString(3, Miscellaneous.fourDigitDate(lenderEnd.trim()));
+            preStatementSelect.setDouble(4, lenderRate);
+            preStatementSelect.setString(5, lenderCondition);
+            preStatementSelect.setString(6, status);
+            preStatementSelect.setString(7, timeStamp);
+            preStatementSelect.setString(8, userName);
+            preStatementSelect.setString(9, borrowerName);
+            preStatementSelect.setString(10, lenderName);
+            preStatementSelect.setString(11, requestId);
+            preStatementSelect.setInt(12, lineNo);
 
             preStatementSelect.executeUpdate();
 
@@ -526,7 +549,6 @@ public class DataUpdate {
             String sql = "UPDATE " + ConfigLoader.transactionTable +
                     " SET lenderQty=?, lenderStart=?, lenderEnd=?, lenderRate=?, lenderCondition=?, price=?, status=?, timeStamp=?, updatedBy=? " +
                     " WHERE status=? AND borrowerName=? AND lenderName=? AND requestId=? AND lineNo=?";
-            System.out.println("Four Digit Date = " + Miscellaneous.fourDigitDate(lenderStart.trim()) + "LEN=" + lenderStart.length());
             PreparedStatement preStatementSelect = connection.prepareStatement(sql);
             preStatementSelect.setInt(1, lenderQty);
             preStatementSelect.setString(2, Miscellaneous.fourDigitDate(lenderStart.trim()));
