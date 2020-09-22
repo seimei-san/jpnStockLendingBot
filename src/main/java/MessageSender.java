@@ -42,7 +42,6 @@ public class MessageSender {
         }
     }
 
-
     public OutboundMessage buildInitializeConfigMessage(String msg1, String msg2, String msg3, String msg4) {
         String message =
                 "Hi, " + msg1 + "<br/>" + msg2 + "<br/>" + msg3 + "<br/>" + msg4;
@@ -92,11 +91,9 @@ public class MessageSender {
         }
 
         String displayRequestId;
-        if (!requestId.equals(ConfigLoader.NO_REQUESTID)) {
-            displayRequestId = requestId;
-        } else {
-            displayRequestId = "";
-        }
+
+        displayRequestId = requestId;
+
 
         if (isNew) {
             titleForm = "RFQの作成: ";
@@ -177,9 +174,7 @@ public class MessageSender {
                     "<form id=\"create-rfq-form\">";
 
             if (!isInserted) {
-                if (requestId.equals("")) {
-                    requestId = ConfigLoader.NO_REQUESTID;
-                }
+
                 message +=
                         "<h3>依頼番号: " + requestId + "</h3>" +
                                 "<br/>";
@@ -267,8 +262,9 @@ public class MessageSender {
                             "<select name=\"lender5-select\" required=\"false\" data-placeholder=\"貸手5を選択\">";
             message += messageOptions;
             message +=
-                    "</select>" +
-                            "<button type=\"action\" name=\"recreate-rfq-button\">再作成</button>" +
+                    "</select>";
+            message +=
+                    "<button type=\"action\" name=\"recreate-rfq-button\">再作成</button>" +
                             "<button type=\"action\" name=\"cancel-rfq-button\">取消</button>" +
                             "<button type=\"action\" name=\"send-rfq-button\">送信</button>" +
                             "</form>";
@@ -460,15 +456,6 @@ public class MessageSender {
         return messageOut;
     }
 
-    public OutboundMessage buildNotAllowYouMessage(String allowedCounterPartyName) {
-        String message =
-                "<h3>この操作は、" + allowedCounterPartyName + "のみが行える操作です。</h3>" +
-                        "<p>チャットボットの動作についての詳細は、システム管理者にお問い合わせください。</p>";
-        OutboundMessage messageOut = new OutboundMessage();
-        messageOut.setMessage(message);
-        return messageOut;
-    }
-
     public OutboundMessage buildAcceptNothingMessage(String requestId, String userName, String borrowerName, String lenderName) {
         String message =
                 "<h5>依頼番号[<hash tag=\"" + requestId + "\"/>] " + lenderName + "からの<b>在庫無し連絡</b>は、" + borrowerName + "(" + userName + ")に承諾されました。</h5>" +
@@ -528,18 +515,6 @@ public class MessageSender {
                         "<p><b>/updateconfig</b>：  チャットボット環境設定の更新</p>";
         OutboundMessage messageOut = new OutboundMessage();
         messageOut.setMessage(message);
-        return messageOut;
-    }
-
-    public OutboundMessage buildAccpetRfqMessageForlender(String requestId, String borrowerName, String lenderName, String csvFullPath) {
-        String message =
-                "<h3>" + borrowerName + "の依頼[<hash tag=\"" + requestId + "\"/>]を" + lenderName + "が受け付けました。</h3>";
-//                        "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.rfqHashTag + "\"/></p>";
-        OutboundMessage messageOut = new OutboundMessage();
-        messageOut.setAttachment(new File(csvFullPath));
-
-        messageOut.setMessage(message);
-        LOGGER.debug("buildAccpetRfqMessageForlender returned");
         return messageOut;
     }
 
@@ -1150,8 +1125,8 @@ public class MessageSender {
                 "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">" + titleForm + "依頼者（一社／数社）← " + lenderName + "</h3>";
 
         message +=
-                "<h4>回答者： <mention uid='" + userId + "'/></h4>" +
-//                "<h4>回答者： " + userId + "</h4>" +
+//                "<h4>回答者： <mention uid='" + userId + "'/></h4>" +
+                "<h4>回答者： " + userId + "</h4>" +
                         "<br/>" +
                         "<table style='table-layout:fixed;width:1400px'>" +
                         "<thead>" +
@@ -1690,6 +1665,230 @@ public class MessageSender {
 
         return messageOut;
     }
+
+    public OutboundMessage buildCreateIoiFormMessage(String botId, String userId, String userName, String requestId, String lenderName, String status, boolean isNew) {
+        String message;
+        String titleForm;
+        StringBuilder messageOptionsForBorrowers = new StringBuilder();
+        for (int i = 0; DataServices.counterPartiesList.length > i; i++) {
+            messageOptionsForBorrowers.append("<option value=\"").append(DataServices.counterPartiesList[i]).append("\">").append(DataServices.counterPartiesList[i]).append("</option>");
+        }
+
+        String displayRequestId;
+
+        displayRequestId = requestId;
+
+
+        if (isNew) {
+            titleForm = "IOIの作成: ";
+        } else {
+            titleForm = "IOIの送信: ";
+        }
+
+        if (displayRequestId.equals("")) {
+            message =
+                    "<h3 class=\"tempo-text-color--black tempo-bg-color--yellow\">" + titleForm + "借手（一社／数社）← " + lenderName + " []</h3>";
+        } else {
+            message =
+                    "<h3 class=\"tempo-text-color--white tempo-bg-color--purple\">" + titleForm + "借手（一社／数社）← " + lenderName+ " [<hash tag=\"" + displayRequestId + "\"/>]</h3>";
+        }
+
+        message +=
+//                "<h4>担当者： <mention uid='" + userId + "'/></h4>" +
+                "<h4>担当者： " + userName + "</h4>" +
+                        "<br/>" +
+                        "<table style='table-layout:fixed;width:1400px'>" +
+                        "<thead>" +
+                        "<tr>" +
+                        "<td style='width:4%;font-weight:bold'>種別</td>" +
+                        "<td style='width:6%;font-weight:bold'>依頼元</td>" +
+                        "<td style='width:5%;font-weight:bold'>銘柄</td>" +
+                        "<td style='width:8%;font-weight:bold;text-align:right'>株数</td>" +
+                        "<td style='width:6%;font-weight:bold'>開始日</td>" +
+                        "<td style='width:7%;font-weight:bold'>返却日/期間</td>" +
+                        "<td style='width:4%;font-weight:bold;text-align:right'>利率</td>" +
+                        "<td style='width:4%;font-weight:bold'>条件</td>" +
+                        "<td style='width:6%;font-weight:bold'>依頼先</td>" +
+                        "<td style='width:8%;font-weight:bold'>依頼番号</td>" +
+                        "<td style='width:3%;font-weight:bold'>枝番</td>" +
+                        "<td style='width:7%;font-weight:bold;text-align:right'>見積株数</td>" +
+                        "<td style='width:6%;font-weight:bold'>見積開始</td>" +
+                        "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
+                        "<td style='width:6%;font-weight:bold;text-align:right'>見積利率</td>" +
+                        "<td style='width:7%;font-weight:bold'>見積条件</td>" +
+                        "<td style='width:5%;font-weight:bold;text-align:right'>価格</td>" +
+                        "<td style='width:4%;font-weight:bold'>状況</td>" +
+                        "</tr>" +
+                        "</thead>" +
+                        "<tbody>";
+
+
+        DataServices dataServices = DataServices.getInstance();
+        int totalQtyborrower = 0;
+        int totalQtylender = 0;
+        for (ViewIoi viewIoi : dataServices.viewImportIoi(requestId,0)) {
+            totalQtyborrower += viewIoi.getBorrowerQty();
+            totalQtylender += viewIoi.getLenderQty();
+
+            message +=
+                    "<tr>" +
+                            "<td>" + viewIoi.getType() + "</td>" +
+                            "<td class='tempo-text-color--green'>" + viewIoi.getBorrowerName() + "</td>" +
+                            "<td>" + viewIoi.getStockCode() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getBorrowerQty()) + "</td>" +
+                            "<td>" + viewIoi.getBorrowerStart() + "</td>" +
+                            "<td>" + viewIoi.getBorrowerEnd() + "</td>" +
+                            "<td style='text-align:right'>" + viewIoi.getBorrowerRate() + "</td>" +
+                            "<td>" + viewIoi.getBorrowerCondition() + "</td>" +
+                            "<td class='tempo-text-color--blue'>" + viewIoi.getLenderName() + "</td>" +
+                            "<td >" + viewIoi.getRequestId() + "</td>" +
+                            "<td style='text-align:right'>" + viewIoi.getLineNo() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getLenderQty()) + "</td>" +
+                            "<td>" + viewIoi.getLenderStart() + "</td>" +
+                            "<td>" + viewIoi.getLenderEnd() + "</td>" +
+                            "<td style='text-align:right'>" + viewIoi.getLenderRate() + "</td>" +
+                            "<td>" + viewIoi.getLenderCondition() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getPrice()) + "</td>" +
+                            "<td>" + viewIoi.getStatus() + "</td>" +
+                            "</tr>";
+        }
+
+        message +=
+                "</tbody>" +
+                        "<tfoot>" +
+                        "<tr>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "</tr>" +
+                        "</tfoot>" +
+                        "</table>" +
+                        "<br/>" ;
+
+        message +=
+                "<div style=\"display: flex;\">";
+
+
+//      Div in Left Bottom ---------------------
+//      Div in Left Bottom ---------------------
+//      Div in Left Bottom ---------------------
+        message +=
+                "<div style=\"width:50%;\">"+
+                        "</div>" ;
+
+//       Div in Right Bottom -------------------
+//       Div in Right Bottom -------------------
+//       Div in Right Bottom -------------------
+        message +=
+                "<br/>" +
+                        "<div style=\"width:50%;\">";
+
+        if (isNew) {
+
+            message +=
+                    "<form id=\"create-ioi-form\">";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "<div style=\"display:none\">";
+            }
+            message +=
+                    "<p>botId: requestId: lenderName: userName: </p>" +
+                            "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                            "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
+                            "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                            "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "</div>";
+            }
+
+            message +=
+                    "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">IOIのデータの入力</h3>" +
+                            "<br/>" +
+//                                "<h6>入力欄にIOIデータをコピー／貼付してください</h6>" +
+                            "<textarea name=\"inputIoi\" placeholder=\"ここにコピーしたIOIデータを貼付てください。 " +
+                            "&#13;" +
+                            "コピー範囲は、エクセルで開いたCSVファイルの先頭列（列名：種別）から最終列（列名：状況）を含めてください。\" required=\"true\"></textarea>" +
+                            "<button type=\"reset\">消去</button><button type=\"action\" name=\"import-ioi-button\">取込</button>";
+
+            message +=
+                    "</form>";
+        }
+        if (!isNew) {
+
+            message +=
+                    "<form id=\"submit-ioi-form\">";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "<div style=\"display:none\">";
+            }
+            message +=
+                    "<p>requestId: lenderName: userName: </p>" +
+                            "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
+                            "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                            "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "</div>";
+            }
+
+            message +=
+                    "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">IOIを借手に送信</h3>" +
+                            "<br/>";
+
+            message +=
+                    "<select name=\"borrower1-select\" required=\"false\" data-placeholder=\"借手1を選択\">";
+            message += messageOptionsForBorrowers;
+            message +=
+                    "</select>" +
+
+                            "<select name=\"borrower2-select\" required=\"false\" data-placeholder=\"借手2を選択\">";
+            message += messageOptionsForBorrowers;
+            message +=
+                    "</select>" +
+
+                            "<select name=\"borrower3-select\" required=\"false\" data-placeholder=\"借手3を選択\">";
+            message += messageOptionsForBorrowers;
+            message +=
+                    "</select>" +
+
+                            "<select name=\"borrower4-select\" required=\"false\" data-placeholder=\"借手4を選択\">";
+            message += messageOptionsForBorrowers;
+            message +=
+                    "</select>" +
+
+                            "<select name=\"borrower5-select\" required=\"false\" data-placeholder=\"借手5を選択\">";
+            message += messageOptionsForBorrowers;
+            message +=
+                    "</select>";
+
+            message +=
+
+                    "<button type=\"action\" name=\"recreate-ioi-button\">再作成</button>" +
+                            "<button type=\"action\" name=\"send-ioi-button\">送信</button>" +
+                            "</form>";
+        }
+
+        message +=
+                "</div>"+
+                        "</div>";
+
+
+        OutboundMessage messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        LOGGER.debug("buildCreateIoiFormMessage returned");
+        return messageOut;
+    }
+
 
 
     public OutboundMessage buildTestMessage() {

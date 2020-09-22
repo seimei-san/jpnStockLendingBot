@@ -16,7 +16,6 @@ public class ConfigLoader {
     private static final String JOB_NAME = "Configuration Loader: ";
 
     public static final int MAX_REQID_LEN = 9;
-    public static final String NO_REQUESTID = "(自動割当)";
 
     public static String env = "";
     public static int maxCounterParty = 0;
@@ -76,7 +75,7 @@ public class ConfigLoader {
             counterPartyTableSql = node.get("counterPartyTableSql").asText();
 //            DataServices.getCounterPartyList();
 
-             isInitialized = true;
+            isInitialized = true;
 
 
 

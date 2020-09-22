@@ -192,6 +192,18 @@ public class MessageProcessor {
                         break;
                     }
 
+                    case "/newioi" : {
+                        if (Miscellaneous.checkRoomId(streamId)) {
+                            this.notifyNotInRoom(inboundMessage,"/newioi");
+                            LOGGER.debug("/newioi executed from not proper room");
+
+                        } else {
+                            this.createIoiForm(inboundMessage);
+                            LOGGER.debug("MessageProcessor.Commend=createIoiForm evoked");
+                        }
+                        break;
+                    }
+
                     case "/viewrfq" : {
                         if (Miscellaneous.checkRoomId(streamId)) {
                             this.notifyNotInRoom(inboundMessage,"/submitquote");
@@ -261,6 +273,16 @@ public class MessageProcessor {
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.submitQuoteForm executed");
     }
+
+    public void createIoiForm(InboundMessage inboundMessage) {
+        String userId = inboundMessage.getUser().getUserId().toString();
+        String userName = inboundMessage.getUser().getDisplayName();
+        String lenderName = ConfigLoader.myCounterPartyName;
+        OutboundMessage messageOut = MessageSender.getInstance().buildCreateIoiFormMessage("", userId, userName, "", lenderName, "YET", true);
+        MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
+        LOGGER.debug("MessageProcessor.createIoiForm executed");
+    }
+
 
     public void notifyAcceptanceRfqByLender(InboundMessage inboundMessage, String requestId, String userId, String userName, String borrowerName, String lenderName, String extChatRoomId) {
         OutboundMessage messageOut = MessageSender.getInstance().buildAcceptQuoteMessage(requestId, userId, userName, borrowerName, lenderName);

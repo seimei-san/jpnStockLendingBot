@@ -42,7 +42,7 @@ public class ActionProcessor {
                     int lotNo;
                     String[] requestIdAndLotNo;
                     String requestId;
-                    if (formValues.get("request_id").equals(ConfigLoader.NO_REQUESTID)) {
+                    if (formValues.get("request_id").equals("")) {
                         // create a new unique Request ID for the day for new RFQ
                         requestIdAndLotNo = DataServices.createRequestId("RFQ");
                         requestId = requestIdAndLotNo[0];
@@ -285,6 +285,28 @@ public class ActionProcessor {
                 break;
             }
 
+            case "create-ioi-form" : {
+                if (formValues.get("action").equals("import-ioi-button")) {
+                    // Import the pasted ioi data into table "transactions"
+                    String userName = user.getDisplayName();
+                    String userId = user.getUserId().toString();
+                    int lotNo;
+                    String[] requestIdAndLotNo;
+                    String requestId;
+                    if (formValues.get("request_id").equals("")) {
+                        // create a new unique Request ID for the day for new IOI
+                        requestIdAndLotNo = DataServices.createRequestId("IOI");
+                        requestId = requestIdAndLotNo[0];
+                        lotNo = Integer.parseInt(requestIdAndLotNo[1]);
+                    } else {
+                        // if not new IOI (normally re-create RFQ with existing Request ID, extra LineNo from Request ID
+                        requestId = (String)formValues.get("request_id");
+                        lotNo = Integer.parseInt(requestId.substring(requestId.length()-2));
+                    }
+                    this.manageAddIoiForm(action, user, userId, userName, requestId, lotNo);
+                }
+                break;
+            }
 
             case "notify-nothing-form" : {
                 String userName = user.getDisplayName();
@@ -384,6 +406,70 @@ public class ActionProcessor {
             OutboundMessage messageOut = MessageSender.getInstance().buildCreateRequestFormMessage(botId, userId, userName, requestId, ConfigLoader.myCounterPartyName, "", false, false);
             MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
             LOGGER.debug("ActionProcessor.manageAddRfqForm completed");
+        }
+
+    }
+
+    public void manageAddIoiForm(SymphonyElementsAction action, User user, String userId, String userName, String requestId, int lotNo) {
+
+        Map<String, Object> formValues = action.getFormValues();
+        String ioiData = (String) formValues.get("inputIoi");
+
+
+        final String type = "IOI";
+
+        boolean notError = true;
+
+
+        try (BufferedReader reader = new BufferedReader(new StringReader(ioiData))) {
+            int lineNo = 0;
+            String line = null;
+            int lenderNo = 0;
+            int lenderQty;
+            double lenderRate;
+            int price;
+
+            while ((line = reader.readLine()) != null) {
+                String[] items = new String[7];
+                String[] ioi = line.split("\t", 0);
+                String stockCode = ioi[0]; // stockCode
+                if (ioi[1]==null || ioi[1].isEmpty()) {
+                    lenderQty = 0;
+                } else {
+                    lenderQty = Integer.parseInt(ioi[1]);    // lenderQty
+                }
+                String lenderStart = ioi[2]; // lenderStart
+                String lenderEnd = ioi[3]; // lenderEnd
+                if (ioi[4]==null || ioi[4].isEmpty()) {
+                    lenderRate = 0.0;
+                } else {
+                    lenderRate = Double.parseDouble(ioi[4]); // lenderRate
+                }
+                String lenderCondition = ioi[5]; // lenderCondition
+                if (ioi[6]==null || ioi[6].isEmpty()) {
+                    price = 0;
+                } else {
+                    price = Integer.parseInt(ioi[6]);    // price
+                }
+                String timeStamp = Miscellaneous.getTimeStamp("transaction");
+                lineNo += 1;
+
+                DataServices.insertIoi(ConfigLoader.myCounterPartyName, type, lotNo, requestId, 0, lineNo,
+                        stockCode, lenderQty, lenderStart, lenderEnd, lenderRate, lenderCondition, price, lenderNo, timeStamp, userName);
+
+            }
+            if (notError) {
+                String lenderName = ConfigLoader.myCounterPartyName;
+                OutboundMessage messageOut = MessageSender.getInstance().buildCreateIoiFormMessage("", userId, userName, requestId, lenderName, "YET", false);
+                MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
+                LOGGER.debug("ActionProcessor.manageAddIoiForm completed");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            LOGGER.error("ActionProcessor.manageAddIoiForm.Exception", e);
+            notError = false;
+            this.noticeDoubtInput(action);
         }
 
     }
