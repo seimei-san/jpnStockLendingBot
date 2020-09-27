@@ -115,7 +115,7 @@ public class MessageProcessor {
                         DataServices.getInsertRfqsIntoTargetCounterParty(rfqsData, userName);
                         this.notifyAcceptanceRfqByLender(inboundMessage, requestId, userId, userName, borrowerName, lenderName, extChatRoomId);
                         break;
-                    }
+                    } //insert RFQ to Lender
 
                     case "/botcmd2" : {
                         // This command is given by IM from Lender Bot with the 7 parameters
@@ -128,7 +128,7 @@ public class MessageProcessor {
                         String quoteData = commandMessage[7];
                         DataUpdate.getUpdateQuoteStatus(quoteData, userName, "REJECT");
                         break;
-                    }
+                    }  // update QUOTE status at Borrower with REJECT
 
                     case "/botcmd3" : {
                         // This command is given by IM from Lender Bot with the 7 parameters
@@ -141,7 +141,7 @@ public class MessageProcessor {
                         String quoteData = commandMessage[7];
                         DataUpdate.getUpdateQuoteByLender(quoteData, userName, "NEW");
                         break;
-                    }
+                    }   // update QUOTE status at Borrower with NEW for acceptance
 
                     case "/botcmd4" : {
                         // This command is given by IM from Lender Bot with the 7 parameters
@@ -154,7 +154,35 @@ public class MessageProcessor {
                         String selectionData = commandMessage[7];
                         DataUpdate.updateSelectionStatusByData(userName, "DONE", selectionData);
                         break;
-                    }
+                    }   // update RFQ status at Lender with DONE
+
+                    case "/botcmd5" : {
+                        // This command is given by IM from Lender Bot with the 7 parameters
+                        String requestId = commandMessage[1];
+                        String userId = commandMessage[2];
+                        String userName = Miscellaneous.convertUserName(commandMessage[3], false);
+                        String borrowerName = commandMessage[4];
+                        String lenderName = commandMessage[5];
+                        String extChatRoomId = Miscellaneous.convertRoomId(commandMessage[6]);
+                        String ioiData = commandMessage[7];
+                        DataUpdate.getUpdateIoiStatus(ioiData, userName, "REJECT");
+                        break;
+                    }   // update IOI status at Borrower with REJECT
+
+                    case "/botcmd6" : {
+                        // This command is given by IM from Lender Bot with the 7 parameters
+                        String requestId = commandMessage[1];
+                        String userId = commandMessage[2];
+                        String userName = Miscellaneous.convertUserName(commandMessage[3], false);
+                        String borrowerName = commandMessage[4];
+                        String lenderName = commandMessage[5];
+                        String extChatRoomId = Miscellaneous.convertRoomId(commandMessage[6]);
+                        String ioiData = commandMessage[7];
+                        DataServices.getInsertIoisIntoTargetCounterParty(ioiData, userName);
+                        this.notifyAcceptanceIoiByBorrower(inboundMessage, requestId, userId, userName, borrowerName, lenderName, extChatRoomId);
+
+                        break;
+                    }   // update IOI status at Borrower with NEW for acceptance
 
                     case "/newquote" : {
                         if (Miscellaneous.checkRoomId(streamId)) {
@@ -164,6 +192,18 @@ public class MessageProcessor {
                         } else {
                             this.createQuoteForm(inboundMessage, "YET");
                             LOGGER.debug("MessageProcessor.Commend=newquote evoked");
+                        }
+                        break;
+                    }
+
+                    case "/checkioi" : {
+                        if (Miscellaneous.checkRoomId(streamId)) {
+                            this.notifyNotInRoom(inboundMessage,"/checkioi");
+                            LOGGER.debug("/checkioi executed from not proper room");
+
+                        } else {
+                            this.selectIoiForm(inboundMessage, "NEW");
+                            LOGGER.debug("MessageProcessor.Commend=checkioi evoked");
                         }
                         break;
                     }
@@ -206,12 +246,24 @@ public class MessageProcessor {
 
                     case "/viewrfq" : {
                         if (Miscellaneous.checkRoomId(streamId)) {
-                            this.notifyNotInRoom(inboundMessage,"/submitquote");
+                            this.notifyNotInRoom(inboundMessage,"/viewrfq");
                             LOGGER.debug("/viewrfq executed from not proper room");
 
                         } else {
                             this.viewRfqUpdatedByLender(inboundMessage);
                             LOGGER.debug("MessageProcessor.Commend=viewrfq evoked");
+                        }
+                        break;
+                    }
+
+                    case "/viewioi" : {
+                        if (Miscellaneous.checkRoomId(streamId)) {
+                            this.notifyNotInRoom(inboundMessage,"/viewioi");
+                            LOGGER.debug("/viewioi executed from not proper room");
+
+                        } else {
+                            this.viewIoiUpdatedByBorrower(inboundMessage);
+                            LOGGER.debug("MessageProcessor.Commend=viewioi evoked");
                         }
                         break;
                     }
@@ -249,12 +301,31 @@ public class MessageProcessor {
         LOGGER.debug("MessageProcessor.createQuoteForm executed");
     }
 
+    public void selectIoiForm(InboundMessage inboundMessage, String status) {
+        String csvFilePath = DataExports.exportIoisUpdatedByBorrower("", "", status);
+        String botId = String.valueOf(botClient.getBotUserId());
+        String userId = inboundMessage.getUser().getUserId().toString();
+//        DataUpdate.updateLenderStatus("YET", "EXPT");
+        String userName = inboundMessage.getUser().getDisplayName();
+        OutboundMessage messageOut = MessageSender.getInstance().buildSelectIoiFormMessage(botId, userId, userName, ConfigLoader.myCounterPartyName, "", status, csvFilePath, true);
+        MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
+        LOGGER.debug("MessageProcessor.selectIoiForm executed");
+    }
+
     public void viewRfqUpdatedByLender(InboundMessage inboundMessage) {
         String csvFilePath = DataExports.exportRfqsUpdatedByLender("","", "");
         String userName = inboundMessage.getUser().getDisplayName();
         OutboundMessage messageOut = MessageSender.getInstance().buildViewRfqFormMessage(userName, "", "", "", "", csvFilePath, false);
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.viewRfqUpdatedByLender executed");
+    }
+
+    public void viewIoiUpdatedByBorrower(InboundMessage inboundMessage) {
+        String csvFilePath = DataExports.exportIoisUpdatedByBorrower("","", "");
+        String userName = inboundMessage.getUser().getDisplayName();
+        OutboundMessage messageOut = MessageSender.getInstance().buildViewIoiFormMessage(userName, "", "", "", "", csvFilePath, false);
+        MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
+        LOGGER.debug("MessageProcessor.viewIoiUpdatedByBorrower executed");
     }
 
     public void viewRfqUpdatedByBorrower(InboundMessage inboundMessage) {
@@ -286,6 +357,12 @@ public class MessageProcessor {
 
     public void notifyAcceptanceRfqByLender(InboundMessage inboundMessage, String requestId, String userId, String userName, String borrowerName, String lenderName, String extChatRoomId) {
         OutboundMessage messageOut = MessageSender.getInstance().buildAcceptQuoteMessage(requestId, userId, userName, borrowerName, lenderName);
+        MessageSender.getInstance().sendMessage(extChatRoomId, messageOut);
+
+    }
+
+    public void notifyAcceptanceIoiByBorrower(InboundMessage inboundMessage, String requestId, String userId, String userName, String borrowerName, String lenderName, String extChatRoomId) {
+        OutboundMessage messageOut = MessageSender.getInstance().buildAcceptIoiMessage(requestId, userId, userName, borrowerName, lenderName);
         MessageSender.getInstance().sendMessage(extChatRoomId, messageOut);
 
     }

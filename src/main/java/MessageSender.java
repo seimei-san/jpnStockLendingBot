@@ -306,7 +306,7 @@ public class MessageSender {
         String message;
 
         message =
-                "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">QUOTEの依頼："+ borrowerName + "[<hash tag=\"" + requestId + "\"/>]" + " → " + lenderName + "</h3>";
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--purple\">QUOTEの依頼："+ borrowerName + "[<hash tag=\"" + requestId + "\"/>]" + " → " + lenderName + "</h3>";
 
         message +=
 //                "<h4>依頼者： <mention uid='" + userId + "'/></h4>" +
@@ -446,11 +446,169 @@ public class MessageSender {
         return messageOut;
     }
 
-    public OutboundMessage buildCancelMessage(String requestId, String userId, String userName) {
+    public OutboundMessage buildSendIoiFormMessage(String botId, String userId, String borrowerBotInstantMessageId, String externalChatRoomId, String ioisData, String userName, String requestId,
+                                                   String borrowerName, String lenderName, String csvFullPath, boolean isSent) {
+
+        String message;
+        String titleForm;
+
+
+        titleForm = "IOIの送信: ";
+
+        message =
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">" + titleForm + borrowerName + " ← " + lenderName + "</h3>";
+
+
+
+        message +=
+//                "<h4>回答者： <mention uid='" + userId + "'/></h4>" +
+                "<h4>担当者： " + userName + "</h4>" +
+                        "<br/>" +
+                        "<table style='table-layout:fixed;width:1400px'>" +
+                        "<thead>" +
+                        "<tr>" +
+                        "<td style='width:4%;font-weight:bold'>種別</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff'>提示先</td>" +
+                        "<td style='width:5%;font-weight:bold;color:#3300ff'>銘柄</td>" +
+                        "<td style='width:8%;font-weight:bold;color:#3300ff;text-align:right'>株数</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff'>開始日</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff'>返却日/期間</td>" +
+                        "<td style='width:4%;font-weight:bold;color:#3300ff;text-align:right'>利率</td>" +
+                        "<td style='width:4%;font-weight:bold;color:#3300ff'>条件</td>" +
+                        "<td style='width:6%;font-weight:bold'>提示元</td>" +
+                        "<td style='width:8%;font-weight:bold'>提示番号</td>" +
+                        "<td style='width:3%;font-weight:bold'>枝番</td>" +
+                        "<td style='width:7%;font-weight:bold;text-align:right'>提示株数</td>" +
+                        "<td style='width:6%;font-weight:bold'>提示開始</td>" +
+                        "<td style='width:7%;font-weight:bold'>提示返却日</td>" +
+                        "<td style='width:6%;font-weight:bold;text-align:right'>提示利率</td>" +
+                        "<td style='width:7%;font-weight:bold'>提示条件</td>" +
+                        "<td style='width:5%;font-weight:bold;text-align:right'>価格</td>" +
+                        "<td style='width:4%;font-weight:bold'>状況</td>" +
+                        "</tr>" +
+                        "</thead>" +
+                        "<tbody>";
+
+
+        DataServices dataServices = DataServices.getInstance();
+        int totalQtyborrower = 0;
+        int totalQtylender = 0;
+        for (ViewIoi viewIoi : dataServices.getSendIois(requestId, borrowerName)) {
+            totalQtyborrower += viewIoi.getBorrowerQty();
+            totalQtylender += viewIoi.getLenderQty();
+
+            message +=
+                    "<tr>" +
+                            "<td>" + viewIoi.getType() + "</td>" +
+                            "<td class='tempo-text-color--green'>" + viewIoi.getBorrowerName() + "</td>" +
+                            "<td>" + viewIoi.getStockCode() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getBorrowerQty()) + "</td>" +
+                            "<td>" + viewIoi.getBorrowerStart() + "</td>" +
+                            "<td>" + viewIoi.getBorrowerEnd() + "</td>" +
+                            "<td style='text-align:right'>" + viewIoi.getBorrowerRate() + "</td>" +
+                            "<td>" + viewIoi.getBorrowerCondition() + "</td>" +
+                            "<td class='tempo-text-color--blue'>" + viewIoi.getLenderName() + "</td>" +
+                            "<td style='color:#ff0000'>" + viewIoi.getRequestId() + "</td>" +
+                            "<td style='text-align:right;color:#ff0000'>" + viewIoi.getLineNo() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getLenderQty()) + "</td>" +
+                            "<td>" + viewIoi.getLenderStart() + "</td>" +
+                            "<td>" + viewIoi.getLenderEnd() + "</td>" +
+                            "<td style='text-align:right'>" + viewIoi.getLenderRate() + "</td>" +
+                            "<td>" + viewIoi.getLenderCondition() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getPrice()) + "</td>" +
+                            "<td>" + viewIoi.getStatus() + "</td>" +
+                            "</tr>";
+        }
+
+        message +=
+                "</tbody>" +
+                        "<tfoot>" +
+                        "<tr>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "</tr>" +
+                        "</tfoot>" +
+                        "</table>" +
+                        "<br/>" ;
+
+        message +=
+                "<div style=\"display: flex;\">";
+
+
+//      Div in Left Bottom -----------------
+//      Div in Left Bottom -----------------
+//      Div in Left Bottom -----------------
+        message +=
+                "<div style=\"width:50%;\">";
+
+        message +=
+                "<form id=\"receive-ioi-form\">";
+        if (ConfigLoader.env.equals("prod")) {
+            message += "<div style=\"display:none\">";
+        }
+        message +=
+                "<p>userName: botId: externalChatRoomId: borrowerBotInstantMessageId: borrowerName: lenderName: quoteData: </p>" +
+                        "<text-field name=\"request_id\" maxlength=\"9\" required=\"false\">" + requestId + "</text-field>" +
+                        "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" +
+                        "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                        "<text-field name=\"external_chatroom_id\" required=\"false\">" + externalChatRoomId + "</text-field>" +
+                        "<text-field name=\"borrowerbot_im_id\" required=\"false\">" + borrowerBotInstantMessageId + "</text-field>" +
+                        "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                        "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                        "<textarea name=\"ioi_data\" required=\"false\">" + ioisData + "</textarea>";
+        if (ConfigLoader.env.equals("prod")) {
+            message += "</div>";
+        }
+
+        message +=
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">借手(" + borrowerName + ")の対応</h3>" +
+                "<br/>";
+
+        message +=
+
+                "<button type=\"action\" name=\"reject-ioi-button\">需要無</button>" +
+                "<button type=\"action\" name=\"accept-ioi-button\">受付</button>" +
+                "</form>";
+        message +=
+                "</div>" ;
+
+//       Div in Right Bottom
+        message +=
+                "<br/>" +
+                        "<div style=\"width:50%;\">";
+
+
+
+        message +=
+                "</div>"+
+                "</div>";
+
+
+        OutboundMessage messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        LOGGER.debug("buildSendIoiFormMessage returned");
+        return messageOut;
+    }
+
+    public OutboundMessage buildCancelMessage(String requestId, String userId, String userName, String commandLine) {
         UserInfo botUserInfo = this.botClient.getBotUserInfo();
         String message =
                 "<h3>依頼番号[<hash tag=\"" + requestId + "\"/>]は、<mention uid='" + userId + "'/>によって取消されました。</h3>" +
-                        "<p>新たな依頼を作成する場合は、<b>@" + botUserInfo.getDisplayName() + " /createrfq</b> のようにチャットボットに命令文を送信してください。</p>";
+                        "<p>新たに作成する場合は、<b>@" + botUserInfo.getDisplayName() + " " + commandLine + "</b> のようにチャットボットに命令文を送信してください。</p>";
         OutboundMessage messageOut = new OutboundMessage();
         messageOut.setMessage(message);
         return messageOut;
@@ -470,6 +628,16 @@ public class MessageSender {
                 "<h5>依頼番号[<hash tag=\"" + requestId + "\"/>] " + borrowerName + "からの<b>QUOTE依頼</b>は、<mention uid='" + userId + "'/> に受付されました。</h5>" +
 //                "<h5>依頼番号[<hash tag=\"" + requestId + "\"/>] " + borrowerName + "からの<b>QUOTE依頼</b>は、" + userName + "に受付されました。</h5>" +
                         "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.rfqHashTag + "\"/></p>";
+        OutboundMessage messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        return messageOut;
+    }
+
+    public OutboundMessage buildAcceptIoiMessage(String requestId, String userId, String userName, String borrowerName, String lenderName) {
+        String message =
+                "<h5>依頼番号[<hash tag=\"" + requestId + "\"/>] " + lenderName + "からの<b>IOIの送信</b>は、<mention uid='" + userId + "'/> に受付されました。</h5>" +
+//                "<h5>依頼番号[<hash tag=\"" + requestId + "\"/>] " + borrowerName + "からの<b>QUOTE依頼</b>は、" + userName + "に受付されました。</h5>" +
+                        "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.ioiHashTag + "\"/></p>";
         OutboundMessage messageOut = new OutboundMessage();
         messageOut.setMessage(message);
         return messageOut;
@@ -610,11 +778,13 @@ public class MessageSender {
         return messageOut;
     }
 
-//  ===========================================================================================================
-//  ===========================================================================================================
-//  ================= Viewing RFQ updated by Lenders and providing the decision to Lenders ====================
-//  ===========================================================================================================
-//  ===========================================================================================================
+    public OutboundMessage buildImToBorrowerBot(String cmd, String userId, String userName, String botId, String externalChatRoomId, String requestId, String borrowerName, String lenderName, String ioisData) {
+        String message = "<mention uid='" + botId + "'/> " + cmd + " " + requestId + " " + userId + " " + userName + " " + borrowerName + " " + lenderName + " " + externalChatRoomId + " " + ioisData;
+        OutboundMessage  messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        return messageOut;
+    }
+
 
     public OutboundMessage buildViewRfqFormMessage(String userName, String requestId, String borrowerName, String lenderName, String status, String csvFullPath, boolean isSelected) {
 
@@ -624,7 +794,7 @@ public class MessageSender {
         for (int i = 0; DataServices.counterPartiesList.length > i; i++) {
             messageOptionsForLenders.append("<option value=\"").append(DataServices.counterPartiesList[i]).append("\">").append(DataServices.counterPartiesList[i]).append("</option>");
         }
-        for (String optionRequestId : DataServices.getRequestIdList()) {
+        for (String optionRequestId : DataServices.getRequestIdList("RFQ")) {
             messageOptionsForRequestId.append("<option value=\"").append(optionRequestId).append("\">").append(optionRequestId).append("</option>");
         }
 
@@ -645,15 +815,15 @@ public class MessageSender {
                 "<table style='table-layout:fixed;width:550px'>" +
                         "<thead>" +
                         "<tr>" +
-                        "<td style='width:4%;font-weight:bold'>種別</td>" +
+                        "<td style='width:8%;font-weight:bold'>種別</td>" +
                         //                        "<td style='width:6%;font-weight:bold'>依頼元</td>" +
-                        "<td style='width:5%;font-weight:bold'>銘柄</td>" +
-                        "<td style='width:6%;font-weight:bold;text-align:right'>株数</td>" +
-                        "<td style='width:6%;font-weight:bold'>開始日</td>" +
-                        "<td style='width:8%;font-weight:bold'>返却日/期間</td>" +
+                        "<td style='width:13%;font-weight:bold'>銘柄</td>" +
+                        "<td style='width:12%;font-weight:bold;text-align:right'>株数</td>" +
+                        "<td style='width:10%;font-weight:bold'>開始日</td>" +
+                        "<td style='width:18%;font-weight:bold'>返却日/期間</td>" +
 //                        "<td style='width:6%;font-weight:bold'>依頼先</td>" +
-                        "<td style='width:7%;font-weight:bold'>依頼番号</td>" +
-                        "<td style='width:3%;font-weight:bold'>枝番</td>" +
+                        "<td style='width:17%;font-weight:bold'>依頼番号</td>" +
+                        "<td style='width:5%;font-weight:bold'>枝番</td>" +
 //                        "<td style='width:7%;font-weight:bold;text-align:right'>見積株数</td>" +
 //                        "<td style='width:6%;font-weight:bold'>見積開始</td>" +
 //                        "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
@@ -681,8 +851,8 @@ public class MessageSender {
                             "<td>" + viewRfq.getBorrowerStart() + "</td>" +
                             "<td>" + viewRfq.getBorrowerEnd() + "</td>" +
 //                            "<td class='tempo-text-color--blue'>" + viewRfqQuote.getLenderName() + "</td>" +
-                            "<td >" + viewRfq.getRequestId() + "</td>" +
-                            "<td style='text-align:right'>" + viewRfq.getLineNo() + "</td>" +
+                            "<td style='color:#ff0000'>" + viewRfq.getRequestId() + "</td>" +
+                            "<td style='text-align:right;color:#ff0000'>" + viewRfq.getLineNo() + "</td>" +
 //                            "<td style='text-align:right'>" + String.format("%,d", viewRfqQuote.getLenderQty()) + "</td>" +
 //                            "<td>" + viewRfqQuote.getLenderStart() + "</td>" +
 //                            "<td>" + viewRfqQuote.getLenderEnd() + "</td>" +
@@ -726,27 +896,27 @@ public class MessageSender {
         message +=
                 "<div style=\"width:65%;\">";
         message +=
-                "<h3 class=\"tempo-text-color--black tempo-bg-color--yellow\">QUOTEの表示</h3>";
+                "<h3 class=\"tempo-text-color--black tempo-bg-color--purple\">QUOTEの表示</h3>";
         message +=
                 "<table style='table-layout:fixed;width:1000px' class='tempo-ui--background'>" +
                         "<thead>" +
                         "<tr>" +
 //                        "<td style='width:4%;font-weight:bold'>種別</td>" +
 //                        "<td style='width:6%;font-weight:bold'>依頼元</td>" +
-                        "<td style='width:5%;font-weight:bold'>銘柄</td>" +
+                        "<td style='width:10%;font-weight:bold'>銘柄</td>" +
 //                        "<td style='width:8%;font-weight:bold;text-align:right'>株数</td>" +
 //                        "<td style='width:6%;font-weight:bold'>開始日</td>" +
 //                        "<td style='width:7%;font-weight:bold'>返却日/期間</td>" +
-                        "<td style='width:6%;font-weight:bold'>依頼先</td>" +
-                        "<td style='width:8%;font-weight:bold'>依頼番号</td>" +
-                        "<td style='width:3%;font-weight:bold'>枝番</td>" +
-                        "<td style='width:7%;font-weight:bold;text-align:right'>見積株数</td>" +
-                        "<td style='width:6%;font-weight:bold'>見積開始</td>" +
-                        "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
-                        "<td style='width:5%;font-weight:bold;text-align:right'>見積利率</td>" +
-                        "<td style='width:7%;font-weight:bold'>見積条件</td>" +
-                        "<td style='width:4%;font-weight:bold;text-align:right'>価格</td>" +
-                        "<td style='width:6%;font-weight:bold'>状況</td>" +
+                        "<td style='width:10%;font-weight:bold'>依頼先</td>" +
+                        "<td style='width:10%;font-weight:bold'>依頼番号</td>" +
+                        "<td style='width:5%;font-weight:bold'>枝番</td>" +
+                        "<td style='width:8%;font-weight:bold;text-align:right;color:#3300ff'>見積株数</td>" +
+                        "<td style='width:10%;font-weight:bold;color:#3300ff'>見積開始</td>" +
+                        "<td style='width:12%;font-weight:bold;color:#3300ff'>見積返却日</td>" +
+                        "<td style='width:10%;font-weight:bold;text-align:right;color:#3300ff'>見積利率</td>" +
+                        "<td style='width:10%;font-weight:bold;color:#3300ff'>見積条件</td>" +
+                        "<td style='width:10%;font-weight:bold;text-align:right'>価格</td>" +
+                        "<td style='width:8%;font-weight:bold'>状況</td>" +
                         "</tr>" +
                         "</thead>" +
                         "<tbody>";
@@ -768,8 +938,8 @@ public class MessageSender {
 //                        "<td>" + viewRfqQuote.getBorrowerStart() + "</td>" +
 //                        "<td>" + viewRfqQuote.getBorrowerEnd() + "</td>" +
                             "<td class='tempo-text-color--blue'>" + viewRfqQuote.getLenderName() + "</td>" +
-                            "<td >" + viewRfqQuote.getRequestId() + "</td>" +
-                            "<td style='text-align:right'>" + viewRfqQuote.getLineNo() + "</td>" +
+                            "<td style='color:#ff0000'>" + viewRfqQuote.getRequestId() + "</td>" +
+                            "<td style='text-align:right;color:#ff0000'>" + viewRfqQuote.getLineNo() + "</td>" +
                             "<td style='text-align:right'>" + String.format("%,d", viewRfqQuote.getLenderQty()) + "</td>" +
                             "<td>" + viewRfqQuote.getLenderStart() + "</td>" +
                             "<td>" + viewRfqQuote.getLenderEnd() + "</td>" +
@@ -937,9 +1107,334 @@ public class MessageSender {
         return messageOut;
     }
 
-//    ================================ Lender Side Forms =======================================
-//    ================================ Lender Side Forms =======================================
-//    ================================ Lender Side Forms ==================================
+    public OutboundMessage buildViewIoiFormMessage(String userName, String requestId, String borrowerName, String lenderName, String status, String csvFullPath, boolean isSelected) {
+
+        String message;
+        StringBuilder messageOptionsForBorrowers = new StringBuilder();
+        StringBuilder messageOptionsForRequestId = new StringBuilder();
+        for (int i = 0; DataServices.counterPartiesList.length > i; i++) {
+            messageOptionsForBorrowers.append("<option value=\"").append(DataServices.counterPartiesList[i]).append("\">").append(DataServices.counterPartiesList[i]).append("</option>");
+        }
+        for (String optionRequestId : DataServices.getRequestIdList("IOI")) {
+            messageOptionsForRequestId.append("<option value=\"").append(optionRequestId).append("\">").append(optionRequestId).append("</option>");
+        }
+
+        message =
+            "<h4>担当者： " + userName + "</h4>" +
+            "<br/>";
+        message +=
+            "<div style=\"display: flex;\">";
+
+        // div for top left vvvvvvvvvvv
+        // div for top left vvvvvvvvvvv
+        // div for top left vvvvvvvvvvv
+
+        message +=
+                "<div style=\"width:50%;\">";
+        message +=
+                "<h3 class=\"tempo-text-color--black tempo-bg-color--yellow\">IOIへの回答状況</h3>";
+        message +=
+                "<table style='table-layout:fixed;width:800px' class='tempo-ui--background'>" +
+                        "<thead>" +
+                        "<tr>" +
+    //                        "<td style='width:4%;font-weight:bold'>種別</td>" +
+    //                        "<td style='width:6%;font-weight:bold'>依頼元</td>" +
+                            "<td style='width:8%;font-weight:bold;color:#3300ff'>銘柄</td>" +
+    //                        "<td style='width:8%;font-weight:bold;text-align:right'>株数</td>" +
+    //                        "<td style='width:6%;font-weight:bold'>開始日</td>" +
+    //                        "<td style='width:7%;font-weight:bold'>返却日/期間</td>" +
+                            "<td style='width:12%;font-weight:bold;color:#3300ff'>提示先</td>" +
+                            "<td style='width:12%;font-weight:bold;color:#3300ff'>提示番号</td>" +
+                            "<td style='width:7%;font-weight:bold;color:#3300ff'>枝番</td>" +
+                            "<td style='width:10%;font-weight:bold;text-align:right;color:#3300ff'>株数</td>" +
+                            "<td style='width:8%;font-weight:bold;color:#3300ff'>開始</td>" +
+                            "<td style='width:10%;font-weight:bold;color:#3300ff'>返却日</td>" +
+                            "<td style='width:8%;font-weight:bold;text-align:right;color:#3300ff'>利率</td>" +
+                            "<td style='width:10%;font-weight:bold;color:#3300ff'>条件</td>" +
+//                            "<td style='width:8%;font-weight:bold;text-align:right'>価格</td>" +
+                            "<td style='width:10%;font-weight:bold;color:#3300ff'>状況</td>" +
+                            "</tr>" +
+                        "</thead>" +
+                    "<tbody>";
+
+        DataServices dataServices = DataServices.getInstance();
+        int totalQtyborrower = 0;
+        for (ViewIoi viewIoi : dataServices.viewIoiUpdatedByBorrower(requestId, lenderName, status)) {
+            totalQtyborrower += viewIoi.getBorrowerQty();
+
+            message +=
+                    "<tr>" +
+//                        "<td>" + viewIoi.getType() + "</td>" +
+                        "<td>" + viewIoi.getStockCode() + "</td>" +
+                        "<td class='tempo-text-color--green'>" + viewIoi.getBorrowerName() + "</td>" +
+                        "<td style='color:#ff0000'>" + viewIoi.getRequestId() + "</td>" +
+                        "<td style='text-align:right;color:#ff0000'>" + viewIoi.getLineNo() + "</td>" +
+                        "<td style='text-align:right'>" + String.format("%,d", viewIoi.getBorrowerQty()) + "</td>" +
+                        "<td>" + viewIoi.getBorrowerStart() + "</td>" +
+                        "<td>" + viewIoi.getBorrowerEnd() + "</td>" +
+                        "<td style='text-align:right'>" + viewIoi.getBorrowerRate() + "</td>" +
+                        "<td>" + viewIoi.getBorrowerCondition() + "</td>" +
+//                        "<td class='tempo-text-color--blue'>" + viewIoi.getLenderName() + "</td>" +
+//                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getLenderQty()) + "</td>" +
+//                            "<td>" + viewIoi.getLenderStart() + "</td>" +
+//                            "<td>" + viewIoi.getLenderEnd() + "</td>" +
+//                        "<td style='text-align:right'>" + String.format("%,d", viewIoi.getPrice()) + "</td>" +
+                        "<td>" + viewIoi.getStatus() + "</td>" +
+                    "</tr>";
+        }
+
+        message +=
+                    "</tbody>" +
+                    "<tfoot>" +
+                        "<tr>" +
+            //                        "<td></td>" +
+            //                        "<td></td>" +
+            //                        "<td style='text-align:right;font-weight:bold'></td>" +
+            //                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
+            //                        "<td></td>" +
+            //                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "</tr>" +
+                    "</tfoot>" +
+                    "</table>" +
+                "<br/>" +
+            "</div>";
+
+        // div for top left ^^^^^^^^^^^^
+        // div for top left ^^^^^^^^^^^^
+        // div for top left ^^^^^^^^^^^^
+
+        // div for top right vvvvvvvvvv
+        // div for top right vvvvvvvvvv
+        // div for top right vvvvvvvvvv
+        message +=
+                "<div style=\"width:50%;\">";
+        message +=
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--purple\">IOIの表示</h3>";
+
+        message +=
+                "<table style='table-layout:fixed;width:800px'>" +
+                    "<thead>" +
+                        "<tr>" +
+                        "<td style='width:8%;font-weight:bold'>種別</td>" +
+                        "<td style='width:10%;font-weight:bold'>銘柄</td>" +
+                        "<td style='width:10%;font-weight:bold'>提示番号</td>" +
+                        "<td style='width:5%;font-weight:bold'>枝番</td>" +
+    //                        "<td style='width:2%;font-weight:bold'>提示元</td>" +
+                        "<td style='width:10%;font-weight:bold;text-align:right'>提示株数</td>" +
+                        "<td style='width:10%;font-weight:bold'>提示開始日</td>" +
+                        "<td style='width:12%;font-weight:bold'>提示返却日/期間</td>" +
+                        "<td style='width:8%;font-weight:bold'>提示利率</td>" +
+                        "<td style='width:10%;font-weight:bold'>提示条件</td>" +
+                        "<td style='width:10%;font-weight:bold;text-align:right'>株価</td>" +
+    //                        "<td style='width:7%;font-weight:bold;text-align:right'>見積株数</td>" +
+    //                        "<td style='width:6%;font-weight:bold'>見積開始</td>" +
+    //                        "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
+    //                        "<td style='width:6%;font-weight:bold;text-align:right'>見積利率</td>" +
+    //                        "<td style='width:7%;font-weight:bold'>見積条件</td>" +
+    //                        "<td style='width:5%;font-weight:bold;text-align:right'>価格</td>" +
+    //                        "<td style='width:4%;font-weight:bold'>状況</td>" +
+                        "</tr>" +
+                    "</thead>" +
+                    "<tbody>";
+
+//        DataServices dataServices = DataServices.getInstance();
+        int totalQtylender = 0;
+        for (ViewIoi viewIoi : dataServices.viewTargetIois(requestId)) {
+            totalQtylender += viewIoi.getLenderQty();
+
+            message +=
+                        "<tr>" +
+                                "<td>" + viewIoi.getType() + "</td>" +
+    //                        "<td class='tempo-text-color--green'>" + viewIoi.getBorrowerName() + "</td>" +
+                                "<td>" + viewIoi.getStockCode() + "</td>" +
+                                "<td style='color:#ff0000'>" + viewIoi.getRequestId() + "</td>" +
+                                "<td style='text-align:right;color:#ff0000'>" + viewIoi.getLineNo() + "</td>" +
+    //                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getBorrowerQty()) + "</td>" +
+    //                            "<td>" + viewIoi.getBorrowerStart() + "</td>" +
+    //                            "<td>" + viewIoi.getBorrowerEnd() + "</td>" +
+    //                            "<td class='tempo-text-color--blue'>" + viewIoi.getLenderName() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getLenderQty()) + "</td>" +
+                            "<td>" + viewIoi.getLenderStart() + "</td>" +
+                            "<td>" + viewIoi.getLenderEnd() + "</td>" +
+                            "<td style='text-align:right'>" + viewIoi.getLenderRate() + "</td>" +
+                            "<td>" + viewIoi.getLenderCondition() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getPrice()) + "</td>" +
+    //                            "<td>" + viewIoi.getStatus() + "</td>" +
+                        "</tr>";
+        }
+
+        message +=
+                     "</tbody>" +
+                    "<tfoot>" +
+                        "<tr>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+    //                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計：</td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+    //                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+    //                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
+    //                        "<td></td>" +
+    //                        "<td></td>" +
+    //                        "<td></td>" +
+    //                        "<td></td>" +
+                        "</tr>" +
+                    "</tfoot>" +
+                "</table>" +
+
+            "</div>";
+
+
+        message +=
+            "</div>";
+
+//      Lower Section vvvvvvvvvvvvvvvvvvvvvv
+//      Lower Section vvvvvvvvvvvvvvvvvvvvvv
+//      Lower Section vvvvvvvvvvvvvvvvvvvvvv
+        message +=
+                "<div style=\"display: flex;\">";
+
+
+
+//      Div in Left Bottom vvvvvvvvvvvvvvvvv
+//      Div in Left Bottom vvvvvvvvvvvvvvvvv
+//      Div in Left Bottom vvvvvvvvvvvvvvvvv
+        if (isSelected) {
+            message +=
+                    "<br/>" +
+                            "<div style=\"width:50%;\">"+
+                            "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">意志決定の送信</h3>" +
+                            "<h5>[送信]を選択すると、状況＝SELECTのIOIが全てSENDとなります。</h5>" +
+                            "<h5>[取消]を選択すると、状況＝SELECTのIOIが全てNEWとなります。</h5>" ;
+
+
+            message +=
+                    "<form id=\"send-selectedioi-form\">";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "<div style=\"display:none\">";
+            }
+            message +=
+                    "<p>botId: borrowerName: lenderName: userName: </p>" +
+//                        "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+//                        "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+//                        "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                            "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "</div>";
+            }
+            message +=
+                    "<button type=\"action\" name=\"cancel-selectedioi-button\">取消</button><button type=\"action\" name=\"send-selectedioi-button\">送信</button>";
+            message +=
+                    "</form>" +
+                            "</div>";
+
+
+
+        } else {
+            message +=
+                    "<br/>" +
+                            "<div style=\"width:50%;\">"+
+                            "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">貸手の意志決定</h3>" ;
+
+            message +=
+                    "<form id=\"import-selectedioi-form\">";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "<div style=\"display:none\">";
+            }
+            message +=
+                    "<p>botId: borrowerName: lenderName: userName: </p>" +
+//                        "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+//                        "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+//                        "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                            "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "</div>";
+            }
+
+            message +=
+                    "<h3>DONEのデータの入力</h3>" +
+                            "<br/>" +
+                            "<textarea name=\"input_selectedIoi\" placeholder=\"ここにコピーしたDONEデータを貼付てください。 " +
+                            "&#13;" +
+                            "コピー範囲は、エクセルで開いたCSVファイルの先頭列（列名：種別）から最終列（列名：状況）を含めてください。\" required=\"false\"></textarea>" +
+                            "<button type=\"reset\">消去</button><button type=\"action\" name=\"import-selectedioi-button\">取込</button><button type=\"action\" name=\"proceed-selectedioi-button\">送信へ</button>";
+            message +=
+                    "</form>" +
+                            "</div>";
+        }
+
+//       Div in Right Bottom  vvvvvvvvvvvvvvvvvvvvvvv
+//       Div in Right Bottom  vvvvvvvvvvvvvvvvvvvvvvv
+//       Div in Right Bottom  vvvvvvvvvvvvvvvvvvvvvvv
+
+
+
+
+        message +=
+                "<div style=\"width:50%;\">";
+
+        message +=
+                "<form id=\"view-ioi-form\">";
+
+        message +=
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">貸手の確認作業</h3>" +
+                        "<h3>IOIのデータの絞り込み</h3>" +
+                        "<br/>";
+        message +=
+                "<select name=\"borrower-select\" required=\"false\" data-placeholder=\"借手を選択\">";
+        message += messageOptionsForBorrowers;
+        message +=
+                "</select>";
+
+        message +=
+                "<select name=\"request-id-select\" required=\"false\" data-placeholder=\"提示番号を選択\">";
+        message += messageOptionsForRequestId;
+        message +=
+                "</select>";
+
+        message +=
+                "<select name=\"status-select\" required=\"false\" data-placeholder=\"状況を選択\">";
+        message +=
+                "<option value=\"NEW\">NEW</option><option value=\"REJECT\">REJECT</option><option value=\"SELECT\">SELECT</option><option value=\"SEND\">SEND</option><option value=\"DONE\">DONE</option>";
+        message +=
+                "</select>";
+
+        message +=
+//                "<button type=\"action\" name=\"reject-quote-button\">却下</button>" +
+                "<button type=\"action\" name=\"refresh-ioi-button\">再表示</button>" +
+                        "</form>";
+        message +=
+                "</div>" ;
+
+
+
+
+        message +=
+                "</div>";
+
+
+        OutboundMessage messageOut = new OutboundMessage();
+        messageOut.setAttachment(new File(csvFullPath));
+        messageOut.setMessage(message);
+        LOGGER.debug("buildViewIoiFormMessage returned");
+        return messageOut;
+    }
 
     public OutboundMessage buildViewQuoteFormMessage(String userName, String requestId, String borrowerName, String lenderName, String status, String csvFullPath) {
         String message;
@@ -949,14 +1444,14 @@ public class MessageSender {
         for (int i = 0; DataServices.counterPartiesList.length > i; i++) {
             messageOptionsForBorrowers.append("<option value=\"").append(DataServices.counterPartiesList[i]).append("\">").append(DataServices.counterPartiesList[i]).append("</option>");
         }
-        for (String optionRequestId : DataServices.getRequestIdList()) {
+        for (String optionRequestId : DataServices.getRequestIdList("RFQ")) {
             messageOptionsForRequestId.append("<option value=\"").append(optionRequestId).append("\">").append(optionRequestId).append("</option>");
         }
 
         titleForm = "QUOTEの一覧 ";
 
         message =
-                "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">" + titleForm + "</h3>";
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--purple\">" + titleForm + "</h3>";
 
         message +=
                 "<h4>閲覧者： " + userName + "</h4>" +
@@ -975,12 +1470,12 @@ public class MessageSender {
                         "<td style='width:6%;font-weight:bold'>依頼先</td>" +
                         "<td style='width:7%;font-weight:bold'>依頼番号</td>" +
                         "<td style='width:3%;font-weight:bold'>枝番</td>" +
-                        "<td style='width:7%;font-weight:bold;text-align:right'>見積株数</td>" +
-                        "<td style='width:6%;font-weight:bold'>見積開始</td>" +
-                        "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
-                        "<td style='width:6%;font-weight:bold;text-align:right'>見積利率</td>" +
-                        "<td style='width:7%;font-weight:bold'>見積条件</td>" +
-                        "<td style='width:5%;font-weight:bold;text-align:right'>価格</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff;text-align:right'>見積株数</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff'>見積開始</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff'>見積返却日</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff;text-align:right'>見積利率</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff'>見積条件</td>" +
+                        "<td style='width:5%;font-weight:bold;text-align:right;color:#3300ff'>価格</td>" +
                         "<td style='width:6%;font-weight:bold'>状況</td>" +
                         "</tr>" +
                         "</thead>" +
@@ -1005,8 +1500,8 @@ public class MessageSender {
                             "<td style='text-align:right'>" + receivedRfq.getBorrowerRate() + "</td>" +
                             "<td>" + receivedRfq.getBorrowerCondition() + "</td>" +
                             "<td class='tempo-text-color--blue'>" + receivedRfq.getLenderName() + "</td>" +
-                            "<td >" + receivedRfq.getRequestId() + "</td>" +
-                            "<td style='text-align:right'>" + receivedRfq.getLineNo() + "</td>" +
+                            "<td style='color:#ff0000'>" + receivedRfq.getRequestId() + "</td>" +
+                            "<td style='text-align:right;color:#ff0000'>" + receivedRfq.getLineNo() + "</td>" +
                             "<td style='text-align:right'>" + String.format("%,d", receivedRfq.getLenderQty()) + "</td>" +
                             "<td>" + receivedRfq.getLenderStart() + "</td>" +
                             "<td>" + receivedRfq.getLenderEnd() + "</td>" +
@@ -1101,7 +1596,7 @@ public class MessageSender {
             messageOut.setAttachment(new File(csvFullPath));
         }
         messageOut.setMessage(message);
-        LOGGER.debug("buildCreateQuoteFormMessage returned");
+        LOGGER.debug("buildViewQuoteFormMessage returned");
         return messageOut;
     }
 
@@ -1122,7 +1617,7 @@ public class MessageSender {
         }
 
         message =
-                "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">" + titleForm + "依頼者（一社／数社）← " + lenderName + "</h3>";
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--purple\">" + titleForm + "依頼者（一社／数社）← " + lenderName + "</h3>";
 
         message +=
 //                "<h4>回答者： <mention uid='" + userId + "'/></h4>" +
@@ -1142,11 +1637,11 @@ public class MessageSender {
                         "<td style='width:6%;font-weight:bold'>依頼先</td>" +
                         "<td style='width:8%;font-weight:bold'>依頼番号</td>" +
                         "<td style='width:3%;font-weight:bold'>枝番</td>" +
-                        "<td style='width:7%;font-weight:bold;text-align:right'>見積株数</td>" +
-                        "<td style='width:6%;font-weight:bold'>見積開始</td>" +
-                        "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
-                        "<td style='width:6%;font-weight:bold;text-align:right'>見積利率</td>" +
-                        "<td style='width:7%;font-weight:bold'>見積条件</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff;text-align:right'>見積株数</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff'>見積開始</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff'>見積返却日</td>" +
+                        "<td style='width:6%;font-weight:bold;text-align:right;color:#3300ff'>見積利率</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff'>見積条件</td>" +
                         "<td style='width:5%;font-weight:bold;text-align:right'>価格</td>" +
                         "<td style='width:4%;font-weight:bold'>状況</td>" +
                         "</tr>" +
@@ -1172,8 +1667,8 @@ public class MessageSender {
                             "<td style='text-align:right'>" + receivedRfq.getBorrowerRate() + "</td>" +
                             "<td>" + receivedRfq.getBorrowerCondition() + "</td>" +
                             "<td class='tempo-text-color--blue'>" + receivedRfq.getLenderName() + "</td>" +
-                            "<td >" + receivedRfq.getRequestId() + "</td>" +
-                            "<td style='text-align:right'>" + receivedRfq.getLineNo() + "</td>" +
+                            "<td style='color:#ff0000'>" + receivedRfq.getRequestId() + "</td>" +
+                            "<td style='text-align:right;color:#ff0000'>" + receivedRfq.getLineNo() + "</td>" +
                             "<td style='text-align:right'>" + String.format("%,d", receivedRfq.getLenderQty()) + "</td>" +
                             "<td>" + receivedRfq.getLenderStart() + "</td>" +
                             "<td>" + receivedRfq.getLenderEnd() + "</td>" +
@@ -1299,6 +1794,193 @@ public class MessageSender {
     }
 
 
+    public OutboundMessage buildSelectIoiFormMessage(String botId, String userId, String userName, String borrowerName, String lenderName, String status, String csvFullPath, boolean isNew) {
+        String message;
+        String titleForm;
+
+        if (isNew) {
+            titleForm = "IOIの選択: ";
+        } else {
+            titleForm = "IOIへの返信: ";
+        }
+
+        message =
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">" + titleForm + borrowerName + " → 貸手（一社／数社） </h3>";
+
+        message +=
+//                "<h4>回答者： <mention uid='" + userId + "'/></h4>" +
+                "<h4>返信者： " + userName + "</h4>" +
+                        "<br/>" +
+                        "<table style='table-layout:fixed;width:1400px'>" +
+                        "<thead>" +
+                        "<tr>" +
+                        "<td style='width:4%;font-weight:bold'>種別</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff'>提示先</td>" +
+                        "<td style='width:5%;font-weight:bold;color:#3300ff'>銘柄</td>" +
+                        "<td style='width:5%;font-weight:bold;;text-align:right;color:#3300ff'>株数</td>" +
+                        "<td style='width:5%;font-weight:bold;color:#3300ff'>開始日</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff'>返却日/期間</td>" +
+                        "<td style='width:4%;font-weight:bold;color:#3300ff;text-align:right'>利率</td>" +
+                        "<td style='width:4%;font-weight:bold;color:#3300ff'>条件</td>" +
+                        "<td style='width:6%;font-weight:bold'>提示元</td>" +
+                        "<td style='width:8%;font-weight:bold'>提示番号</td>" +
+                        "<td style='width:3%;font-weight:bold'>枝番</td>" +
+                        "<td style='width:7%;font-weight:bold;text-align:right'>提示株数</td>" +
+                        "<td style='width:6%;font-weight:bold'>提示開始</td>" +
+                        "<td style='width:7%;font-weight:bold'>提示返却日</td>" +
+                        "<td style='width:6%;font-weight:bold;text-align:right'>提示利率</td>" +
+                        "<td style='width:6%;font-weight:bold'>提示条件</td>" +
+                        "<td style='width:4%;font-weight:bold;text-align:right'>価格</td>" +
+                        "<td style='width:6%;font-weight:bold'>状況</td>" +
+                        "</tr>" +
+                        "</thead>" +
+                        "<tbody>";
+
+
+        DataServices dataServices = DataServices.getInstance();
+        int totalQtyborrower = 0;
+        int totalQtylender = 0;
+        for (ViewIoi viewIoi : dataServices.getReceivedIois(status)) {
+            totalQtyborrower += viewIoi.getBorrowerQty();
+            totalQtylender += viewIoi.getLenderQty();
+
+            message +=
+                    "<tr>" +
+                            "<td>" + viewIoi.getType() + "</td>" +
+                            "<td class='tempo-text-color--green'>" + viewIoi.getBorrowerName() + "</td>" +
+                            "<td>" + viewIoi.getStockCode() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getBorrowerQty()) + "</td>" +
+                            "<td>" + viewIoi.getBorrowerStart() + "</td>" +
+                            "<td>" + viewIoi.getBorrowerEnd() + "</td>" +
+                            "<td style='text-align:right'>" + viewIoi.getBorrowerRate() + "</td>" +
+                            "<td>" + viewIoi.getBorrowerCondition() + "</td>" +
+                            "<td class='tempo-text-color--blue'>" + viewIoi.getLenderName() + "</td>" +
+                            "<td style='color:#ff0000'>" + viewIoi.getRequestId() + "</td>" +
+                            "<td style='text-align:right;color:#ff0000'>" + viewIoi.getLineNo() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getLenderQty()) + "</td>" +
+                            "<td>" + viewIoi.getLenderStart() + "</td>" +
+                            "<td>" + viewIoi.getLenderEnd() + "</td>" +
+                            "<td style='text-align:right'>" + viewIoi.getLenderRate() + "</td>" +
+                            "<td>" + viewIoi.getLenderCondition() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getPrice()) + "</td>" +
+                            "<td>" + viewIoi.getStatus() + "</td>" +
+                            "</tr>";
+        }
+
+        message +=
+                "</tbody>" +
+                        "<tfoot>" +
+                        "<tr>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "</tr>" +
+                        "</tfoot>" +
+                        "</table>" +
+                        "<br/>" ;
+
+        message +=
+                "<div style=\"display: flex;\">";
+
+
+//      Div in Left Bottom ---------------------
+//      Div in Left Bottom ---------------------
+//      Div in Left Bottom ---------------------
+        message +=
+                "<div style=\"width:50%;\">";
+
+        if (isNew) {
+            message +=
+                    "<form id=\"select-ioi-form\">";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "<div style=\"display:none\">";
+            }
+            message +=
+                    "<p>botId: borrowerName: lenderName: userName: </p>" +
+                            "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                            "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                            "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                            "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "</div>";
+            }
+
+            message +=
+                    "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">IOIデータの入力</h3>" +
+                            "<br/>" +
+//                                "<h6>入力欄にIOIデータをコピー／貼付してください</h6>" +
+                            "<textarea name=\"input_ioi\" placeholder=\"ここにコピーしたIOIデータを貼付てください。 " +
+                            "&#13;" +
+                            "コピー範囲は、エクセルで開いたCSVファイルの先頭列（列名：種別）から最終列（列名：状況）を含めてください。\" required=\"true\"></textarea>" +
+                            "<button type=\"reset\">消去</button><button type=\"action\" name=\"import-select-ioi-button\">取込</button>";
+
+            message +=
+                    "</form>";
+        }
+        if (!isNew) {
+
+            message +=
+                    "<form id=\"submit-select-ioi-form\">";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "<div style=\"display:none\">";
+            }
+            message +=
+                    "<p>borrowerName: lenderName: userName: </p>" +
+                            "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                            "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                            "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>";
+            if (ConfigLoader.env.equals("prod")) {
+                message += "</div>";
+            }
+
+            message +=
+                    "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">貸手のIOIに返信</h3>" +
+                            "<br/>";
+
+            message +=
+
+                    "<button type=\"action\" name=\"reselect-select-ioi-button\">再選択</button>" +
+                            "<button type=\"action\" name=\"send-select-ioi-button\">返信</button>" +
+                            "</form>";
+        }
+        message +=
+                "</div>" ;
+
+//       Div in Right Bottom -------------------
+//       Div in Right Bottom -------------------
+//       Div in Right Bottom -------------------
+        message +=
+                "<br/>" +
+                        "<div style=\"width:50%;\">";
+        message +=
+                "</div>"+
+
+        "</div>";
+
+
+        OutboundMessage messageOut = new OutboundMessage();
+        if (!csvFullPath.equals("")) {
+            messageOut.setAttachment(new File(csvFullPath));
+        }
+        messageOut.setMessage(message);
+        LOGGER.debug("buildCreateQuoteFormMessage returned");
+        return messageOut;
+    }
+
+
     public OutboundMessage buildSendSelectionFormMessage(String botId, String userId, String userName, String externalChatRoomId,
                                                          String lenderBotInstantMessageId, String borrowerName, String lenderName, String status, String selectionData) {
 
@@ -1330,11 +2012,11 @@ public class MessageSender {
                         "<td style='width:6%;font-weight:bold'>依頼先</td>" +
                         "<td style='width:7%;font-weight:bold'>依頼番号</td>" +
                         "<td style='width:3%;font-weight:bold'>枝番</td>" +
-                        "<td style='width:7%;font-weight:bold;text-align:right'>見積株数</td>" +
-                        "<td style='width:6%;font-weight:bold'>見積開始</td>" +
-                        "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
-                        "<td style='width:6%;font-weight:bold;text-align:right'>見積利率</td>" +
-                        "<td style='width:7%;font-weight:bold'>見積条件</td>" +
+                        "<td style='width:7%;font-weight:bold;text-align:right;color:#3300ff'>見積株数</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff'>見積開始</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff'>見積返却日</td>" +
+                        "<td style='width:6%;font-weight:bold;text-align:right;color:#3300ff'>見積利率</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff'>見積条件</td>" +
                         "<td style='width:5%;font-weight:bold;text-align:right'>価格</td>" +
                         "<td style='width:6%;font-weight:bold'>状況</td>" +
                         "</tr>" +
@@ -1361,8 +2043,8 @@ public class MessageSender {
                             "<td style='text-align:right'>" + viewRfqQuote.getBorrowerRate() + "</td>" +
                             "<td>" + viewRfqQuote.getBorrowerCondition() + "</td>" +
                             "<td class='tempo-text-color--blue'>" + viewRfqQuote.getLenderName() + "</td>" +
-                            "<td >" + viewRfqQuote.getRequestId() + "</td>" +
-                            "<td style='text-align:right'>" + viewRfqQuote.getLineNo() + "</td>" +
+                            "<td style='color:#ff0000'>" + viewRfqQuote.getRequestId() + "</td>" +
+                            "<td style='text-align:right;color:#ff0000'>" + viewRfqQuote.getLineNo() + "</td>" +
                             "<td style='text-align:right'>" + String.format("%,d", viewRfqQuote.getLenderQty()) + "</td>" +
                             "<td>" + viewRfqQuote.getLenderStart() + "</td>" +
                             "<td>" + viewRfqQuote.getLenderEnd() + "</td>" +
@@ -1457,6 +2139,165 @@ public class MessageSender {
         return messageOut;
     }
 
+    public OutboundMessage buildSendSelectedIoiFormMessage(String botId, String userId, String userName, String externalChatRoomId,
+                                                         String lenderBotInstantMessageId, String borrowerName, String lenderName, String status, String selectionData) {
+
+        String message;
+        String titleForm;
+
+        titleForm = "IOIへの返信: ";
+
+        message =
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">" + titleForm + borrowerName+ " → " + lenderName + "</h3>";
+
+
+
+        message +=
+                //                "<h4>回答者： <mention uid='" + userId + "'/></h4>" +
+                "<h4>返信者： " + userName + "</h4>" +
+                        "<br/>" +
+                        "<table style='table-layout:fixed;width:1400px'>" +
+                        "<thead>" +
+                        "<tr>" +
+                        "<td style='width:4%;font-weight:bold'>種別</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff'>提示先</td>" +
+                        "<td style='width:5%;font-weight:bold;color:#3300ff'>銘柄</td>" +
+                        "<td style='width:7%;font-weight:bold;text-align:right;color:#3300ff'>株数</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff'>開始日</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff'>返却日/期間</td>" +
+                        "<td style='width:4%;font-weight:bold;color:#3300ff;text-align:right'>利率</td>" +
+                        "<td style='width:4%;font-weight:bold;color:#3300ff'>条件</td>" +
+                        "<td style='width:6%;font-weight:bold'>提示元</td>" +
+                        "<td style='width:7%;font-weight:bold'>提示番号</td>" +
+                        "<td style='width:3%;font-weight:bold'>枝番</td>" +
+                        "<td style='width:7%;font-weight:bold;text-align:right;color:#3300ff'>提示株数</td>" +
+                        "<td style='width:6%;font-weight:bold'>提示開始</td>" +
+                        "<td style='width:7%;font-weight:bold'>提示返却日</td>" +
+                        "<td style='width:6%;font-weight:bold;text-align:right'>提示利率</td>" +
+                        "<td style='width:7%;font-weight:bold'>提示条件</td>" +
+                        "<td style='width:5%;font-weight:bold;text-align:right'>価格</td>" +
+                        "<td style='width:6%;font-weight:bold'>状況</td>" +
+                        "</tr>" +
+                        "</thead>" +
+                        "<tbody>";
+
+
+
+        DataServices dataServices = DataServices.getInstance();
+        int totalQtyborrower = 0;
+        int totalQtylender = 0;
+        for (ViewIoi viewIoi : dataServices.viewSendSelectedIoiFromBorrowerToLender(lenderName, status)) {
+            totalQtyborrower += viewIoi.getBorrowerQty();
+            totalQtylender += viewIoi.getLenderQty();
+
+            message +=
+                    "<tr>" +
+                            "<td>" + viewIoi.getType() + "</td>" +
+                            "<td class='tempo-text-color--green'>" + viewIoi.getBorrowerName() + "</td>" +
+                            "<td>" + viewIoi.getStockCode() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getBorrowerQty()) + "</td>" +
+                            "<td>" + viewIoi.getBorrowerStart() + "</td>" +
+                            "<td>" + viewIoi.getBorrowerEnd() + "</td>" +
+                            "<td style='text-align:right'>" + viewIoi.getBorrowerRate() + "</td>" +
+                            "<td>" + viewIoi.getBorrowerCondition() + "</td>" +
+                            "<td class='tempo-text-color--blue'>" + viewIoi.getLenderName() + "</td>" +
+                            "<td style='color:#ff0000'>" + viewIoi.getRequestId() + "</td>" +
+                            "<td style='text-align:right;color:#ff0000'>" + viewIoi.getLineNo() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getLenderQty()) + "</td>" +
+                            "<td>" + viewIoi.getLenderStart() + "</td>" +
+                            "<td>" + viewIoi.getLenderEnd() + "</td>" +
+                            "<td style='text-align:right'>" + viewIoi.getLenderRate() + "</td>" +
+                            "<td>" + viewIoi.getLenderCondition() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getPrice()) + "</td>" +
+                            "<td>" + viewIoi.getStatus() + "</td>" +
+                            "</tr>";
+        }
+
+        message +=
+                "</tbody>" +
+                        "<tfoot>" +
+                        "<tr>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "</tr>" +
+                        "</tfoot>" +
+                        "</table>" +
+                        "<br/>" ;
+
+        message +=
+                "<div style=\"display: flex;\">";
+
+
+        //      Div in Left Bottom -----------------
+        //      Div in Left Bottom -----------------
+        //      Div in Left Bottom -----------------
+        message +=
+                "<div style=\"width:50%;\">";
+
+
+        message +=
+                "</div>" ;
+
+        //       Div in Right Bottom -----------------
+        //       Div in Right Bottom -----------------
+        //       Div in Right Bottom -----------------
+        message +=
+                "<br/>" +
+                        "<div style=\"width:50%;\">";
+
+        message +=
+                "<form id=\"confirm-selected-ioi-form\">";
+        if (ConfigLoader.env.equals("prod")) {
+            message += "<div style=\"display:none\">";
+        }
+        message +=
+                "<p>userName: botId: externalChatRoomId: borrowerBotInstantMessageId: borrowerName: lenderName: quoteData: </p>" +
+                        "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" +
+                        "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                        "<text-field name=\"external_chatroom_id\" required=\"false\">" + externalChatRoomId + "</text-field>" +
+                        "<text-field name=\"lenderbot_im_id\" required=\"false\">" + lenderBotInstantMessageId + "</text-field>" +
+                        "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                        "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                        "<textarea name=\"selection_data\" required=\"false\">" + selectionData + "</textarea>";
+        if (ConfigLoader.env.equals("prod")) {
+            message += "</div>";
+        }
+
+        message +=
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--blue\">貸手(" + lenderName + ")の対応</h3>" +
+                        "<br/>";
+
+        message +=
+
+                "<button type=\"action\" name=\"confirm-selected-ioi-button\">確認</button>" +
+                        "</form>";
+
+        message +=
+                "</div>"+
+            "</div>";
+
+
+        OutboundMessage messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        LOGGER.debug("buildSendQuoteFormMessage returned");
+        return messageOut;
+    }
+
+
 
     public OutboundMessage buildSendQuoteFormMessage(String botId, String userId, String userName, String externalChatRoomId,
                                                      String borrowerBotInstantMessageId, String borrowerName, String lenderName, String lenderStatus, String quoteData, boolean isNew) {
@@ -1471,7 +2312,7 @@ public class MessageSender {
         }
 
         message =
-                "<h3 class=\"tempo-text-color--white tempo-bg-color--blue\">" + titleForm + borrowerName + " ← " + lenderName + "</h3>";
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--purple\">" + titleForm + borrowerName + " ← " + lenderName + "</h3>";
 
 
 
@@ -1493,11 +2334,11 @@ public class MessageSender {
                         "<td style='width:6%;font-weight:bold'>依頼先</td>" +
                         "<td style='width:8%;font-weight:bold'>依頼番号</td>" +
                         "<td style='width:3%;font-weight:bold'>枝番</td>" +
-                        "<td style='width:7%;font-weight:bold;text-align:right'>見積株数</td>" +
-                        "<td style='width:6%;font-weight:bold'>見積開始</td>" +
-                        "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
-                        "<td style='width:6%;font-weight:bold;text-align:right'>見積利率</td>" +
-                        "<td style='width:7%;font-weight:bold'>見積条件</td>" +
+                        "<td style='width:7%;font-weight:bold;text-align:right;color:#3300ff'>見積株数</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff'>見積開始</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff'>見積返却日</td>" +
+                        "<td style='width:6%;font-weight:bold;text-align:right;color:#3300ff'>見積利率</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff'>見積条件</td>" +
                         "<td style='width:5%;font-weight:bold;text-align:right'>価格</td>" +
                         "<td style='width:4%;font-weight:bold'>状況</td>" +
                         "</tr>" +
@@ -1523,8 +2364,8 @@ public class MessageSender {
                             "<td style='text-align:right'>" + sendQuote.getBorrowerRate() + "</td>" +
                             "<td>" + sendQuote.getBorrowerCondition() + "</td>" +
                             "<td class='tempo-text-color--blue'>" + sendQuote.getLenderName() + "</td>" +
-                            "<td >" + sendQuote.getRequestId() + "</td>" +
-                            "<td style='text-align:right'>" + sendQuote.getLineNo() + "</td>" +
+                            "<td style='color:#ff0000'>" + sendQuote.getRequestId() + "</td>" +
+                            "<td style='text-align:right;color:#ff0000'>" + sendQuote.getLineNo() + "</td>" +
                             "<td style='text-align:right'>" + String.format("%,d", sendQuote.getLenderQty()) + "</td>" +
                             "<td>" + sendQuote.getLenderStart() + "</td>" +
                             "<td>" + sendQuote.getLenderEnd() + "</td>" +
@@ -1628,11 +2469,30 @@ public class MessageSender {
         return messageOut;
     }
 
-    public OutboundMessage buildImToBorrowerBotForReject(String userId, String userName, String botId, String externalChatRoomId, String borrowerName, String lenderName, String quoteData) {
+    public OutboundMessage buildNotifyRejectIoiMessage(String userId, String userName, String borrowerName, String lenderName) {
+        String message =
+                "<h5>" + lenderName + "からの<b>IOIの送信</b>は、" + borrowerName + "(" + userName + ")に需要無しと返信されました。</h5>" +
+                        "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.ioiHashTag + "\"/></p>";
+        OutboundMessage messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        LOGGER.debug("buildNotifyRejectIoiMessage returned");
+        return messageOut;
+    }
+
+    public OutboundMessage buildImToBorrowerBotForRejectQuote(String userId, String userName, String botId, String externalChatRoomId, String borrowerName, String lenderName, String quoteData) {
         String message = "<mention uid='" + botId + "'/> /botcmd2 DUMMY " + userId + " " + userName + " " + borrowerName + " " + lenderName + " " + externalChatRoomId + " " + quoteData;
         OutboundMessage  messageOut = new OutboundMessage();
         messageOut.setMessage(message);
-        LOGGER.debug("buildImToBorrowerBotForReject returned");
+        LOGGER.debug("buildImToBorrowerBotForRejectQuote returned");
+
+        return messageOut;
+    }
+
+    public OutboundMessage buildImToBorrowerBotForRejectIoi(String userId, String userName, String botId, String externalChatRoomId, String borrowerName, String lenderName, String ioiData) {
+        String message = "<mention uid='" + botId + "'/> /botcmd5 DUMMY " + userId + " " + userName + " " + borrowerName + " " + lenderName + " " + externalChatRoomId + " " + ioiData;
+        OutboundMessage  messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        LOGGER.debug("buildImToBorrowerBotForRejectIoi returned");
 
         return messageOut;
     }
@@ -1644,6 +2504,16 @@ public class MessageSender {
         OutboundMessage messageOut = new OutboundMessage();
         messageOut.setMessage(message);
         LOGGER.debug("buildNotifyAcceptMessage returned");
+        return messageOut;
+    }
+
+    public OutboundMessage buildNotifyAcceptMessageIoi(String userId, String userName, String borrowerName, String lenderName) {
+        String message =
+                "<h5>" + lenderName + "からの<b>IOIの送信</b>は、" + borrowerName + "(" + userName + ")に受付されました。</h5>" +
+                        "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.ioiHashTag + "\"/></p>";
+        OutboundMessage messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        LOGGER.debug("buildNotifyAcceptMessageIoi returned");
         return messageOut;
     }
 
@@ -1662,6 +2532,15 @@ public class MessageSender {
         OutboundMessage  messageOut = new OutboundMessage();
         messageOut.setMessage(message);
         LOGGER.debug("buildImToBorrowerBotForAccept returned");
+
+        return messageOut;
+    }
+
+    public OutboundMessage buildImToBorrowerBotForAcceptIoi(String userId, String userName, String botId, String externalChatRoomId, String borrowerName, String lenderName, String quoteData) {
+        String message = "<mention uid='" + botId + "'/> /botcmd6 DUMMY " + userId + " " + userName + " " + borrowerName + " " + lenderName + " " + externalChatRoomId + " " + quoteData;
+        OutboundMessage  messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        LOGGER.debug("buildImToBorrowerBotForAcceptIoi returned");
 
         return messageOut;
     }
@@ -1687,10 +2566,10 @@ public class MessageSender {
 
         if (displayRequestId.equals("")) {
             message =
-                    "<h3 class=\"tempo-text-color--black tempo-bg-color--yellow\">" + titleForm + "借手（一社／数社）← " + lenderName + " []</h3>";
+                    "<h3 class=\"tempo-text-color--black tempo-bg-color--cyan\">" + titleForm + "借手（一社／数社）← " + lenderName + " []</h3>";
         } else {
             message =
-                    "<h3 class=\"tempo-text-color--white tempo-bg-color--purple\">" + titleForm + "借手（一社／数社）← " + lenderName+ " [<hash tag=\"" + displayRequestId + "\"/>]</h3>";
+                    "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">" + titleForm + "借手（一社／数社）← " + lenderName+ " [<hash tag=\"" + displayRequestId + "\"/>]</h3>";
         }
 
         message +=
@@ -1701,21 +2580,21 @@ public class MessageSender {
                         "<thead>" +
                         "<tr>" +
                         "<td style='width:4%;font-weight:bold'>種別</td>" +
-                        "<td style='width:6%;font-weight:bold'>依頼元</td>" +
-                        "<td style='width:5%;font-weight:bold'>銘柄</td>" +
-                        "<td style='width:8%;font-weight:bold;text-align:right'>株数</td>" +
-                        "<td style='width:6%;font-weight:bold'>開始日</td>" +
-                        "<td style='width:7%;font-weight:bold'>返却日/期間</td>" +
-                        "<td style='width:4%;font-weight:bold;text-align:right'>利率</td>" +
-                        "<td style='width:4%;font-weight:bold'>条件</td>" +
-                        "<td style='width:6%;font-weight:bold'>依頼先</td>" +
-                        "<td style='width:8%;font-weight:bold'>依頼番号</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff'>提示先</td>" +
+                        "<td style='width:5%;font-weight:bold;color:#3300ff'>銘柄</td>" +
+                        "<td style='width:8%;font-weight:bold;text-align:right;color:#3300ff'>株数</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff'>開始日</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff'>返却日/期間</td>" +
+                        "<td style='width:4%;font-weight:bold;color:#3300ff;text-align:right'>利率</td>" +
+                        "<td style='width:4%;font-weight:bold;color:#3300ff'>条件</td>" +
+                        "<td style='width:6%;font-weight:bold'>提示元</td>" +
+                        "<td style='width:8%;font-weight:bold'>提示番号</td>" +
                         "<td style='width:3%;font-weight:bold'>枝番</td>" +
-                        "<td style='width:7%;font-weight:bold;text-align:right'>見積株数</td>" +
-                        "<td style='width:6%;font-weight:bold'>見積開始</td>" +
-                        "<td style='width:7%;font-weight:bold'>見積返却日</td>" +
-                        "<td style='width:6%;font-weight:bold;text-align:right'>見積利率</td>" +
-                        "<td style='width:7%;font-weight:bold'>見積条件</td>" +
+                        "<td style='width:7%;font-weight:bold;text-align:right'>提示株数</td>" +
+                        "<td style='width:6%;font-weight:bold'>提示開始</td>" +
+                        "<td style='width:7%;font-weight:bold'>提示返却日</td>" +
+                        "<td style='width:6%;font-weight:bold;text-align:right'>提示利率</td>" +
+                        "<td style='width:7%;font-weight:bold'>提示条件</td>" +
                         "<td style='width:5%;font-weight:bold;text-align:right'>価格</td>" +
                         "<td style='width:4%;font-weight:bold'>状況</td>" +
                         "</tr>" +
@@ -1741,8 +2620,8 @@ public class MessageSender {
                             "<td style='text-align:right'>" + viewIoi.getBorrowerRate() + "</td>" +
                             "<td>" + viewIoi.getBorrowerCondition() + "</td>" +
                             "<td class='tempo-text-color--blue'>" + viewIoi.getLenderName() + "</td>" +
-                            "<td >" + viewIoi.getRequestId() + "</td>" +
-                            "<td style='text-align:right'>" + viewIoi.getLineNo() + "</td>" +
+                            "<td style='color:#ff0000'>" + viewIoi.getRequestId() + "</td>" +
+                            "<td style='text-align:right;color:#ff0000'>" + viewIoi.getLineNo() + "</td>" +
                             "<td style='text-align:right'>" + String.format("%,d", viewIoi.getLenderQty()) + "</td>" +
                             "<td>" + viewIoi.getLenderStart() + "</td>" +
                             "<td>" + viewIoi.getLenderEnd() + "</td>" +
@@ -1874,6 +2753,7 @@ public class MessageSender {
             message +=
 
                     "<button type=\"action\" name=\"recreate-ioi-button\">再作成</button>" +
+                            "<button type=\"action\" name=\"cancel-ioi-button\">取消</button>" +
                             "<button type=\"action\" name=\"send-ioi-button\">送信</button>" +
                             "</form>";
         }

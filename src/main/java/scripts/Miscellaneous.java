@@ -27,7 +27,7 @@ public class Miscellaneous {
         if (type.equals("RFQ")) {
             newRequestId = "B" + timeStamp + String.format("%1$02d", lotNo);
         } else if (type.equals("IOI")) {
-            newRequestId = "L" + timeStamp + String.format("%1$02d", lotNo);
+            newRequestId = "I" + timeStamp + String.format("%1$02d", lotNo);
 
         } else {
             newRequestId = "ERROR";

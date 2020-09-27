@@ -16,7 +16,7 @@
   "sendRfqCsvPath": "/home/seimeisama/projects/bots/borrower/JapanLendingBotBorrower/csvrfqs",
   "uploadCsvPath": "/home/seimeisama/projects/bots/borrower/JapanLendingBotBorrower/csvupload",
   "database": "stockLending.sqlite3",
-  "transactionSchema":"(type text, lotNo integer, requestId text, versionNo integer, lineNo integer, stockCode text, borrowerName text, borrowerQty integer, borrowerStart text, borrowerEnd text, borrowerRate real, borrowerCondition text, lenderNo integer, lenderName text, lenderQty integer, lenderStart text, lenderEnd text, lenderRate real, lenderCondition text, price integer, status text, timeStamp text, updatedBy text)",
+  "transactionSchema":"(type text, lotNo integer default 0, requestId text, versionNo integer default 0, lineNo integer default 0, stockCode text, borrowerName text, borrowerQty integer default 0, borrowerStart text, borrowerEnd text, borrowerRate real default 0.0, borrowerCondition text, lenderNo integer default 0, lenderName text, lenderQty integer default 0, lenderStart text, lenderEnd text, lenderRate real default 0, lenderCondition text, price integer default 0, status text, timeStamp text, updatedBy text)",
   "counterPartySchema":"(counterPartyId text, counterPartyName text, counterPartyType text, counterPartyBotName text, extChatRoomId text, botImStreamId text, isActive integer)",
   "transactionTable": "transactions",
   "counterPartyTable": "counterParties",

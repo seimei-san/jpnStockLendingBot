@@ -26,7 +26,7 @@ public class DataUpdate {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sql = "UPDATE " + ConfigLoader.transactionTable + " SET status=?, timeStamp=?, updatedBy=? WHERE lenderNo!=0 AND status=?";
+            String sql = "UPDATE " + ConfigLoader.transactionTable + " SET status=?, timeStamp=?, updatedBy=? WHERE type='RFQ' AND lenderNo!=0 AND status=?";
             PreparedStatement preStatementSelect = connection.prepareStatement(sql);
             preStatementSelect.setString(1, toStatus);
             preStatementSelect.setString(2, timeStamp);
@@ -42,6 +42,55 @@ public class DataUpdate {
             LOGGER.error("DataUpdate.updateSelectionStatus.ClassException", e);
         } catch (SQLException e) {
             LOGGER.error("DataUpdate.updateSelectionStatus.SQLException", e);
+            result = false;
+            e.printStackTrace();
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
+
+    }
+
+    public static boolean updateSelectedIoiStatus (String userName, String timeStamp, String fromStatus, String toStatus) {
+        Connection connection = null;
+        Statement statement = null;
+        boolean result = true;
+        try {
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String sql = "UPDATE " + ConfigLoader.transactionTable + " SET status=?, timeStamp=?, updatedBy=? WHERE type='IOI' AND lenderNo!=0 AND status=?";
+            PreparedStatement preStatementSelect = connection.prepareStatement(sql);
+            preStatementSelect.setString(1, toStatus);
+            preStatementSelect.setString(2, timeStamp);
+            preStatementSelect.setString(3, userName);
+            preStatementSelect.setString(4, fromStatus);
+            preStatementSelect.executeUpdate();
+
+            LOGGER.debug("DataUpdate.updateSelectedIoiStatus completed");
+
+        }catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            result = false;
+            LOGGER.error("DataUpdate.updateSelectedIoiStatus.ClassException", e);
+        } catch (SQLException e) {
+            LOGGER.error("DataUpdate.updateSelectedIoiStatus.SQLException", e);
             result = false;
             e.printStackTrace();
         } finally {
@@ -406,7 +455,7 @@ public class DataUpdate {
 
     }
 
-    public static boolean updateStatusAfterSentSelection (String lenderName, String fromStatus, String toStatus) {
+    public static boolean updateStatusAfterSentSelection (String type, String lenderName, String fromStatus, String toStatus) {
         Connection connection = null;
         Statement statement = null;
         boolean result = true;
@@ -417,10 +466,12 @@ public class DataUpdate {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sql = "UPDATE " + ConfigLoader.transactionTable + " SET status = '" + toStatus + "' WHERE lenderNo!=0 AND status=? AND lenderName=?";
+            String sql = "UPDATE " + ConfigLoader.transactionTable + " SET status=? WHERE type=? AND lenderNo!=0 AND status=? AND lenderName=?";
             PreparedStatement preStatementSelect = connection.prepareStatement(sql);
-            preStatementSelect.setString(1, fromStatus);
-            preStatementSelect.setString(2, lenderName);
+            preStatementSelect.setString(1, toStatus);
+            preStatementSelect.setString(2, type);
+            preStatementSelect.setString(3, fromStatus);
+            preStatementSelect.setString(4, lenderName);
 
             preStatementSelect.executeUpdate();
 
@@ -548,7 +599,7 @@ public class DataUpdate {
 
             String sql = "UPDATE " + ConfigLoader.transactionTable +
                     " SET lenderQty=?, lenderStart=?, lenderEnd=?, lenderRate=?, lenderCondition=?, price=?, status=?, timeStamp=?, updatedBy=? " +
-                    " WHERE status=? AND borrowerName=? AND lenderName=? AND requestId=? AND lineNo=?";
+                    " WHERE type='RFQ' AND status=? AND borrowerName=? AND lenderName=? AND requestId=? AND lineNo=?";
             PreparedStatement preStatementSelect = connection.prepareStatement(sql);
             preStatementSelect.setInt(1, lenderQty);
             preStatementSelect.setString(2, Miscellaneous.fourDigitDate(lenderStart.trim()));
@@ -597,6 +648,70 @@ public class DataUpdate {
 
     }
 
+    public static boolean updateIoi (String userName, String fromStatus, String borrowerName, String lenderName, String requestId,
+                                       int lineNo, int borrowerQty, String borrowerStart, String borrowerEnd, double borrowerRate,
+                                       String borrowerCondition, String toStatus) {
+        Connection connection = null;
+        Statement statement = null;
+        boolean result = true;
+        try {
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String timeStamp = Miscellaneous.getTimeStamp("transaction");
+
+            String sql = "UPDATE " + ConfigLoader.transactionTable +
+                    " SET borrowerQty=?, borrowerStart=?, borrowerEnd=?, borrowerRate=?, borrowerCondition=?, status=?, timeStamp=?, updatedBy=? " +
+                    " WHERE type='IOI' AND status=? AND borrowerName=? AND lenderName=? AND requestId=? AND lineNo=?";
+            PreparedStatement preStatementSelect = connection.prepareStatement(sql);
+            preStatementSelect.setInt(1, borrowerQty);
+            preStatementSelect.setString(2, Miscellaneous.fourDigitDate(borrowerStart.trim()));
+            preStatementSelect.setString(3, Miscellaneous.fourDigitDate(borrowerEnd.trim()));
+            preStatementSelect.setDouble(4, borrowerRate);
+            preStatementSelect.setString(5, borrowerCondition);
+            preStatementSelect.setString(6, toStatus);
+            preStatementSelect.setString(7, timeStamp);
+            preStatementSelect.setString(8, userName);
+            preStatementSelect.setString(9, fromStatus);
+            preStatementSelect.setString(10, borrowerName);
+            preStatementSelect.setString(11, lenderName);
+            preStatementSelect.setString(12, requestId);
+            preStatementSelect.setInt(13, lineNo);
+
+            preStatementSelect.executeUpdate();
+
+            LOGGER.debug("DataUpdate.updateIoi completed");
+
+        }catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            result = false;
+            LOGGER.error("DataUpdate.updateIoi.ClassException", e);
+        } catch (SQLException e) {
+            LOGGER.error("DataUpdate.updateIoi.SQLException", e);
+            result = false;
+            e.printStackTrace();
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
+
+    }
 
     public static void getUpdateQuoteStatus(String quoteData, String userName, String toStatus) {
         Connection connection = null;
@@ -613,7 +728,7 @@ public class DataUpdate {
 //           while (rs.next()) failed into Loop so that limit loop by the count of results
 
             String sqlUpdateQuoteWithNewStatus = "UPDATE " + ConfigLoader.transactionTable +
-                    " SET status=?, timeStamp=?, updatedBy=? WHERE requestId=? AND lineNo=? AND borrowerName=? AND lenderName=? ";
+                    " SET status=?, timeStamp=?, updatedBy=? WHERE requestId=? AND lineNo=? AND borrowerName=? AND lenderName=? AND type=?";
             PreparedStatement preparedStatementUpdate = connection.prepareStatement(sqlUpdateQuoteWithNewStatus);
 
             String timeStamp = Miscellaneous.getTimeStamp("transaction");
@@ -632,6 +747,7 @@ public class DataUpdate {
 
                     if (countItem==noOfFields) {
 //                        tmpArray[1] // type
+                        preparedStatementUpdate.setString(8, "RFQ");
 //                        tmpArray[2] // lotNo
 //                        tmpArray[3] // requestId
                         preparedStatementUpdate.setString(4, tmpArray[3]); // updateBy
@@ -699,6 +815,108 @@ public class DataUpdate {
         LOGGER.debug("DataServices.getUpdateQuoteStatus completed");
     }
 
+    public static void getUpdateIoiStatus(String ioiData, String userName, String toStatus) {
+        Connection connection = null;
+        Statement statement = null;
+        try {
+
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            connection.setAutoCommit(false);
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+//           while (rs.next()) failed into Loop so that limit loop by the count of results
+
+            String sqlUpdateQuoteWithNewStatus = "UPDATE " + ConfigLoader.transactionTable +
+                    " SET status=?, timeStamp=?, updatedBy=? WHERE requestId=? AND lineNo=? AND borrowerName=? AND lenderName=? AND type=?";
+            PreparedStatement preparedStatementUpdate = connection.prepareStatement(sqlUpdateQuoteWithNewStatus);
+
+            String timeStamp = Miscellaneous.getTimeStamp("transaction");
+
+
+            List<String> ioiLine;
+            ioiLine = Arrays.asList(ioiData.split(",", 0));
+            String[] tmpArray = new String[24];
+
+            int noOfFields = 23;
+            int countItem = 1;
+            for (String item : ioiLine) {
+                if (countItem<=noOfFields) {
+                    tmpArray[countItem] = item;
+                    countItem += 1;
+
+                    if (countItem==noOfFields) {
+//                        tmpArray[1] // type
+                        preparedStatementUpdate.setString(8, "IOI"); // type
+//                        tmpArray[2] // lotNo
+//                        tmpArray[3] // requestId
+                        preparedStatementUpdate.setString(4, tmpArray[3]); // updateBy
+//                        tmpArray[4] // versionNo
+//                        tmpArray[5] // LineNo
+                        preparedStatementUpdate.setInt(5, Integer.parseInt(tmpArray[5])); // updateBy
+//                        tmpArray[6] // stockCode
+//                        tmpArray[7] // borrowerName
+                        preparedStatementUpdate.setString(6, tmpArray[7]); // borrowerName
+//                        tmpArray[8] // borrowerQty
+//                        tmpArray[9] // borrowerStart
+//                        tmpArray[10] // borrowerEnd
+//                        tmpArray[11] // borrowerRate
+//                        tmpArray[12] // borrowerCondition
+//                        tmpArray[13] // provideNo
+//                        tmpArray[14] // lenderName
+                        preparedStatementUpdate.setString(7, tmpArray[14]); // lenderName
+//                        tmpArray[15] // lenderQty
+//                        tmpArray[16] // lenderStart
+//                        tmpArray[17] // lenderEnd
+//                        tmpArray[18] // lenderRate
+//                        tmpArray[19] // lenderCondition
+//                        tmpArray[20] // price
+//                        tmpArray[21] // status
+                        preparedStatementUpdate.setString(1, toStatus); // status
+//                        tmpArray[22] // timStamp
+                        preparedStatementUpdate.setString(2, timeStamp); // timeStamp
+//                        tmpArray[23] // updateBy
+                        preparedStatementUpdate.setString(3, userName); // updateBy
+
+                        preparedStatementUpdate.executeUpdate();
+                        countItem = 1;
+
+                    }
+                }
+
+            }
+            connection.commit();
+
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getUpdateIoiStatus.ClassException", e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getUpdateIoiStatus.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                if (connection != null) {
+                    connection.close();
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        LOGGER.debug("DataServices.getUpdateIoiStatus completed");
+    }
+
     public static void getUpdateQuoteByLender(String quoteData, String userName, String toStatus) {
         Connection connection = null;
         Statement statement = null;
@@ -715,7 +933,7 @@ public class DataUpdate {
 
             String sqlUpdateQuoteWithNewStatus = "UPDATE " + ConfigLoader.transactionTable +
                     " SET lenderQty=?, lenderStart=?, lenderEnd=?, lenderRate=?, lenderCondition=?, price=?, " +
-                    "status=?, timeStamp=?, updatedBy=? WHERE requestId=? AND lineNo=? AND borrowerName=? AND lenderName=?";
+                    "status=?, timeStamp=?, updatedBy=? WHERE requestId=? AND lineNo=? AND borrowerName=? AND lenderName=? and type=?";
             PreparedStatement preparedStatementUpdate = connection.prepareStatement(sqlUpdateQuoteWithNewStatus);
 
             String timeStamp = Miscellaneous.getTimeStamp("transaction");
@@ -734,6 +952,7 @@ public class DataUpdate {
 
                     if (countItem==noOfFields) {
 //                        tmpArray[1] // type
+                        preparedStatementUpdate.setString(14, "RFQ");
 //                        tmpArray[2] // lotNo
 //                        tmpArray[3] // requestId
                         preparedStatementUpdate.setString(10, tmpArray[3]); // updateBy
@@ -807,5 +1026,113 @@ public class DataUpdate {
         LOGGER.debug("DataServices.getUpdateQuoteStatus completed");
     }
 
+    public static void getUpdateIoiByLender(String ioiData, String userName, String toStatus) {
+        Connection connection = null;
+        Statement statement = null;
+        try {
+
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            connection.setAutoCommit(false);
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+//           while (rs.next()) failed into Loop so that limit loop by the count of results
+
+            String sqlUpdateIoiWithNewStatus = "UPDATE " + ConfigLoader.transactionTable +
+                    " SET lenderQty=?, lenderStart=?, lenderEnd=?, lenderRate=?, lenderCondition=?, price=?, " +
+                    "status=?, timeStamp=?, updatedBy=? WHERE requestId=? AND lineNo=? AND borrowerName=? AND lenderName=? and type=?";
+            PreparedStatement preparedStatementUpdate = connection.prepareStatement(sqlUpdateIoiWithNewStatus);
+
+            String timeStamp = Miscellaneous.getTimeStamp("transaction");
+
+
+            List<String> ioiLine;
+            ioiLine = Arrays.asList(ioiData.split(",", 0));
+            String[] tmpArray = new String[24];
+
+            int noOfFields = 23;
+            int countItem = 1;
+            for (String item : ioiLine) {
+                if (countItem<=noOfFields) {
+                    tmpArray[countItem] = item;
+                    countItem += 1;
+
+                    if (countItem==noOfFields) {
+//                        tmpArray[1] // type
+                        preparedStatementUpdate.setString(14, "IOI");
+//                        tmpArray[2] // lotNo
+//                        tmpArray[3] // requestId
+                        preparedStatementUpdate.setString(10, tmpArray[3]); // updateBy
+//                        tmpArray[4] // versionNo
+//                        tmpArray[5] // LineNo
+                        preparedStatementUpdate.setInt(11, Integer.parseInt(tmpArray[5])); // updateBy
+//                        tmpArray[6] // stockCode
+//                        tmpArray[7] // borrowerName
+                        preparedStatementUpdate.setString(12, tmpArray[7]); // borrowerName
+//                        tmpArray[8] // borrowerQty
+//                        tmpArray[9] // borrowerStart
+//                        tmpArray[10] // borrowerEnd
+//                        tmpArray[11] // borrowerRate
+//                        tmpArray[12] // borrowerCondition
+//                        tmpArray[13] // provideNo
+//                        tmpArray[14] // lenderName
+                        preparedStatementUpdate.setString(13, tmpArray[14]); // lenderName
+//                        tmpArray[15] // lenderQty
+                        preparedStatementUpdate.setInt(1, Integer.parseInt(tmpArray[15])); // lenderQty
+//                        tmpArray[16] // lenderStart
+                        preparedStatementUpdate.setString(2, tmpArray[16]); // lenderStart
+//                        tmpArray[17] // lenderEnd
+                        preparedStatementUpdate.setString(3, tmpArray[17]); // lenderEnd
+//                        tmpArray[18] // lenderRate
+                        preparedStatementUpdate.setDouble(4, Double.parseDouble(tmpArray[18])); // lenderRate
+//                        tmpArray[19] // lenderCondition
+                        preparedStatementUpdate.setString(5, tmpArray[19]); // lenderCondition
+//                        tmpArray[20] // price
+                        preparedStatementUpdate.setInt(6, Integer.parseInt(tmpArray[20])); // price
+//                        tmpArray[21] // status
+                        preparedStatementUpdate.setString(7, toStatus); // status
+//                        tmpArray[22] // timStamp
+                        preparedStatementUpdate.setString(8, timeStamp); // timeStamp
+//                        tmpArray[23] // updateBy
+                        preparedStatementUpdate.setString(9, userName); // updateBy
+
+                        preparedStatementUpdate.executeUpdate();
+                        countItem = 1;
+
+                    }
+                }
+
+            }
+            connection.commit();
+
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getUpdateIoiByLender.ClassException", e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getUpdateIoiByLender.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                if (connection != null) {
+                    connection.close();
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        LOGGER.debug("DataServices.getUpdateIoiByLender completed");
+    }
 
 }

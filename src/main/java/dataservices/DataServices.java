@@ -153,7 +153,7 @@ public class DataServices {
         return tmpArray;
     }
 
-    public static ArrayList<String> getRequestIdList() {
+    public static ArrayList<String> getRequestIdList(String type) {
 
 //        Get Request ID List into the public static RequestID to list the options in Lender
         final String JOB_NAME = "Request ID List Update: ";
@@ -169,7 +169,7 @@ public class DataServices {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sql = "select " + COLUMN_REQUESTID_LIST + " from " + ConfigLoader.transactionTable + " GROUP BY " + COLUMN_REQUESTID_LIST;
+            String sql = "select " + COLUMN_REQUESTID_LIST + " from " + ConfigLoader.transactionTable + " WHERE type='" + type + "' GROUP BY " + COLUMN_REQUESTID_LIST;
 
             ResultSet rs = statement.executeQuery(sql);
             while (rs.next()) {
@@ -292,7 +292,7 @@ public class DataServices {
             lastLotNo = rsLastLotNo.getInt(1);
             newLotNo = lastLotNo + 1;
             requestIdAndLotNo[1] = String.valueOf(newLotNo);
-            newRequestId = Miscellaneous.getNewRequestId("RFQ", newLotNo);
+            newRequestId = Miscellaneous.getNewRequestId(type, newLotNo);
             requestIdAndLotNo[0] = newRequestId;
 
 
@@ -534,7 +534,7 @@ public class DataServices {
             }
 
             String sql = "SELECT requestId, type, lineNo, stockCode, borrowerQty, borrowerStart, borrowerEnd, lenderNo FROM "
-                    + ConfigLoader.transactionTable + " WHERE lenderNo=0" + sqlSuffix;
+                    + ConfigLoader.transactionTable + " WHERE type='RFQ' AND lenderNo=0" + sqlSuffix;
             ResultSet resultSet = statement.executeQuery(sql);
 
             while (resultSet.next()) {
@@ -576,7 +576,82 @@ public class DataServices {
         return targetViewRfqs;
     }
 
-    public static boolean deleteRfqsByRequestId(String requestId) {
+    public ArrayList<ViewIoi> viewTargetIois(String requestId) {
+
+        Connection connection = null;
+        Statement statement = null;
+        ArrayList<ViewIoi> targetViewIois = new ArrayList<>();
+        try {
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String sqlSuffix = "";
+            if (requestId!=null && !requestId.equals("")) {
+                sqlSuffix = " AND requestId='" + requestId + "'";
+            }
+
+            String sql = "SELECT * FROM " + ConfigLoader.transactionTable + " WHERE type='IOI' AND lenderNo=0" + sqlSuffix;
+            ResultSet resultSet = statement.executeQuery(sql);
+
+            while (resultSet.next()) {
+                ViewIoi newViewIoi = new ViewIoi(
+                        resultSet.getString("type"),
+                        resultSet.getInt("lotNo"),
+                        resultSet.getString("requestId"),
+                        resultSet.getInt("versionNo"),
+                        resultSet.getInt("lineNo"),
+                        resultSet.getString("stockCode"),
+                        resultSet.getString("borrowerName"),
+                        resultSet.getInt("borrowerQty"),
+                        resultSet.getString("borrowerStart"),
+                        resultSet.getString("borrowerEnd"),
+                        resultSet.getDouble("borrowerRate"),
+                        resultSet.getString("borrowerCondition"),
+                        resultSet.getInt("lenderNo"),
+                        resultSet.getString("lenderName"),
+                        resultSet.getInt("lenderQty"),
+                        resultSet.getString("lenderStart"),
+                        resultSet.getString("lenderEnd"),
+                        resultSet.getDouble("lenderRate"),
+                        resultSet.getString("lenderCondition"),
+                        resultSet.getInt("price"),
+                        resultSet.getString("status"),
+                        resultSet.getString("timeStamp"),
+                        resultSet.getString("updatedBy"));
+                targetViewIois.add(newViewIoi);
+
+            }
+        }catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.viewTargetIois.ClassException", e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.viewTargetIois.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+
+            }
+        }
+        LOGGER.debug("DataServices.viewTargetIois Completed");
+        return targetViewIois;
+    }
+
+    public static boolean deleteTransactionsByRequestId(String requestId) {
         Connection connection = null;
         Statement statement = null;
         try {
@@ -597,10 +672,10 @@ public class DataServices {
 
         }catch (ClassNotFoundException e) {
             e.printStackTrace();
-            LOGGER.error("DataService.deleteRfqsByRequestId.ClassException", e);
+            LOGGER.error("DataService.deleteTransactionsByRequestId.ClassException", e);
         } catch (SQLException e) {
             e.printStackTrace();
-            LOGGER.error("DataService.deleteRfqsByRequestId.SQLException", e);
+            LOGGER.error("DataService.deleteTransactionsByRequestId.SQLException", e);
         } finally {
             try {
                 if (statement != null) {
@@ -617,7 +692,7 @@ public class DataServices {
                 e.printStackTrace();
             }
         }
-        LOGGER.debug("DataService.deleteRfqsByRequestId completed");
+        LOGGER.debug("DataService.deleteTransactionsByRequestId completed");
         return true;
     }
 
@@ -741,6 +816,152 @@ public class DataServices {
 
     }
 
+    public static String insertGetIoisForTargetCounterParty(String type, String userName, String requestId, String borrowerName, int lenderNo) {
+        Connection connection = null;
+        Statement statement = null;
+        String ioisData = "";
+        try {
+
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            connection.setAutoCommit(false);
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+
+//           while (rs.next()) failed into Loop so that limit loop by the count of results
+            String sqlCountTargetIois = "select count(requestId) as cnt from " + ConfigLoader.transactionTable + " where lenderNo=0 AND type='" + type + "' AND requestId=" + "'" + requestId + "'";
+            ResultSet rsCount = statement.executeQuery(sqlCountTargetIois);
+            int resultCount = rsCount.getInt(1);
+
+            String sqlGetTargetIois = "select * from " + ConfigLoader.transactionTable + " where lenderNo=0 AND type='" + type + "' AND requestId=?";
+            PreparedStatement preStatementSelect = connection.prepareStatement(sqlGetTargetIois);
+            preStatementSelect.setString(1, requestId);
+            ResultSet resultSet = preStatementSelect.executeQuery();
+
+            String sqlInsertIoiForTargetCounterParty = "insert into " + ConfigLoader.transactionTable +
+                    " (type, lotNo, requestId, versionNo, lineNo, stockCode, borrowerName, borrowerQty, " +
+                    "borrowerStart, borrowerEnd, borrowerRate, borrowerCondition, lenderNo, lenderName, lenderQty, lenderStart, " +
+                    "lenderEnd, lenderRate, lenderCondition, price, status, timeStamp, updatedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            PreparedStatement preparedStatementInsert = connection.prepareStatement(sqlInsertIoiForTargetCounterParty);
+
+            String timeStamp = Miscellaneous.getTimeStamp("transaction");
+
+
+            for (int i=1; i<=resultCount; i++) {
+                resultSet.next();
+                tmpArray = new String[24];
+                tmpArray[1] = resultSet.getString(1); // type
+                tmpArray[2] = resultSet.getString(2); // lotNo
+                tmpArray[3] = resultSet.getString(3); // requestId
+                tmpArray[4] = resultSet.getString(4); // versionNo
+                tmpArray[5] = resultSet.getString(5); // lineNo
+                tmpArray[6] = resultSet.getString(6); // stockCode
+                tmpArray[7] = resultSet.getString(7); // borrowerName
+                tmpArray[8] = resultSet.getString(8); // borrowerQty
+                tmpArray[9] = resultSet.getString(9); // borrowerStart
+                tmpArray[10] = resultSet.getString(10); // borrowerEnd
+                tmpArray[11] = resultSet.getString(11); // borrowerRate
+                tmpArray[12] = resultSet.getString(12); // borrowerCondition
+                tmpArray[13] = resultSet.getString(13); // lenderNo
+                tmpArray[14] = resultSet.getString(14); // lenderName
+                tmpArray[15] = resultSet.getString(15); // lenderQty
+                tmpArray[16] = resultSet.getString(16); // lenderStart
+                tmpArray[17] = resultSet.getString(17); // lenderEnd
+                tmpArray[18] = resultSet.getString(18); // lenderRate
+                tmpArray[19] = resultSet.getString(19); // lenderCondition
+                tmpArray[20] = resultSet.getString(20); // price
+                tmpArray[21] = resultSet.getString(21); // status
+                tmpArray[22] = resultSet.getString(22); // timestamp
+                tmpArray[23] = resultSet.getString(23); // updatedBy
+
+                preparedStatementInsert.setString(1,  tmpArray[1]); // type
+                preparedStatementInsert.setInt(2, Integer.parseInt( tmpArray[2])); // lotNo
+                preparedStatementInsert.setString(3,  tmpArray[3]); // requestId
+                preparedStatementInsert.setInt(4, Integer.parseInt( tmpArray[4])); // versionNo
+                preparedStatementInsert.setInt(5, Integer.parseInt( tmpArray[5])); // lineNo
+                preparedStatementInsert.setString(6,  tmpArray[6]); // stockCode
+                preparedStatementInsert.setString(7,  borrowerName); // borrowerName
+                preparedStatementInsert.setInt(8, Integer.parseInt(tmpArray[8])); // borrowerQty
+                preparedStatementInsert.setString(9,  tmpArray[9]); // borrowerStart
+                preparedStatementInsert.setString(10,  tmpArray[10]); // borrowerEnd
+                preparedStatementInsert.setDouble(11,  Double.parseDouble(tmpArray[11])); // borrowerRate
+                preparedStatementInsert.setString(12,  tmpArray[12]); // borrowerCondition
+                preparedStatementInsert.setInt(13, lenderNo); // lenderNo
+                preparedStatementInsert.setString(14, tmpArray[14]); // lenderName
+                preparedStatementInsert.setInt(15, Integer.parseInt(tmpArray[15])); // lenderQty
+                preparedStatementInsert.setString(16, tmpArray[16]); // lenderStart
+                preparedStatementInsert.setString(17, tmpArray[17]); // lenderEnd
+                preparedStatementInsert.setDouble(18, Double.parseDouble(tmpArray[18])); // lenderRate
+                preparedStatementInsert.setString(19, tmpArray[19]); // lenderCondition
+                preparedStatementInsert.setInt(20, Integer.parseInt(tmpArray[20])); // price
+                preparedStatementInsert.setString(21, tmpArray[21]); // status
+                preparedStatementInsert.setString(22, timeStamp); // timestamp
+                preparedStatementInsert.setString(23, userName); // updatedBy
+
+                preparedStatementInsert.executeUpdate();
+
+                ioisData += tmpArray[1] + ","; // type 1
+                ioisData += tmpArray[2] + ","; // lotNo 2
+                ioisData += tmpArray[3] + ","; // requestId 3
+                ioisData += Integer.parseInt( tmpArray[4]) + ","; // versionNo 4
+                ioisData += Integer.parseInt( tmpArray[5]) + ","; // lineNo 5
+                ioisData += tmpArray[6] + ","; // stockCode 6
+                ioisData += borrowerName + ","; // borrowerName 7
+                ioisData += Integer.parseInt( tmpArray[8]) + ","; // borrowerQty 8
+                ioisData += tmpArray[9] + ","; // borrowerStart 9
+                ioisData += tmpArray[10] + ","; // borrowerEnd 10
+                ioisData += Double.parseDouble(tmpArray[11]) + ","; // borrowerRate 11
+                ioisData += tmpArray[12] + ","; // borrowerCondition 12
+                ioisData += lenderNo + ","; // lenderNo 13
+                ioisData += tmpArray[14] + ","; // lenderName 14
+                ioisData += Integer.parseInt(tmpArray[15]) + ","; // lenderQty 15
+                ioisData += tmpArray[16] + ","; // lenderStart 16
+                ioisData += tmpArray[17] + ","; // lenderEnd 17
+                ioisData += Double.parseDouble(tmpArray[18]) + ","; // lenderRate 18
+                ioisData += tmpArray[19] + ","; // lenderCondition 19
+                ioisData += Integer.parseInt(tmpArray[20]) + ","; // price 20
+//                ioisData += tmpArray[21] + ","; // status 21
+                ioisData += "NEW" + ","; // status 21
+                ioisData += timeStamp + ","; // timeStamp 22
+                ioisData += userName + "\r"; // updatedBy 23
+//                ioisData += userName + ","; // updatedBy 23
+
+
+            }
+            connection.commit();
+
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.insertGetIoisForTargetCounterParty.ClassException", e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.insertGetIoisForTargetCounterParty.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                if (connection != null) {
+                    connection.close();
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        LOGGER.debug("DataServices.insertGetIoisForTargetCounterParty completed");
+        return ioisData;
+
+    }
+
     public static void getInsertRfqsIntoTargetCounterParty(String rfqData, String userName) {
         Connection connection = null;
         Statement statement = null;
@@ -837,6 +1058,110 @@ public class DataServices {
 
     }
 
+    public static void getInsertIoisIntoTargetCounterParty(String ioiData, String userName) {
+        Connection connection = null;
+        Statement statement = null;
+        try {
+
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            connection.setAutoCommit(false);
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+
+//           while (rs.next()) failed into Loop so that limit loop by the count of results
+
+            String sqlInsertIoiForTargetCounterParty = "insert into " + ConfigLoader.transactionTable +
+                    " (type, lotNo, requestId, versionNo, lineNo, stockCode, borrowerName, borrowerQty, " +
+                    "borrowerStart, borrowerEnd, borrowerRate, borrowerCondition, lenderNo, lenderName, lenderQty, lenderStart, " +
+                    "lenderEnd, lenderRate, lenderCondition, price, status, timeStamp, updatedBy) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+            PreparedStatement preparedStatementInsert = connection.prepareStatement(sqlInsertIoiForTargetCounterParty);
+            String timeStamp = Miscellaneous.getTimeStamp("transaction");
+
+
+            List<String> ioiLine;
+            ioiLine = Arrays.asList(ioiData.split(",", 0));
+            tmpArray = new String[24];
+
+            int noOfFields = 23;
+            int countItem = 1;
+            for (String item : ioiLine) {
+                if (countItem<=noOfFields) {
+                    tmpArray[countItem] = item;
+                    countItem += 1;
+
+                    if (countItem==noOfFields) {
+                        preparedStatementInsert.setString(1,  "IOI"); // type
+                        preparedStatementInsert.setInt(2, Integer.parseInt( tmpArray[2])); // lotNo
+                        preparedStatementInsert.setString(3,  tmpArray[3]); // requestId
+                        preparedStatementInsert.setInt(4, Integer.parseInt( tmpArray[4])); // versionNo
+                        preparedStatementInsert.setInt(5, Integer.parseInt( tmpArray[5])); // lineNo
+                        preparedStatementInsert.setString(6,  tmpArray[6]); // stockCode
+                        preparedStatementInsert.setString(7,  tmpArray[7]); // borrowerName
+//                        preparedStatementInsert.setInt(8, Integer.parseInt(tmpArray[8])); // borrowerQty
+                        preparedStatementInsert.setInt(8, Integer.parseInt(tmpArray[15])); // borrowerQty <- lenderQty
+//                        preparedStatementInsert.setString(9,  tmpArray[9]); // borrowerStart
+                        preparedStatementInsert.setString(9,  tmpArray[16]); // borrowerStart <- lenderStart
+//                        preparedStatementInsert.setString(10,  tmpArray[10]); // borrowerEnd
+                        preparedStatementInsert.setString(10,  tmpArray[17]); // borrowerEnd <- lenderEnd
+//                        preparedStatementInsert.setDouble(11,  Double.parseDouble(tmpArray[11])); // borrowerRate
+                        preparedStatementInsert.setDouble(11,  Double.parseDouble(tmpArray[18])); // borrowerRate <- lenderRate
+//                        preparedStatementInsert.setString(12,  tmpArray[12]); // borrowerCondition
+                        preparedStatementInsert.setString(12,  tmpArray[19]); // borrowerCondition <- lenderCondition
+                        preparedStatementInsert.setInt(13, Integer.parseInt(tmpArray[13])); // lenderNo
+                        preparedStatementInsert.setString(14, tmpArray[14]); // lenderName
+                        preparedStatementInsert.setInt(15, Integer.parseInt(tmpArray[15])); // lenderQty
+                        preparedStatementInsert.setString(16, tmpArray[16]); // lenderStart
+                        preparedStatementInsert.setString(17, tmpArray[17]); // lenderEnd
+                        preparedStatementInsert.setDouble(18, Double.parseDouble(tmpArray[18])); // lenderRate
+                        preparedStatementInsert.setString(19, tmpArray[19]); // lenderCondition
+                        preparedStatementInsert.setInt(20, Integer.parseInt(tmpArray[20])); // price
+                        preparedStatementInsert.setString(21, tmpArray[21]); // status
+                        preparedStatementInsert.setString(22, timeStamp); // timestamp
+                        preparedStatementInsert.setString(23, userName); // updatedBy
+                        preparedStatementInsert.executeUpdate();
+                        countItem = 1;
+                        tmpArray = new String[24];
+
+                    }
+                }
+
+
+
+            }
+            connection.commit();
+
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getInsertIoisIntoTargetCounterParty.ClassException", e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getInsertIoisIntoTargetCounterParty.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            try {
+                if (connection != null) {
+                    connection.close();
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        LOGGER.debug("DataServices.getInsertIoisIntoTargetCounterParty completed");
+
+    }
+
     public ArrayList<SendRfq> getSendRfqs(String requestId, String lenderName) {
 
         Connection connection = null;
@@ -915,6 +1240,84 @@ public class DataServices {
         return targetSendRfqs;
     }
 
+    public ArrayList<ViewIoi> getSendIois(String requestId, String borrowerName) {
+
+        Connection connection = null;
+        Statement statement = null;
+        try {
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String sqlSelectSendRfqs = "SELECT * FROM " + ConfigLoader.transactionTable +
+                    " WHERE requestId=? AND borrowerName=?";
+//            ResultSet resultSet = statement.executeQuery(sql);
+            PreparedStatement preStatementSelect = connection.prepareStatement(sqlSelectSendRfqs);
+            preStatementSelect.setString(1, requestId);
+            preStatementSelect.setString(2, borrowerName);
+            ResultSet resultSet = preStatementSelect.executeQuery();
+
+            this.targetViewingIois = new ArrayList<>();
+
+            while (resultSet.next()) {
+                ViewIoi newViewIoi = new ViewIoi(
+                        resultSet.getString("type"),
+                        resultSet.getInt("lotNo"),
+                        resultSet.getString("requestId"),
+                        resultSet.getInt("versionNo"),
+                        resultSet.getInt("lineNo"),
+                        resultSet.getString("stockCode"),
+                        resultSet.getString("borrowerName"),
+                        resultSet.getInt("borrowerQty"),
+                        resultSet.getString("borrowerStart"),
+                        resultSet.getString("borrowerEnd"),
+                        resultSet.getDouble("borrowerRate"),
+                        resultSet.getString("borrowerCondition"),
+                        resultSet.getInt("lenderNo"),
+                        resultSet.getString("lenderName"),
+                        resultSet.getInt("lenderQty"),
+                        resultSet.getString("lenderStart"),
+                        resultSet.getString("lenderEnd"),
+                        resultSet.getDouble("lenderRate"),
+                        resultSet.getString("lenderCondition"),
+                        resultSet.getInt("price"),
+                        resultSet.getString("status"),
+                        resultSet.getString("timeStamp"),
+                        resultSet.getString("updatedBy")
+
+                );
+                targetViewingIois.add(newViewIoi);
+            }
+        }catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getSendIois.ClassException", e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getSendIois.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+
+            }
+
+        }
+        LOGGER.debug("DataServices.getSendIois completed");
+        return targetViewingIois;
+    }
+
     public ArrayList<ReceivedRfq> getReceivedRfqs(String status) {
 
         Connection connection = null;
@@ -991,6 +1394,84 @@ public class DataServices {
         }
         LOGGER.debug("DataServices.getReceivedRfq completed");
         return targetReceivedRfqs;
+    }
+
+    public ArrayList<ViewIoi> getReceivedIois(String status) {
+
+        Connection connection = null;
+        Statement statement = null;
+        try {
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String sqlSelectReceivedIois = "SELECT * FROM " + ConfigLoader.transactionTable + " WHERE type=? AND status=?";
+//            ResultSet resultSet = statement.executeQuery(sql);
+            PreparedStatement preStatementSelect = connection.prepareStatement(sqlSelectReceivedIois);
+            preStatementSelect.setString(1, "IOI");
+            preStatementSelect.setString(2, status);
+//            preStatementSelect.setString(2, requestId);
+            ResultSet resultSet = preStatementSelect.executeQuery();
+
+            this.targetViewingIois = new ArrayList<>();
+
+            while (resultSet.next()) {
+                ViewIoi newViewIoi = new ViewIoi(
+                        resultSet.getString("type"),
+                        resultSet.getInt("lotNo"),
+                        resultSet.getString("requestId"),
+                        resultSet.getInt("versionNo"),
+                        resultSet.getInt("lineNo"),
+                        resultSet.getString("stockCode"),
+                        resultSet.getString("borrowerName"),
+                        resultSet.getInt("borrowerQty"),
+                        resultSet.getString("borrowerStart"),
+                        resultSet.getString("borrowerEnd"),
+                        resultSet.getDouble("borrowerRate"),
+                        resultSet.getString("borrowerCondition"),
+                        resultSet.getInt("lenderNo"),
+                        resultSet.getString("lenderName"),
+                        resultSet.getInt("lenderQty"),
+                        resultSet.getString("lenderStart"),
+                        resultSet.getString("lenderEnd"),
+                        resultSet.getDouble("lenderRate"),
+                        resultSet.getString("lenderCondition"),
+                        resultSet.getInt("price"),
+                        resultSet.getString("status"),
+                        resultSet.getString("timeStamp"),
+                        resultSet.getString("updatedBy")
+
+                );
+                targetViewingIois.add(newViewIoi);
+            }
+        }catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getReceivedIois.ClassException", e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getReceivedIois.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+
+            }
+
+        }
+        LOGGER.debug("DataServices.getReceivedIois completed");
+        return targetViewingIois;
     }
 
     public ArrayList<ViewIoi> viewImportIoi(String requestId, int lenderNo) {
@@ -1113,7 +1594,7 @@ public class DataServices {
 
     }
 
-    public ArrayList<String> listLenderNames(String status) {
+    public ArrayList<String> listLenderNames(String type, String status) {
         Connection connection = null;
         Statement statement = null;
         ArrayList<String> listLenderNames = new ArrayList<>();
@@ -1123,7 +1604,7 @@ public class DataServices {
             connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
-            String sqlListTargetLenders = "select lenderName from " + ConfigLoader.transactionTable + " where lenderNo!=0 AND status='" + status + "' GROUP By lenderName";
+            String sqlListTargetLenders = "select lenderName from " + ConfigLoader.transactionTable + " where lenderNo!=0 AND type='" + type + "' AND status='" + status + "' GROUP By lenderName";
 
             ResultSet lenderList = statement.executeQuery(sqlListTargetLenders);
             while (lenderList.next()) {
@@ -1235,6 +1716,85 @@ public class DataServices {
         return targetSendingQuote;
     }
 
+    public ArrayList<ViewIoi> getIoiForBorrower(String borrowerName, String toLenderStatus) {
+
+        Connection connection = null;
+        Statement statement = null;
+
+        try {
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String sqlSelectIoiToBorrower = "select * from " + ConfigLoader.transactionTable + " where type='IOI' AND (status='NEW' OR status='UPDATE') AND borrowerName=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectIoiToBorrower);
+            preparedStatement.setString(1, borrowerName);
+            ResultSet IoisForBorrower = preparedStatement.executeQuery();
+
+            this.targetViewingIois = new ArrayList<>();
+
+            while (IoisForBorrower.next()) {
+                ViewIoi newViewIoi = new ViewIoi(
+                        IoisForBorrower.getString("type"),
+                        IoisForBorrower.getInt("lotNo"),
+                        IoisForBorrower.getString("requestId"),
+                        IoisForBorrower.getInt("versionNo"),
+                        IoisForBorrower.getInt("lineNo"),
+                        IoisForBorrower.getString("stockCode"),
+                        IoisForBorrower.getString("borrowerName"),
+                        IoisForBorrower.getInt("borrowerQty"),
+                        IoisForBorrower.getString("borrowerStart"),
+                        IoisForBorrower.getString("borrowerEnd"),
+                        IoisForBorrower.getDouble("borrowerRate"),
+                        IoisForBorrower.getString("borrowerCondition"),
+                        IoisForBorrower.getInt("lenderNo"),
+                        IoisForBorrower.getString("lenderName"),
+                        IoisForBorrower.getInt("lenderQty"),
+                        IoisForBorrower.getString("lenderStart"),
+                        IoisForBorrower.getString("lenderEnd"),
+                        IoisForBorrower.getDouble("lenderRate"),
+                        IoisForBorrower.getString("lenderCondition"),
+                        IoisForBorrower.getInt("price"),
+//                        IoisForBorrower.getString("status"),
+                        toLenderStatus,
+                        IoisForBorrower.getString("timeStamp"),
+                        IoisForBorrower.getString("updatedBy")
+                );
+                targetViewingIois.add(newViewIoi);
+            }
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getIoiForBorrower.ClassException", e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.getIoiForBorrower.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+
+            }
+
+        }
+        LOGGER.debug("DataServices.getIoiForBorrower completed");
+        System.out.println("Size of Array=" + targetSendingQuote.size());
+        return targetViewingIois;
+    }
+
+
     public String getQuoteForBorrowerToTextarea(String borrowerName, String fromLenderStatus, String toLenderStatus) {
 
         Connection connection = null;
@@ -1311,7 +1871,7 @@ public class DataServices {
         return quoteData;
     }
 
-    public String getSelectionForLenderToTextarea(String lenderName, String fromLenderStatus, String toLenderStatus) {
+    public String getSelectionForLenderToTextarea(String type, String lenderName, String fromLenderStatus, String toLenderStatus) {
 
         Connection connection = null;
         Statement statement = null;
@@ -1324,7 +1884,7 @@ public class DataServices {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sqlSelectQuoteToLender = "select * from " + ConfigLoader.transactionTable + " where lenderName=? AND lenderNo!=0 AND status=?";
+            String sqlSelectQuoteToLender = "select * from " + ConfigLoader.transactionTable + " WHERE type='" + type + "' AND lenderName=? AND lenderNo!=0 AND status=?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectQuoteToLender);
             preparedStatement.setString(1, lenderName);
             preparedStatement.setString(2, fromLenderStatus);
@@ -1410,7 +1970,7 @@ public class DataServices {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sqlSelectRfqUpdatedByLender = "select * from " + ConfigLoader.transactionTable + " where lenderNo!=0" + sqlSuffix;
+            String sqlSelectRfqUpdatedByLender = "select * from " + ConfigLoader.transactionTable + " where type='RFQ' AND lenderNo!=0" + sqlSuffix;
             PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectRfqUpdatedByLender);
             ResultSet rfqsUpdatedByLender = preparedStatement.executeQuery();
 
@@ -1472,6 +2032,94 @@ public class DataServices {
         LOGGER.debug("DataServices.viewRfqUpdatedByLender completed");
 //        System.out.println("Size of Array=" + targetSendingQuote.size());
         return targetViewingRfqs;
+    }
+
+    public ArrayList<ViewIoi> viewIoiUpdatedByBorrower(String requestId, String lenderName, String status) {
+
+        Connection connection = null;
+        Statement statement = null;
+
+
+        try {
+            Class.forName("org.sqlite.JDBC");
+
+            String sqlSuffix = "";
+            if (requestId!=null && !requestId.equals("")) {
+                sqlSuffix = " AND requestId='" + requestId + "'";
+            }
+            if (lenderName!=null && !lenderName.equals("")) {
+                sqlSuffix += " AND lenderName='" + lenderName + "'";
+            }
+            if (status!=null && !status.equals("")) {
+                sqlSuffix += " AND status='" + status + "'";
+            }
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String sqlSelectIoiUpdatedByBorrower = "select * from " + ConfigLoader.transactionTable + " where type='IOI' AND lenderNo!=0" + sqlSuffix;
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectIoiUpdatedByBorrower);
+            ResultSet ioisUpdatedByBorrower = preparedStatement.executeQuery();
+
+            this.targetViewingIois = new ArrayList<>();
+
+            while (ioisUpdatedByBorrower.next()) {
+                ViewIoi newViewIoi = new ViewIoi(
+                        ioisUpdatedByBorrower.getString("type"),
+                        ioisUpdatedByBorrower.getInt("lotNo"),
+                        ioisUpdatedByBorrower.getString("requestId"),
+                        ioisUpdatedByBorrower.getInt("versionNo"),
+                        ioisUpdatedByBorrower.getInt("lineNo"),
+                        ioisUpdatedByBorrower.getString("stockCode"),
+                        ioisUpdatedByBorrower.getString("borrowerName"),
+                        ioisUpdatedByBorrower.getInt("borrowerQty"),
+                        ioisUpdatedByBorrower.getString("borrowerStart"),
+                        ioisUpdatedByBorrower.getString("borrowerEnd"),
+                        ioisUpdatedByBorrower.getDouble("borrowerRate"),
+                        ioisUpdatedByBorrower.getString("borrowerCondition"),
+                        ioisUpdatedByBorrower.getInt("lenderNo"),
+                        ioisUpdatedByBorrower.getString("lenderName"),
+                        ioisUpdatedByBorrower.getInt("lenderQty"),
+                        ioisUpdatedByBorrower.getString("lenderStart"),
+                        ioisUpdatedByBorrower.getString("lenderEnd"),
+                        ioisUpdatedByBorrower.getDouble("lenderRate"),
+                        ioisUpdatedByBorrower.getString("lenderCondition"),
+                        ioisUpdatedByBorrower.getInt("price"),
+                        ioisUpdatedByBorrower.getString("status"),
+                        ioisUpdatedByBorrower.getString("timeStamp"),
+                        ioisUpdatedByBorrower.getString("updatedBy")
+                );
+                targetViewingIois.add(newViewIoi);
+            }
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.viewIoiUpdatedByBorrower.ClassException", e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.viewIoiUpdatedByBorrower.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+
+            }
+
+        }
+        LOGGER.debug("DataServices.viewIoiUpdatedByBorrower completed");
+//        System.out.println("Size of Array=" + targetSendingQuote.size());
+        return targetViewingIois;
     }
 
     public ArrayList<ViewRfqQuote> viewReceivedRfqs(String requestId, String borrowerName, String status) {
@@ -1574,8 +2222,8 @@ public class DataServices {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sqlSelectionFromBrowkerToLender = "select * from " + ConfigLoader.transactionTable + " where lenderNo!=0 AND lenderName=? AND status=?";
-            PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectionFromBrowkerToLender);
+            String sqlSelectionFromBorrowerToLender = "select * from " + ConfigLoader.transactionTable + " where type='RFQ' AND lenderNo!=0 AND lenderName=? AND status=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectionFromBorrowerToLender);
             preparedStatement.setString(1, lenderName);
             preparedStatement.setString(2, status);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -1639,6 +2287,82 @@ public class DataServices {
         return targetViewingRfqs;
     }
 
+    public ArrayList<ViewIoi> viewSendSelectedIoiFromBorrowerToLender(String lenderName, String status) {
 
+        Connection connection = null;
+        Statement statement = null;
+
+
+        try {
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String sql = "select * from " + ConfigLoader.transactionTable + " where type='IOI' AND lenderNo!=0 AND lenderName=? AND status=?";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1, lenderName);
+            preparedStatement.setString(2, status);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            this.targetViewingIois = new ArrayList<>();
+
+            while (resultSet.next()) {
+                ViewIoi newViewIoi = new ViewIoi(
+                        resultSet.getString("type"),
+                        resultSet.getInt("lotNo"),
+                        resultSet.getString("requestId"),
+                        resultSet.getInt("versionNo"),
+                        resultSet.getInt("lineNo"),
+                        resultSet.getString("stockCode"),
+                        resultSet.getString("borrowerName"),
+                        resultSet.getInt("borrowerQty"),
+                        resultSet.getString("borrowerStart"),
+                        resultSet.getString("borrowerEnd"),
+                        resultSet.getDouble("borrowerRate"),
+                        resultSet.getString("borrowerCondition"),
+                        resultSet.getInt("lenderNo"),
+                        resultSet.getString("lenderName"),
+                        resultSet.getInt("lenderQty"),
+                        resultSet.getString("lenderStart"),
+                        resultSet.getString("lenderEnd"),
+                        resultSet.getDouble("lenderRate"),
+                        resultSet.getString("lenderCondition"),
+                        resultSet.getInt("price"),
+                        resultSet.getString("status"),
+                        resultSet.getString("timeStamp"),
+                        resultSet.getString("updatedBy")
+                );
+                targetViewingIois.add(newViewIoi);
+            }
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.viewSendSelectedIoiFromBorrowerToLender.ClassException", e);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.error("DataServices.viewSendSelectedIoiFromBorrowerToLender.SQLException", e);
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+
+            }
+
+        }
+        LOGGER.debug("DataServices.viewSendSelectedIoiFromBorrowerToLender completed");
+        return targetViewingIois;
+    }
 
 }

@@ -65,7 +65,7 @@ public class ActionProcessor {
                     String userName = user.getDisplayName();
                     String userId = user.getUserId().toString();
                     String requestId = (String)formValues.get("request_id");
-                    if (DataServices.deleteRfqsByRequestId(requestId)) {
+                    if (DataServices.deleteTransactionsByRequestId(requestId)) {
                         this.reCreateRfqForm(action, userId, userName, requestId);
 
                     } else {
@@ -77,8 +77,8 @@ public class ActionProcessor {
                     String userName = user.getDisplayName();
                     String userId = user.getUserId().toString();
                     String requestId =  (String)formValues.get("request_id");
-                    DataServices.deleteRfqsByRequestId(requestId);
-                    this.noticeCancelCompletion(action, userId, userName, requestId);
+                    DataServices.deleteTransactionsByRequestId(requestId);
+                    this.noticeCancelCompletion(action, userId, userName, requestId, "/newrfq");
 
                 } else if (formValues.get("action").equals("send-rfq-button")) {
                     // fetch Lender Names from Elements pull-down boxes (max 5 boxes)   [INTERNAL CHAT ROOM AT BORROWER]
@@ -198,7 +198,7 @@ public class ActionProcessor {
                     // update the transactions at Lender with status=REJECT
                     // update the transactions at borrower with status=REJECT (need to send IM to Borrower Bot)
 
-                    this.sendImToBorrowerBotForReject(userId, userName, botId, borrowerBotInstantMessageId, externalChatRoomId, borrowerName, lenderName, quoteData);
+                    this.sendImToBorrowerBotForRejectQuote(userId, userName, botId, borrowerBotInstantMessageId, externalChatRoomId, borrowerName, lenderName, quoteData);
                     DataUpdate.getUpdateQuoteStatus(quoteData, userName, "REJECT");
                     this.notifyRejectQuoteToBorrowerForm(action, userId, userName, borrowerName, lenderName, externalChatRoomId);
 
@@ -217,6 +217,16 @@ public class ActionProcessor {
                 String status = (String)formValues.get("status-select");
                 if (formValues.get("action").equals("refresh-rfq-button")) {
                     this.viewRfqUpdatedByLender(action, user, requestId, lenderName, status);
+                }
+                break;
+            }
+
+            case "view-ioi-form" : {
+                String requestId = (String)formValues.get("request-id-select");
+                String borrowerName = (String)formValues.get("borrower-select");
+                String status = (String)formValues.get("status-select");
+                if (formValues.get("action").equals("refresh-ioi-button")) {
+                    this.viewIoiUpdatedByBorrower(action, user, requestId, borrowerName, status);
                 }
                 break;
             }
@@ -308,6 +318,123 @@ public class ActionProcessor {
                 break;
             }
 
+            case "submit-ioi-form" : {
+                if (formValues.get("action").equals("send-ioi-button")) {
+                    // fetch Lender Names from Elements pull-down boxes (max 5 boxes)   [INTERNAL CHAT ROOM AT LENDER]
+                    String userName = user.getDisplayName();
+                    String userId = user.getUserId().toString();
+                    String requestId = (String)formValues.get("request_id");
+                    String lenderName = (String)formValues.get("counterparty_lender");
+                    String borrowerName1 = (String)formValues.get("borrower1-select");
+                    String borrowerName2 = (String)formValues.get("borrower2-select");
+                    String borrowerName3 = (String)formValues.get("borrower3-select");
+                    String borrowerName4 = (String)formValues.get("borrower4-select");
+                    String borrowerName5 = (String)formValues.get("borrower5-select");
+
+                    // send RFQ to each selected Lender
+                    if (borrowerName1!=null) {
+                        requestId = (String)formValues.get("request_id");
+                        blastSendIoiForm(userId, userName, requestId, lenderName,1, borrowerName1, true);
+                    } else {
+                        this.noticeNoCounterParty(action);
+                        this.manageResendRfqForm(action, userId, userName, requestId);
+                    }
+                    if (borrowerName2!=null) {
+                        blastSendIoiForm(userId, userName, requestId, lenderName,2, borrowerName2, true);
+                    }
+                    if (borrowerName3!=null) {
+                        blastSendIoiForm(userId, userName, requestId, lenderName,3, borrowerName3, true);
+                    }
+                    if (borrowerName4!=null) {
+                        blastSendIoiForm(userId, userName, requestId, lenderName,4, borrowerName4, true);
+
+                    }
+                    if (borrowerName5!=null) {
+                        blastSendIoiForm(userId, userName, requestId, lenderName,5, borrowerName5, true);
+                    }
+                } else if (formValues.get("action").equals("recreate-ioi-button")) {
+                    // Maintain the Request ID but delete the IOI with the Request ID
+                    String userName = user.getDisplayName();
+                    String userId = user.getUserId().toString();
+                    String requestId = (String)formValues.get("request_id");
+                    if (DataServices.deleteTransactionsByRequestId(requestId)) {
+                        this.reCreateIoiForm(action, user, requestId);
+                    } else {
+                        this.noticeError(action);
+                    }
+                } else if (formValues.get("action").equals("cancel-ioi-button")) {
+                    // Delete the transactions for the Request ID and return the simple text message "Cancelled" [INTERNAL CHAT ROOM AT LENDER]
+                    String userName = user.getDisplayName();
+                    String userId = user.getUserId().toString();
+                    String requestId =  (String)formValues.get("request_id");
+                    DataServices.deleteTransactionsByRequestId(requestId);
+                    this.noticeCancelCompletion(action, userId, userName, requestId, "/newioi");
+                }
+                break;
+            }
+
+            case "receive-ioi-form" : {
+//                This form is submitted by bot at lender
+//                The actions expects by Borrower, not lender
+//                but update the DB on both Lender and Borrower
+//                [EXTERNAL CHAT ROOM OPERATED BY BORROWER ONLY]
+                String userId = String.valueOf(user.getUserId());
+                String requestId = (String)formValues.get("request_id");
+                String userName = String.valueOf(user.getDisplayName());
+                String botId = (String)formValues.get("bot_id");
+                String borrowerBotInstantMessageId = (String)formValues.get("borrowerbot_im_id");
+                String externalChatRoomId = (String)formValues.get("external_chatroom_id");
+                String borrowerName = (String)formValues.get("counterparty_borrower");
+                String lenderName = (String)formValues.get("counterparty_lender");
+                String ioiData = (String)formValues.get("ioi_data");
+
+                if (formValues.get("action").equals("reject-ioi-button")) {
+
+                    // send the notification of this reject in External Chat Room
+                    // update the transactions at Lender with status=REJECT
+                    // update the transactions at borrower with status=REJECT (need to send IM to Borrower Bot)
+
+                    this.sendImToBorrowerBotForRejectIoi(userId, userName, botId, borrowerBotInstantMessageId, externalChatRoomId, borrowerName, lenderName, ioiData);
+                    DataUpdate.getUpdateIoiStatus(ioiData, userName, "REJECT");
+                    this.notifyRejectIoiToBorrowerForm(action, userId, userName, borrowerName, lenderName, externalChatRoomId);
+
+
+                } else if (formValues.get("action").equals("accept-ioi-button")) {
+                    this.sendImToBorrowerBot("/botcmd6", userId, userName, botId, borrowerBotInstantMessageId, externalChatRoomId, requestId, borrowerName, lenderName, ioiData);
+                    DataUpdate.getUpdateIoiStatus(ioiData, userName, "ACK");
+                }
+                break;
+
+            }
+
+            case "select-ioi-form" : {
+                if (formValues.get("action").equals("import-select-ioi-button")) {
+                    String userName = user.getDisplayName();
+                    String userId = user.getUserId().toString();
+                    this.manageSelectIoiForm(action, userId, userName,"NEW", "SELECT", "");
+                }
+                break;
+            }
+
+            case "submit-select-ioi-form" : {
+                String botId = "";
+                String userId = user.getUserId().toString();
+
+                String userName = user.getDisplayName();
+                String timeStamp = Miscellaneous.getTimeStamp("transaction");
+                if (formValues.get("action").equals("send-select-ioi-button")) {
+                    // send a form to EXT chat room and ask Lender to accept
+                    // update borrower trans table status from SELECT to SEND
+                    this.manageSelectedIoiToLenderForm(action, userId, userName, "SELECT", "SEND");
+
+                } else if (formValues.get("action").equals("reselect-select-ioi-button")) {
+                    DataUpdate.updateSelectedIoiStatus(userName, timeStamp, "SELECT", "NEW");
+                    this.manageSelectedIoiForm(action, userId, userName, "NEW");
+
+                }
+            }
+
+
             case "notify-nothing-form" : {
                 String userName = user.getDisplayName();
                 String requestId = (String)formValues.get("request_id");
@@ -397,7 +524,7 @@ public class ActionProcessor {
             e.printStackTrace();
             LOGGER.error("ActionProcessor.manageAddRfqForm.Exception", e);
             notError = false;
-            DataServices.deleteRfqsByRequestId(requestId);
+            DataServices.deleteTransactionsByRequestId(requestId);
             this.noticeDoubtInput(action);
 
         }
@@ -525,13 +652,21 @@ public class ActionProcessor {
 
     }
 
+    public void manageSelectedIoiForm(SymphonyElementsAction action, String userId, String userName, String status) {
+        String csvFilePath = DataExports.exportIoisUpdatedByBorrower(null,null, status);
+        OutboundMessage messageOut = MessageSender.getInstance().buildSelectIoiFormMessage(userName, userId, userName, "", "", status, csvFilePath, true);
+        MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
+        LOGGER.debug("ActionProcessor.manageSelectedIoiForm completed");
+
+    }
+
     public void manageSelectionToLenderForm(SymphonyElementsAction action, String userId, String userName, String fromStatus, String toStatus) {
 
         String selectionData;
-        ArrayList<String> lenderNames = DataServices.getInstance().listLenderNames(fromStatus);
+        ArrayList<String> lenderNames = DataServices.getInstance().listLenderNames("RFQ", fromStatus);
 
         for (String lenderName : lenderNames) {
-            selectionData = DataServices.getInstance().getSelectionForLenderToTextarea(lenderName, fromStatus, toStatus);
+            selectionData = DataServices.getInstance().getSelectionForLenderToTextarea("RFQ", lenderName, fromStatus, toStatus);
             String[] lenderNameInfo = DataServices.getCounterPartyInfo(lenderName);
             String borrowerName = ConfigLoader.myCounterPartyName;
             String botId = lenderNameInfo[3];
@@ -539,9 +674,28 @@ public class ActionProcessor {
             String lenderBotInstantMessageId = lenderNameInfo[5];
             OutboundMessage messageOut = MessageSender.getInstance().buildSendSelectionFormMessage(botId, userId, userName, externalChatRoomId, lenderBotInstantMessageId, borrowerName, lenderName, fromStatus,  selectionData);
             MessageSender.getInstance().sendMessage(externalChatRoomId, messageOut);
-            DataUpdate.updateStatusAfterSentSelection(lenderName, fromStatus, toStatus);
+            DataUpdate.updateStatusAfterSentSelection("RFQ", lenderName, fromStatus, toStatus);
         }
         LOGGER.debug("ActionProcessor.manageSelectionToLenderForm completed");
+    }
+
+    public void manageSelectedIoiToLenderForm(SymphonyElementsAction action, String userId, String userName, String fromStatus, String toStatus) {
+
+        String selectionData;
+        ArrayList<String> lenderNames = DataServices.getInstance().listLenderNames("IOI", fromStatus);
+
+        for (String lenderName : lenderNames) {
+            selectionData = DataServices.getInstance().getSelectionForLenderToTextarea("IOI", lenderName, fromStatus, toStatus);
+            String[] lenderNameInfo = DataServices.getCounterPartyInfo(lenderName);
+            String borrowerName = ConfigLoader.myCounterPartyName;
+            String botId = lenderNameInfo[3];
+            String externalChatRoomId = lenderNameInfo[4];
+            String lenderBotInstantMessageId = lenderNameInfo[5];
+            OutboundMessage messageOut = MessageSender.getInstance().buildSendSelectedIoiFormMessage(botId, userId, userName, externalChatRoomId, lenderBotInstantMessageId, borrowerName, lenderName, fromStatus,  selectionData);
+            MessageSender.getInstance().sendMessage(externalChatRoomId, messageOut);
+            DataUpdate.updateStatusAfterSentSelection("IOI", lenderName, fromStatus, toStatus);
+        }
+        LOGGER.debug("ActionProcessor.manageSelectedIoiToLenderForm completed");
     }
 
     public void manageAddQuoteForm(SymphonyElementsAction action, String userId, String userName, String fromStatus, String toStatus, String csvFilePath) {
@@ -597,6 +751,60 @@ public class ActionProcessor {
         }
     }
 
+    public void manageSelectIoiForm(SymphonyElementsAction action, String userId, String userName, String fromStatus, String toStatus, String csvFilePath) {
+
+        Map<String, Object> formValues = action.getFormValues();
+        String quoteData = (String) formValues.get("input_ioi");
+
+        final String type = "IOI";
+
+        boolean notError = true;
+
+        try (BufferedReader reader = new BufferedReader(new StringReader(quoteData))) {
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                String[] items = new String[11];
+                String[] ioi = line.split("\t", 0);
+                items[0] = ioi[1]; // borrowerName
+//                items[1] = ioi[3]; // borrowerQty
+                if (ioi[3]==null || ioi[3].isEmpty()) {
+                    items[1] = "0";
+                } else {
+                    items[1] = ioi[3];    // borrowerQty
+                }
+                items[2] = ioi[4]; // borrowerStart
+                items[3] = ioi[5]; // borrowerEnd
+//                items[4] = ioi[6]; // borrowerRate
+                if (ioi[6]==null || ioi[6].isEmpty()) {
+                    items[4] = "0.0";
+                } else {
+                    items[4] = ioi[6]; // borrowerRate
+                }
+                items[5] = ioi[7]; // borrowerCondition
+                items[6] = ioi[8]; // lenderName
+                items[7] = ioi[9]; // requestId
+                items[8] = ioi[10]; // lineNo
+                 items[10] = ioi[17];    // Status
+
+                DataUpdate.updateIoi(userName, fromStatus, items[0], items[6], items[7],
+                        Integer.parseInt(items[8]), Integer.parseInt(items[1]), items[2], items[3],
+                        Double.parseDouble(items[4]), items[5], toStatus) ;
+            }
+            if (notError) {
+                String botId = String.valueOf(botClient.getBotUserId());
+                OutboundMessage messageOut = MessageSender.getInstance().buildSelectIoiFormMessage(botId, userId, userName, ConfigLoader.myCounterPartyName, "", toStatus, csvFilePath, false);
+                MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
+                LOGGER.debug("ActionProcessor.manageSelectIoiForm completed");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            LOGGER.error("ActionProcessor.manageSelectIoiForm.Exception", e);
+            notError = false;
+            this.noticeDoubtInput(action);
+        }
+    }
+
     public void blastSendReqForm(String userId, String userName, String requestId, String borrowerName, int lenderNo, String lenderName, boolean isSent) {
         String rfqsData = DataServices.insertGetRfqsForTargetCounterParty("RFQ", userName, requestId, lenderName, lenderNo);
 //        String csvFilePath = DataExports.exportRfqsForTargetlender(requestId, borrowerName,lenderName);
@@ -610,9 +818,26 @@ public class ActionProcessor {
         LOGGER.debug("ActionProcessor.blastSendReqForm completed");
     }
 
+    public void blastSendIoiForm(String userId, String userName, String requestId, String lenderName, int lenderNo, String borrowerName, boolean isSent) {
+        String ioiData = DataServices.insertGetIoisForTargetCounterParty("IOI", userName, requestId, borrowerName, lenderNo);
+        String[] counterPartyInfo = DataServices.getCounterPartyInfo(borrowerName);
+        String botId = counterPartyInfo[3];
+        String externalChatRoomId = counterPartyInfo[4];
+        String lenderBotInstantMessageId = counterPartyInfo[5];
+        OutboundMessage messageOut = MessageSender.getInstance().buildSendIoiFormMessage(botId, userId, lenderBotInstantMessageId, externalChatRoomId, ioiData, userName, requestId, borrowerName, lenderName, "", isSent);
+        MessageSender.getInstance().sendMessage(externalChatRoomId, messageOut);
+        LOGGER.debug("ActionProcessor.blastSendIoiForm completed");
+    }
+
     public void sendImToLenderBot(String cmd, String userId, String userName, String botId, String lenderBotInstantMessageId, String externalChatRoomId, String requestId, String borrowerName, String lenderName, String rfqsData) {
         userName = Miscellaneous.convertUserName(userName, true);
         OutboundMessage messageOut = MessageSender.getInstance().buildImToLenderBot(cmd, userId, userName, botId, externalChatRoomId, requestId, borrowerName, lenderName, rfqsData);
+        MessageSender.getInstance().sendMessage(Miscellaneous.convertRoomId(lenderBotInstantMessageId), messageOut);
+    }
+
+    public void sendImToBorrowerBot(String cmd, String userId, String userName, String botId, String lenderBotInstantMessageId, String externalChatRoomId, String requestId, String borrowerName, String lenderName, String ioisData) {
+        userName = Miscellaneous.convertUserName(userName, true);
+        OutboundMessage messageOut = MessageSender.getInstance().buildImToBorrowerBot(cmd, userId, userName, botId, externalChatRoomId, requestId, borrowerName, lenderName, ioisData);
         MessageSender.getInstance().sendMessage(Miscellaneous.convertRoomId(lenderBotInstantMessageId), messageOut);
     }
 
@@ -654,6 +879,15 @@ public class ActionProcessor {
         LOGGER.debug("ActionProcessor.reCreateRfqForm completed");
     }
 
+    public void reCreateIoiForm(SymphonyElementsAction action, User user, String requestId) {
+        String userId = user.getUserId().toString();
+        String userName = user.getDisplayName();
+        String lenderName = ConfigLoader.myCounterPartyName;
+        OutboundMessage messageOut = MessageSender.getInstance().buildCreateIoiFormMessage("", userId, userName, requestId, lenderName, "YET", true);
+        MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
+        LOGGER.debug("MessageProcessor.reCreateIoiForm executed");
+    }
+
     public void replyRfqNothing(SymphonyElementsAction action, String userId, String userName, String requestId, String borrowerName, String lenderName) {
         OutboundMessage messageOut = MessageSender.getInstance().buildNothingMessage(userId, userName, requestId, borrowerName, lenderName);
         MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
@@ -671,14 +905,30 @@ public class ActionProcessor {
         MessageSender.getInstance().sendMessage(externalChatRoomId, messageOut);
     }
 
-    public void sendImToBorrowerBotForReject(String userId, String userName, String botId, String borrowerBotInstantMessageId, String externalChatRoomId, String borrowerName, String lenderName, String quoteData) {
+    public void notifyRejectIoiToBorrowerForm(SymphonyElementsAction action, String userId, String userName, String borrowerName, String lenderName, String externalChatRoomId) {
+        OutboundMessage messageOut = MessageSender.getInstance().buildNotifyRejectIoiMessage(userId, userName, borrowerName, lenderName);
+        MessageSender.getInstance().sendMessage(externalChatRoomId, messageOut);
+    }
+
+    public void sendImToBorrowerBotForRejectQuote(String userId, String userName, String botId, String borrowerBotInstantMessageId, String externalChatRoomId, String borrowerName, String lenderName, String quoteData) {
         userName = Miscellaneous.convertUserName(userName, true);
-        OutboundMessage messageOut = MessageSender.getInstance().buildImToBorrowerBotForReject(userId, userName, botId, externalChatRoomId, borrowerName, lenderName, quoteData);
+        OutboundMessage messageOut = MessageSender.getInstance().buildImToBorrowerBotForRejectQuote(userId, userName, botId, externalChatRoomId, borrowerName, lenderName, quoteData);
+        MessageSender.getInstance().sendMessage(Miscellaneous.convertRoomId(borrowerBotInstantMessageId), messageOut);
+    }
+
+    public void sendImToBorrowerBotForRejectIoi(String userId, String userName, String botId, String borrowerBotInstantMessageId, String externalChatRoomId, String borrowerName, String lenderName, String quoteData) {
+        userName = Miscellaneous.convertUserName(userName, true);
+        OutboundMessage messageOut = MessageSender.getInstance().buildImToBorrowerBotForRejectIoi(userId, userName, botId, externalChatRoomId, borrowerName, lenderName, quoteData);
         MessageSender.getInstance().sendMessage(Miscellaneous.convertRoomId(borrowerBotInstantMessageId), messageOut);
     }
 
     public void notifyAcceptQuoteToBorrowerForm(SymphonyElementsAction action, String userId, String userName, String borrowerName, String lenderName, String externalChatRoomId) {
         OutboundMessage messageOut = MessageSender.getInstance().buildNotifyAcceptMessage(userId, userName, borrowerName, lenderName);
+        MessageSender.getInstance().sendMessage(externalChatRoomId, messageOut);
+    }
+
+    public void notifyAcceptIoiToBorrowerForm(SymphonyElementsAction action, String userId, String userName, String borrowerName, String lenderName, String externalChatRoomId) {
+        OutboundMessage messageOut = MessageSender.getInstance().buildNotifyAcceptMessageIoi(userId, userName, borrowerName, lenderName);
         MessageSender.getInstance().sendMessage(externalChatRoomId, messageOut);
     }
 
@@ -693,10 +943,23 @@ public class ActionProcessor {
         MessageSender.getInstance().sendMessage(Miscellaneous.convertRoomId(borrowerBotInstantMessageId), messageOut);
     }
 
+    public void sendImToBorrowerBotForAcceptIoi(String userId, String userName, String botId, String borrowerBotInstantMessageId, String externalChatRoomId, String borrowerName, String lenderName, String ioiData) {
+        userName = Miscellaneous.convertUserName(userName, true);
+        OutboundMessage messageOut = MessageSender.getInstance().buildImToBorrowerBotForAcceptIoi(userId, userName, botId, externalChatRoomId, borrowerName, lenderName, ioiData);
+        MessageSender.getInstance().sendMessage(Miscellaneous.convertRoomId(borrowerBotInstantMessageId), messageOut);
+    }
+
     public void viewRfqUpdatedByLender(SymphonyElementsAction action, User user, String requestId, String lenderName, String status) {
         String csvFilePath = DataExports.exportRfqsUpdatedByLender(requestId,lenderName, status);
         String userName = user.getDisplayName();
         OutboundMessage messageOut = MessageSender.getInstance().buildViewRfqFormMessage(userName, requestId, "", lenderName, status, csvFilePath, false);
+        MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
+    }
+
+    public void viewIoiUpdatedByBorrower(SymphonyElementsAction action, User user, String requestId, String borrowerName, String status) {
+        String csvFilePath = DataExports.exportRfqsUpdatedByBorrower(requestId, borrowerName, status);
+        String userName = user.getDisplayName();
+        OutboundMessage messageOut = MessageSender.getInstance().buildViewIoiFormMessage(userName, requestId, borrowerName, "", status, csvFilePath, false);
         MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
     }
 
@@ -729,9 +992,9 @@ public class ActionProcessor {
 
     }
 
-    public void noticeCancelCompletion(SymphonyElementsAction action, String userId, String userName, String requestId) {
+    public void noticeCancelCompletion(SymphonyElementsAction action, String userId, String userName, String requestId, String commandLine) {
 
-        OutboundMessage messageOut = MessageSender.getInstance().buildCancelMessage(requestId, userId, userName);
+        OutboundMessage messageOut = MessageSender.getInstance().buildCancelMessage(requestId, userId, userName, commandLine);
         MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
         LOGGER.debug("ActionProcessor.noticeCancelCompletion completed");
 
