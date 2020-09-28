@@ -6,6 +6,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scripts.ConfigLoader;
+import scripts.CleanUp;
 
 
 public class StockLendingBot {
@@ -19,6 +20,14 @@ public class StockLendingBot {
         BasicConfigurator.configure();
 
         try {
+            ConfigLoader.loadConfig(); LOGGER.debug("ConfigLoader.loadConfig executed");
+            CleanUp.RemoveFiles(ConfigLoader.uploadCsvPath);
+            DataInitialize.freshCounterPartyTable(); LOGGER.debug("DataInitialize.freshCounterPartyTable executed");
+            DataImport.importCsv(ConfigLoader.counterPartyTable); LOGGER.debug("DataImport.importCsv executed");
+            DataServices.getCounterPartyList(); LOGGER.debug("DataServices.getCounterPartyList executed");
+            DataServices.getExtRoomIdList(); LOGGER.debug("DataServices.getExtRoomIdList executed");
+
+
             SymBotClient botClient = SymBotClient.initBotRsa("config.json");
             MessageSender.createInstance(botClient);
             MessageProcessor messageProcessor = new MessageProcessor(botClient);
@@ -28,13 +37,8 @@ public class StockLendingBot {
                     new RoomListenerImpl(messageProcessor),
                     new ElementsListenerImpl(actionProcessor)
             );
-
-            ConfigLoader.loadConfig(); LOGGER.debug("ConfigLoader.loadConfig executed");
-            DataInitialize.freshCounterPartyTable(); LOGGER.debug("DataInitialize.freshCounterPartyTable executed");
-            DataImport.importCsv(ConfigLoader.counterPartyTable); LOGGER.debug("DataImport.importCsv executed");
-            DataServices.getCounterPartyList(); LOGGER.debug("DataServices.getCounterPartyList executed");
-            DataServices.getExtRoomIdList(); LOGGER.debug("DataServices.getExtRoomIdList executed");
             AutoLoader.inputWatcher(botClient.getBotUsername());
+
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("StockLendingBotException thrown on StockLendingBOt", e);

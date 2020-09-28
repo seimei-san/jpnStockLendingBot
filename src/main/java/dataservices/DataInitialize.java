@@ -2,6 +2,7 @@ package dataservices;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scripts.CleanUp;
 import scripts.ConfigLoader;
 
 import java.sql.*;
@@ -58,6 +59,8 @@ public class DataInitialize {
                     transactionTableIndexColumn1 + ", " + transactionTableIndexColumn2 + ", " + transactionTableIndexColumn3 + ", " +
                     transactionTableIndexColumn4 + ", "+ transactionTableIndexColumn5 +")" ;
             statement.executeUpdate(indexTransactionSql);
+
+
 
             LOGGER.debug("DataInitialize.initializeTable Indices applied");
 
