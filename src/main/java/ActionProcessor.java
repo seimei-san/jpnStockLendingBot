@@ -243,6 +243,18 @@ public class ActionProcessor {
                 break;
             }
 
+            case "import-alloc-ioi-form" : {
+                String userName = user.getDisplayName();
+                String userId = user.getUserId().toString();
+                if (formValues.get("action").equals("import-alloc-ioi-button")) {
+                    this.manageImportAllocIoiForm(action, userId, userName,"TAKE", "ALLOC");
+
+                } else if (formValues.get("action").equals("proceed-alloc-ioi-button")) {
+                    this.manageSelectedIoiForm(action, userId, userName, "ALLOC");
+                }
+                break;
+            }
+
             case "send-selection-form" : {
                 String botId = "";
                 String userId = user.getUserId().toString();
@@ -257,6 +269,25 @@ public class ActionProcessor {
                 } else if (formValues.get("action").equals("cancel-selection-button")) {
                     DataUpdate.updateSelectionStatus(userName, timeStamp, "SELECT", "NEW");
                     this.manageSelectionForm(action, userId, userName, "NEW");
+
+                }
+                break;
+            }
+
+            case "send-alloc-ioi-form" : {
+                String botId = "";
+                String userId = user.getUserId().toString();
+
+                String userName = user.getDisplayName();
+                String timeStamp = Miscellaneous.getTimeStamp("transaction");
+                if (formValues.get("action").equals("send-alloc-ioi-button")) {
+                    // send a form to EXT chat room and ask Lender to accept
+                    // update borrower trans table status from SELECT to SEND
+                    this.manageAllocIoiToBorrowerForm(action, userId, userName, "ALLOC", "SEND");
+
+                } else if (formValues.get("action").equals("cancel-alloc-ioi-button")) {
+                    DataUpdate.updateSelectedIoiStatus(userName, timeStamp, "ALLOC", "TAKE");
+                    this.manageSelectedIoiForm(action, userId, userName, "TAKE");
 
                 }
                 break;
@@ -277,8 +308,31 @@ public class ActionProcessor {
                     // Lending Bot will update the selected quotation with status=DONE based on the data via IM
                     // Borrow Bot will update the selected transaction status=DONE
                     this.sendImToLenderBot("/botcmd4", userId, userName, botId, lenderBotInstantMessageId,externalChatRoomId, requestId, borrowerName, lenderName, selectionData);
-                    DataUpdate.getUpdateSelectionStatus(selectionData, userName, "DONE");
+                    DataUpdate.getUpdateSelectionStatus("RFQ", selectionData, userName, "DONE");
                     this.notifyAcceptSelectionForm(action, userId, userName, borrowerName, lenderName, externalChatRoomId);
+
+
+                }
+                break;
+            }
+
+            case "confirm-alloc-ioi-form" : {
+                String userId = String.valueOf(user.getUserId());
+                String userName = String.valueOf(user.getDisplayName());
+                String botId = (String)formValues.get("bot_id");
+                String lenderBotInstantMessageId = (String)formValues.get("lenderbot_im_id");
+                String externalChatRoomId = (String)formValues.get("external_chatroom_id");
+                String requestId = "DUMMY";
+                String borrowerName = (String)formValues.get("counterparty_borrower");
+                String lenderName = (String)formValues.get("counterparty_lender");
+                String selectionData = (String)formValues.get("selection_data");
+                if (formValues.get("action").equals("confirm-alloc-ioi-button")) {
+                    // send the selection data in textarea to Lending Bot via IM
+                    // Lending Bot will update the selected quotation with status=DONE based on the data via IM
+                    // Borrow Bot will update the selected transaction status=DONE
+                    this.sendImToLenderBot("/botcmd8", userId, userName, botId, lenderBotInstantMessageId, externalChatRoomId, requestId, borrowerName, lenderName, selectionData);
+                    DataUpdate.getUpdateSelectionStatus("IOI", selectionData, userName, "DONE");
+                    this.notifyAcceptAllocIoiForm(action, userId, userName, borrowerName, lenderName, externalChatRoomId);
 
 
                 }
@@ -291,6 +345,16 @@ public class ActionProcessor {
                 String status = (String)formValues.get("status-select");
                 if (formValues.get("action").equals("refresh-quote-button")) {
                     this.viewRfqUpdatedByBorrower(action, user, requestId, borrowerName, status);
+                }
+                break;
+            }
+
+            case "view-alloc-ioi-form" : {
+                String requestId = (String)formValues.get("request-id-select");
+                String lenderName = (String)formValues.get("lender-select");
+                String status = (String)formValues.get("status-select");
+                if (formValues.get("action").equals("refresh-alloc-ioi-button")) {
+                    this.viewIoiAllocatedByLender(action, user, requestId, lenderName, status);
                 }
                 break;
             }
@@ -411,7 +475,7 @@ public class ActionProcessor {
                 if (formValues.get("action").equals("import-select-ioi-button")) {
                     String userName = user.getDisplayName();
                     String userId = user.getUserId().toString();
-                    this.manageSelectIoiForm(action, userId, userName,"NEW", "SELECT", "");
+                    this.manageSelectIoiForm(action, userId, userName,"NEW", "TAKE", "");
                 }
                 break;
             }
@@ -425,13 +489,35 @@ public class ActionProcessor {
                 if (formValues.get("action").equals("send-select-ioi-button")) {
                     // send a form to EXT chat room and ask Lender to accept
                     // update borrower trans table status from SELECT to SEND
-                    this.manageSelectedIoiToLenderForm(action, userId, userName, "SELECT", "SEND");
+                    this.manageSelectedIoiToLenderForm(action, userId, userName, "TAKE", "SEND");
 
                 } else if (formValues.get("action").equals("reselect-select-ioi-button")) {
                     DataUpdate.updateSelectedIoiStatus(userName, timeStamp, "SELECT", "NEW");
                     this.manageSelectedIoiForm(action, userId, userName, "NEW");
 
                 }
+                break;
+            }
+
+            case "confirm-selected-ioi-form" : {
+                String userId = String.valueOf(user.getUserId());
+                String userName = String.valueOf(user.getDisplayName());
+                String botId = (String)formValues.get("bot_id");
+                String lenderBotInstantMessageId = (String)formValues.get("lenderbot_im_id");
+                String externalChatRoomId = (String)formValues.get("external_chatroom_id");
+                String requestId = "DUMMY";
+                String borrowerName = (String)formValues.get("counterparty_borrower");
+                String lenderName = (String)formValues.get("counterparty_lender");
+                String selectionData = (String)formValues.get("selection_data");
+                if (formValues.get("action").equals("confirm-selected-ioi-button")) {
+                    // send the selection data in textarea to Lending Bot via IM
+                    // Lending Bot will update the selected quotation with status=DONE based on the data via IM
+                    // Borrow Bot will update the selected transaction status=DONE
+                    this.sendImToLenderBot("/botcmd7", userId, userName, botId, lenderBotInstantMessageId,externalChatRoomId, requestId, borrowerName, lenderName, selectionData);
+                    DataUpdate.getUpdateSelectionStatus("IOI", selectionData, userName, "SEND");
+                    this.notifyAcceptSelectedIoiForm(action, userId, userName, borrowerName, lenderName, externalChatRoomId);
+                }
+                break;
             }
 
 
@@ -644,6 +730,59 @@ public class ActionProcessor {
         }
     }
 
+    public void manageImportAllocIoiForm(SymphonyElementsAction action, String userId, String userName, String fromStatus, String toStatus) {
+
+        Map<String, Object> formValues = action.getFormValues();
+        String selectData = (String) formValues.get("input_alloc_ioi");
+
+        boolean notError = true;
+
+        try (BufferedReader reader = new BufferedReader(new StringReader(selectData))) {
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                String[] items = new String[11];
+                String[] ioi = line.split("\t", 0);
+                items[0] = ioi[1]; // borrowerName
+//                items[1] = ioi[3]; // borrowerQty
+                if (ioi[3]==null || ioi[3].isEmpty()) {
+                    items[1] = "0";
+                } else {
+                    items[1] = ioi[3];    // borrowerQty
+                }
+                items[2] = ioi[4]; // borrowerStart
+                items[3] = ioi[5]; // borrowerEnd
+//                items[4] = ioi[6]; // borrowerRate
+                if (ioi[6]==null || ioi[6].isEmpty()) {
+                    items[4] = "0.0";
+                } else {
+                    items[4] = ioi[6]; // borrowerRate
+                }
+                items[5] = ioi[7]; // borrowerCondition
+                items[6] = ioi[8]; // lenderName
+                items[7] = ioi[9]; // requestId
+                items[8] = ioi[10]; // lineNo
+                items[10] = ioi[17];    // Status
+
+                DataUpdate.updateIoi(userName, fromStatus, items[0], items[6], items[7],
+                        Integer.parseInt(items[8]), Integer.parseInt(items[1]), items[2], items[3],
+                        Double.parseDouble(items[4]), items[5], toStatus) ;
+            }
+            if (notError) {
+                String botId = String.valueOf(botClient.getBotUserId());
+                String csvFilePath = DataExports.exportIoisUpdatedByBorrower(null,null, toStatus);
+                OutboundMessage messageOut = MessageSender.getInstance().buildCheckIoiFormMessage(userName, "", "", "", toStatus, csvFilePath, true);
+                MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
+                LOGGER.debug("ActionProcessor.manageImportAllocIoiForm completed");
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            LOGGER.error("ActionProcessor.manageImportAllocIoiForm.Exception", e);
+            notError = false;
+            this.noticeDoubtInput(action);
+        }
+    }
+
     public void manageSelectionForm(SymphonyElementsAction action, String userId, String userName, String status) {
         String csvFilePath = DataExports.exportRfqsUpdatedByLender(null,null, status);
         OutboundMessage messageOut = MessageSender.getInstance().buildViewRfqFormMessage(userName, "", "", "", status, csvFilePath, true);
@@ -677,6 +816,25 @@ public class ActionProcessor {
             DataUpdate.updateStatusAfterSentSelection("RFQ", lenderName, fromStatus, toStatus);
         }
         LOGGER.debug("ActionProcessor.manageSelectionToLenderForm completed");
+    }
+
+    public void manageAllocIoiToBorrowerForm(SymphonyElementsAction action, String userId, String userName, String fromStatus, String toStatus) {
+
+        String selectionData;
+        ArrayList<String> borrowerNames = DataServices.getInstance().listBorrowerNames("IOI", fromStatus);
+
+        for (String borrowerName : borrowerNames) {
+            selectionData = DataServices.getInstance().getSelectionForBorrowerToTextarea("IOI", borrowerName, fromStatus, toStatus);
+            String[] borrowerNameInfo = DataServices.getCounterPartyInfo(borrowerName);
+            String lenderName = ConfigLoader.myCounterPartyName;
+            String botId = borrowerNameInfo[3];
+            String externalChatRoomId = borrowerNameInfo[4];
+            String borrowerBotInstantMessageId = borrowerNameInfo[5];
+            OutboundMessage messageOut = MessageSender.getInstance().buildSendAllocIoiFormMessage(botId, userId, userName, externalChatRoomId, borrowerBotInstantMessageId, borrowerName, lenderName, fromStatus,  selectionData);
+            MessageSender.getInstance().sendMessage(externalChatRoomId, messageOut);
+            DataUpdate.updateStatusAfterSentSelection("IOI", lenderName, fromStatus, toStatus);
+        }
+        LOGGER.debug("ActionProcessor.manageAllocIoiToBorrowerForm completed");
     }
 
     public void manageSelectedIoiToLenderForm(SymphonyElementsAction action, String userId, String userName, String fromStatus, String toStatus) {
@@ -754,13 +912,13 @@ public class ActionProcessor {
     public void manageSelectIoiForm(SymphonyElementsAction action, String userId, String userName, String fromStatus, String toStatus, String csvFilePath) {
 
         Map<String, Object> formValues = action.getFormValues();
-        String quoteData = (String) formValues.get("input_ioi");
+        String ioiData = (String) formValues.get("input_ioi");
 
         final String type = "IOI";
 
         boolean notError = true;
 
-        try (BufferedReader reader = new BufferedReader(new StringReader(quoteData))) {
+        try (BufferedReader reader = new BufferedReader(new StringReader(ioiData))) {
             String line = null;
             while ((line = reader.readLine()) != null) {
                 String[] items = new String[11];
@@ -850,7 +1008,7 @@ public class ActionProcessor {
 
     public void blastSendQuoteToBorrowerForm(SymphonyElementsAction action, String userId, String userName, String lenderName, String fromStatus, String toStatus, boolean isNew) {
         String quoteData;
-        ArrayList<String> borrowerNames = DataServices.getInstance().listBorrowerNames();
+        ArrayList<String> borrowerNames = DataServices.getInstance().listBorrowerNames("RFQ", fromStatus);
 
         for (String borrowerName : borrowerNames) {
             quoteData = DataServices.getInstance().getQuoteForBorrowerToTextarea(borrowerName, fromStatus, toStatus);
@@ -937,6 +1095,16 @@ public class ActionProcessor {
         MessageSender.getInstance().sendMessage(externalChatRoomId, messageOut);
     }
 
+    public void notifyAcceptAllocIoiForm(SymphonyElementsAction action, String userId, String userName, String borrowerName, String lenderName, String externalChatRoomId) {
+        OutboundMessage messageOut = MessageSender.getInstance().buildNotifyAllocIoiMessage(userId, userName, borrowerName, lenderName);
+        MessageSender.getInstance().sendMessage(externalChatRoomId, messageOut);
+    }
+
+    public void notifyAcceptSelectedIoiForm(SymphonyElementsAction action, String userId, String userName, String borrowerName, String lenderName, String externalChatRoomId) {
+        OutboundMessage messageOut = MessageSender.getInstance().buildNotifyAcceptSelectedIoiMessage(userId, userName, borrowerName, lenderName);
+        MessageSender.getInstance().sendMessage(externalChatRoomId, messageOut);
+    }
+
     public void sendImToBorrowerBotForAccept(String userId, String userName, String botId, String borrowerBotInstantMessageId, String externalChatRoomId, String borrowerName, String lenderName, String quoteData) {
         userName = Miscellaneous.convertUserName(userName, true);
         OutboundMessage messageOut = MessageSender.getInstance().buildImToBorrowerBotForAccept(userId, userName, botId, externalChatRoomId, borrowerName, lenderName, quoteData);
@@ -959,7 +1127,7 @@ public class ActionProcessor {
     public void viewIoiUpdatedByBorrower(SymphonyElementsAction action, User user, String requestId, String borrowerName, String status) {
         String csvFilePath = DataExports.exportRfqsUpdatedByBorrower(requestId, borrowerName, status);
         String userName = user.getDisplayName();
-        OutboundMessage messageOut = MessageSender.getInstance().buildViewIoiFormMessage(userName, requestId, borrowerName, "", status, csvFilePath, false);
+        OutboundMessage messageOut = MessageSender.getInstance().buildCheckIoiFormMessage(userName, requestId, borrowerName, "", status, csvFilePath, false);
         MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
     }
 
@@ -967,6 +1135,13 @@ public class ActionProcessor {
         String csvFilePath = DataExports.exportRfqsUpdatedByBorrower(requestId, borrowerName, status);
         String userName = user.getDisplayName();
         OutboundMessage messageOut = MessageSender.getInstance().buildViewQuoteFormMessage(userName, requestId, borrowerName, "", status, csvFilePath);
+        MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
+    }
+
+    public void viewIoiAllocatedByLender(SymphonyElementsAction action, User user, String requestId, String lenderName, String status) {
+        String csvFilePath = DataExports.exportIoisUpdatedByLender(requestId,lenderName, status);
+        String userName = user.getDisplayName();
+        OutboundMessage messageOut = MessageSender.getInstance().buildViewIoiFormMessage(userName, requestId, "", lenderName, status, csvFilePath);
         MessageSender.getInstance().sendMessage(action.getStreamId(), messageOut);
     }
 

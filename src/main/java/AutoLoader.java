@@ -19,7 +19,7 @@ public class AutoLoader {
     private static final Logger LOGGER = LoggerFactory.getLogger(AutoLoader.class);
 
 
-    public static void inputWatcher() throws Exception {
+    public static void inputWatcher(String botName) throws Exception {
 
         Path dir = Paths.get(ConfigLoader.uploadCsvPath);
         WatchService watcher = FileSystems.getDefault().newWatchService();
@@ -41,7 +41,7 @@ public class AutoLoader {
                 TimerTask task = new TimerTask() {
                     public void run() {
                         try {
-                            autoLoading(read_file, target_file);
+                            autoLoading(read_file, target_file, botName);
                         } catch (Exception e) {
                             System.out.println("autoLoading was failed");
                         }
@@ -59,7 +59,7 @@ public class AutoLoader {
         return (WatchEvent<T>)event;
     }
 
-    public static void autoLoading(String read_file, String target_file){
+    public static void autoLoading(String read_file, String target_file, String botName){
         String requestIdAndLotNo[];
         String requestId;
         int lotNo;
@@ -68,7 +68,7 @@ public class AutoLoader {
             if (read_file.toLowerCase().contains("rfq")) {
                 requestIdAndLotNo = DataServices.createRequestId("RFQ");
                 String botId = ConfigLoader.owner;
-                String userName = "BOT";
+                String userName = botName;
                 String userId = botId;
                 String type = "RFQ";
                 String timeStamp = Miscellaneous.getTimeStamp("transaction");
@@ -93,7 +93,7 @@ public class AutoLoader {
 
             } else if (read_file.toLowerCase().contains("quote")) {
                 String botId = ConfigLoader.owner;
-                String userName = "BOT";
+                String userName = botName;
                 String userId = botId;
                 String fromStatus = "YET";
                 String toStatus = "NEW";
@@ -133,7 +133,7 @@ public class AutoLoader {
 
             } else if (read_file.toLowerCase().contains("select")) {
                 String botId = ConfigLoader.owner;
-                String userName = "BOT";
+                String userName = botName;
                 String userId = botId;
                 String fromStatus = "YET";
                 String toStatus = "NEW";
@@ -164,7 +164,7 @@ public class AutoLoader {
 
                 requestIdAndLotNo = DataServices.createRequestId("IOI");
                 String botId = ConfigLoader.owner;
-                String userName = "BOT";
+                String userName = botName;
                 String userId = botId;
                 String type = "IOI";
                 requestId = requestIdAndLotNo[0];
@@ -210,16 +210,51 @@ public class AutoLoader {
                 String lenderName = ConfigLoader.myCounterPartyName;
                 OutboundMessage messageOut = MessageSender.getInstance().buildCreateIoiFormMessage("", userId, userName, requestId, lenderName, "YET", false);
                 MessageSender.getInstance().sendMessage(Miscellaneous.convertRoomId(ConfigLoader.intChatRoomId), messageOut);
-                LOGGER.debug("ActionProcessor.manageAddIoiForm completed");
+                LOGGER.debug("AutoLoader.autoLoading.createIoi completed");
 
+            } else if (read_file.toLowerCase().contains("taken")) {
+
+                String line = null;
+                String botId = ConfigLoader.owner;
+                String userName = botName;
+                String userId = botId;
+                String fromStatus = "NEW";
+                String toStatus = "SELECT";
+                while ((line = bufferedReader.readLine()) != null) {
+                    String[] items = new String[11];
+                    String[] ioi = line.split(",", 0);
+                    items[0] = ioi[1]; // borrowerName
+//                items[1] = ioi[3]; // borrowerQty
+                    if (ioi[3]==null || ioi[3].isEmpty()) {
+                        items[1] = "0";
+                    } else {
+                        items[1] = ioi[3];    // borrowerQty
+                    }
+                    items[2] = ioi[4]; // borrowerStart
+                    items[3] = ioi[5]; // borrowerEnd
+//                items[4] = ioi[6]; // borrowerRate
+                    if (ioi[6]==null || ioi[6].isEmpty()) {
+                        items[4] = "0.0";
+                    } else {
+                        items[4] = ioi[6]; // borrowerRate
+                    }
+                    items[5] = ioi[7]; // borrowerCondition
+                    items[6] = ioi[8]; // lenderName
+                    items[7] = ioi[9]; // requestId
+                    items[8] = ioi[10]; // lineNo
+                    items[10] = ioi[17];    // Status
+
+                    DataUpdate.updateIoi(userName, fromStatus, items[0], items[6], items[7],
+                            Integer.parseInt(items[8]), Integer.parseInt(items[1]), items[2], items[3],
+                            Double.parseDouble(items[4]), items[5], toStatus);
+                }
+                String csvFilePath = DataExports.exportIoisUpdatedByBorrower(null,null, "SELECT");
+                OutboundMessage messageOut = MessageSender.getInstance().buildSelectIoiFormMessage(botId, userId, userName, ConfigLoader.myCounterPartyName, "", toStatus, csvFilePath, false);
+                MessageSender.getInstance().sendMessage(Miscellaneous.convertRoomId(ConfigLoader.intChatRoomId), messageOut);
+                LOGGER.debug("AutoLoader.autoLoading.selectIoi completed");
             }
 
-
-
-
-
-
-            } catch (IOException ex) {
+        } catch (IOException ex) {
             ex.printStackTrace();
         } finally {
             try {

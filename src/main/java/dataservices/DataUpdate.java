@@ -209,7 +209,107 @@ public class DataUpdate {
         return result;
     }
 
-    public static void getUpdateSelectionStatus(String selectionData, String userName, String toStatus) {
+    public static boolean updateSelectedIoiStatusByData (String userName, String toStatus, String selectionData) {
+        Connection connection = null;
+        Statement statement = null;
+        boolean result = true;
+        try {
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String timeStamp = Miscellaneous.getTimeStamp("transaction");
+            String sql = "UPDATE " + ConfigLoader.transactionTable + " SET borrowerQty=?, borrowerStart=?, borrowerEnd=?, " +
+                    "borrowerRate=?, borrowerCondition=?, status=?, timeStamp=?, updatedBy=? WHERE requestId=? AND  lineNo=? AND borrowerName=? AND lenderName=? AND lenderNo!=0";
+            PreparedStatement preStatementSelect = connection.prepareStatement(sql);
+
+            List<String> selectionLine;
+            selectionLine = Arrays.asList(selectionData.split(",", 0));
+            String[] tmpArray = new String[24];
+
+            int noOfFields = 23;
+            int countItem = 1;
+            for (String item : selectionLine) {
+                if (countItem <= noOfFields) {
+                    tmpArray[countItem] = item;
+                    countItem += 1;
+
+                    if (countItem == noOfFields) {
+//                        tmpArray[1] // type
+//                        tmpArray[2] // lotNo
+//                        tmpArray[3] // requestId
+                        preStatementSelect.setString(9, tmpArray[3]); // requestId
+//                        tmpArray[4] // versionNo
+//                        tmpArray[5] // LineNo
+                        preStatementSelect.setInt(10, Integer.parseInt(tmpArray[5])); // lineNo
+//                        tmpArray[6] // stockCode
+//                        tmpArray[7] // borrowerName
+                        preStatementSelect.setString(11, tmpArray[7]); // borrowerName
+//                        tmpArray[8] // borrowerQty
+                        preStatementSelect.setInt(1, Integer.parseInt(tmpArray[8])); // borrowerQty
+//                        tmpArray[9] // borrowerStart
+                        preStatementSelect.setString(2, tmpArray[9]); // borrowerStart
+//                        tmpArray[10] // borrowerEnd
+                        preStatementSelect.setString(3, tmpArray[10]); // borrowerEnd
+//                        tmpArray[11] // borrowerRate
+                        preStatementSelect.setDouble(4, Double.parseDouble(tmpArray[11])); // borrowerName
+//                        tmpArray[12] // borrowerCondition
+                        preStatementSelect.setString(5, tmpArray[12]); // borrowerCondition
+//                        tmpArray[13] // provideNo
+//                        tmpArray[14] // lenderName
+                        preStatementSelect.setString(12, tmpArray[14]); // lenderName
+//                        tmpArray[15] // lenderQty
+//                        tmpArray[16] // lenderStart
+//                        tmpArray[17] // lenderEnd
+//                        tmpArray[18] // lenderRate
+//                        tmpArray[19] // lenderCondition
+//                        tmpArray[20] // price
+//                        tmpArray[21] // status
+                        preStatementSelect.setString(6, toStatus); // status
+//                        tmpArray[22] // timStamp
+                        preStatementSelect.setString(7, timeStamp); // timeStamp
+//                        tmpArray[23] // updateBy
+                        preStatementSelect.setString(8, userName); // updateBy
+
+                        preStatementSelect.executeUpdate();
+                        countItem = 1;
+
+                    }
+                }
+            }
+
+            LOGGER.debug("DataUpdate.updateSelectedIoiStatusByData completed");
+
+        }catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            result = false;
+            LOGGER.error("DataUpdate.updateSelectedIoiStatusByData.ClassException", e);
+        } catch (SQLException e) {
+            LOGGER.error("DataUpdate.updateSelectedIoiStatusByData.SQLException", e);
+            result = false;
+            e.printStackTrace();
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
+    }
+
+    public static void getUpdateSelectionStatus(String type, String selectionData, String userName, String toStatus) {
         Connection connection = null;
         Statement statement = null;
         try {
@@ -224,7 +324,7 @@ public class DataUpdate {
 //           while (rs.next()) failed into Loop so that limit loop by the count of results
 
             String sqlUpdateQuoteWithNewStatus = "UPDATE " + ConfigLoader.transactionTable +
-                    " SET status=?, timeStamp=?, updatedBy=? WHERE requestId=? AND lineNo=? AND borrowerName=? AND lenderName=? ";
+                    " SET status=?, timeStamp=?, updatedBy=? WHERE type=? AND requestId=? AND lineNo=? AND borrowerName=? AND lenderName=? ";
             PreparedStatement preparedStatementUpdate = connection.prepareStatement(sqlUpdateQuoteWithNewStatus);
 
             String timeStamp = Miscellaneous.getTimeStamp("transaction");
@@ -243,15 +343,16 @@ public class DataUpdate {
 
                     if (countItem==noOfFields) {
 //                        tmpArray[1] // type
+                        preparedStatementUpdate.setString(4, type); // type
 //                        tmpArray[2] // lotNo
 //                        tmpArray[3] // requestId
-                        preparedStatementUpdate.setString(4, tmpArray[3]); // updateBy
+                        preparedStatementUpdate.setString(5, tmpArray[3]); // updateBy
 //                        tmpArray[4] // versionNo
 //                        tmpArray[5] // LineNo
-                        preparedStatementUpdate.setInt(5, Integer.parseInt(tmpArray[5])); // updateBy
+                        preparedStatementUpdate.setInt(6, Integer.parseInt(tmpArray[5])); // updateBy
 //                        tmpArray[6] // stockCode
 //                        tmpArray[7] // borrowerName
-                        preparedStatementUpdate.setString(6, tmpArray[7]); // borrowerName
+                        preparedStatementUpdate.setString(7, tmpArray[7]); // borrowerName
 //                        tmpArray[8] // borrowerQty
 //                        tmpArray[9] // borrowerStart
 //                        tmpArray[10] // borrowerEnd
@@ -259,7 +360,7 @@ public class DataUpdate {
 //                        tmpArray[12] // borrowerCondition
 //                        tmpArray[13] // provideNo
 //                        tmpArray[14] // lenderName
-                        preparedStatementUpdate.setString(7, tmpArray[14]); // lenderName
+                        preparedStatementUpdate.setString(8, tmpArray[14]); // lenderName
 //                        tmpArray[15] // lenderQty
 //                        tmpArray[16] // lenderStart
 //                        tmpArray[17] // lenderEnd

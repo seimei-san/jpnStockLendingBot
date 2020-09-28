@@ -184,6 +184,32 @@ public class MessageProcessor {
                         break;
                     }   // update IOI status at Borrower with NEW for acceptance
 
+                    case "/botcmd7" : {
+                        // This command is given by IM from Lender Bot with the 7 parameters
+                        String requestId = commandMessage[1];
+                        String userId = commandMessage[2];
+                        String userName = Miscellaneous.convertUserName(commandMessage[3], false);
+                        String borrowerName = commandMessage[4];
+                        String lenderName = commandMessage[5];
+                        String extChatRoomId = Miscellaneous.convertRoomId(commandMessage[6]);
+                        String selectionData = commandMessage[7];
+                        DataUpdate.updateSelectedIoiStatusByData(userName, "TAKE", selectionData);
+                        break;
+                    }   // update IOI status at Lender with ALLOC
+
+                    case "/botcmd8" : {
+                        // This command is given by IM from Lender Bot with the 7 parameters
+                        String requestId = commandMessage[1];
+                        String userId = commandMessage[2];
+                        String userName = Miscellaneous.convertUserName(commandMessage[3], false);
+                        String borrowerName = commandMessage[4];
+                        String lenderName = commandMessage[5];
+                        String extChatRoomId = Miscellaneous.convertRoomId(commandMessage[6]);
+                        String selectionData = commandMessage[7];
+                        DataUpdate.updateSelectedIoiStatusByData(userName, "DONE", selectionData);
+                        break;
+                    }   // update IOI status at Lender with DONE
+
                     case "/newquote" : {
                         if (Miscellaneous.checkRoomId(streamId)) {
                             this.notifyNotInRoom(inboundMessage,"/newquote");
@@ -216,6 +242,18 @@ public class MessageProcessor {
                         } else {
                             this.viewRfqUpdatedByBorrower(inboundMessage);
                             LOGGER.debug("MessageProcessor.Commend=viewquote evoked");
+                        }
+                        break;
+                    }
+
+                    case "/viewioi" : {
+                        if (Miscellaneous.checkRoomId(streamId)) {
+                            this.notifyNotInRoom(inboundMessage,"/viewioi");
+                            LOGGER.debug("/viewioi executed from not proper room");
+
+                        } else {
+                            this.viewIoiAllocatedByLender(inboundMessage);
+                            LOGGER.debug("MessageProcessor.Commend=viewioi evoked");
                         }
                         break;
                     }
@@ -256,10 +294,10 @@ public class MessageProcessor {
                         break;
                     }
 
-                    case "/viewioi" : {
+                    case "/allocioi" : {
                         if (Miscellaneous.checkRoomId(streamId)) {
-                            this.notifyNotInRoom(inboundMessage,"/viewioi");
-                            LOGGER.debug("/viewioi executed from not proper room");
+                            this.notifyNotInRoom(inboundMessage,"/allocioi");
+                            LOGGER.debug("/allocioi executed from not proper room");
 
                         } else {
                             this.viewIoiUpdatedByBorrower(inboundMessage);
@@ -323,7 +361,7 @@ public class MessageProcessor {
     public void viewIoiUpdatedByBorrower(InboundMessage inboundMessage) {
         String csvFilePath = DataExports.exportIoisUpdatedByBorrower("","", "");
         String userName = inboundMessage.getUser().getDisplayName();
-        OutboundMessage messageOut = MessageSender.getInstance().buildViewIoiFormMessage(userName, "", "", "", "", csvFilePath, false);
+        OutboundMessage messageOut = MessageSender.getInstance().buildCheckIoiFormMessage(userName, "", "", "", "", csvFilePath, false);
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.viewIoiUpdatedByBorrower executed");
     }
@@ -335,6 +373,15 @@ public class MessageProcessor {
         MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
         LOGGER.debug("MessageProcessor.viewRfqUpdatedByBorrower executed");
     }
+
+    public void viewIoiAllocatedByLender(InboundMessage inboundMessage) {
+        String csvFilePath = DataExports.exportIoisUpdatedByBorrower("","", "");
+        String userName = inboundMessage.getUser().getDisplayName();
+        OutboundMessage messageOut = MessageSender.getInstance().buildViewIoiFormMessage(userName, "", "", "", "", csvFilePath);
+        MessageSender.getInstance().sendMessage(inboundMessage.getStream().getStreamId(), messageOut);
+        LOGGER.debug("MessageProcessor.viewIoiAllocatedByLender executed");
+    }
+
 
     public void submitQuoteForm(InboundMessage inboundMessage, String lenderStatus) {
         String userName = inboundMessage.getUser().getDisplayName();

@@ -1018,7 +1018,8 @@ public class MessageSender {
         message +=
                 "<select name=\"status-select\" required=\"false\" data-placeholder=\"状況を選択\">";
         message +=
-                "<option value=\"NEW\">NEW</option><option value=\"REJECT\">REJECT</option><option value=\"SELECT\">SELECT</option><option value=\"SEND\">SEND</option><option value=\"DONE\">DONE</option>";
+                "<option value=\"NEW\">NEW</option><option value=\"REJECT\">REJECT</option><option value=\"SELECT\">SELECT</option>" +
+                        "<option value=\"SEND\">SEND</option><option value=\"DONE\">DONE</option>";
         message +=
                 "</select>";
 
@@ -1107,7 +1108,7 @@ public class MessageSender {
         return messageOut;
     }
 
-    public OutboundMessage buildViewIoiFormMessage(String userName, String requestId, String borrowerName, String lenderName, String status, String csvFullPath, boolean isSelected) {
+    public OutboundMessage buildCheckIoiFormMessage(String userName, String requestId, String borrowerName, String lenderName, String status, String csvFullPath, boolean isSelected) {
 
         String message;
         StringBuilder messageOptionsForBorrowers = new StringBuilder();
@@ -1132,7 +1133,7 @@ public class MessageSender {
         message +=
                 "<div style=\"width:50%;\">";
         message +=
-                "<h3 class=\"tempo-text-color--black tempo-bg-color--yellow\">IOIへの回答状況</h3>";
+                "<h3 class=\"tempo-text-color--black tempo-bg-color--yellow\">IOIへの配分状況</h3>";
         message +=
                 "<table style='table-layout:fixed;width:800px' class='tempo-ui--background'>" +
                         "<thead>" +
@@ -1219,7 +1220,7 @@ public class MessageSender {
         message +=
                 "<div style=\"width:50%;\">";
         message +=
-                "<h3 class=\"tempo-text-color--white tempo-bg-color--purple\">IOIの表示</h3>";
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">IOIの表示</h3>";
 
         message +=
                 "<table style='table-layout:fixed;width:800px'>" +
@@ -1325,7 +1326,7 @@ public class MessageSender {
 
 
             message +=
-                    "<form id=\"send-selectedioi-form\">";
+                    "<form id=\"send-alloc-ioi-form\">";
             if (ConfigLoader.env.equals("prod")) {
                 message += "<div style=\"display:none\">";
             }
@@ -1339,7 +1340,7 @@ public class MessageSender {
                 message += "</div>";
             }
             message +=
-                    "<button type=\"action\" name=\"cancel-selectedioi-button\">取消</button><button type=\"action\" name=\"send-selectedioi-button\">送信</button>";
+                    "<button type=\"action\" name=\"cancel-alloc-ioi-button\">取消</button><button type=\"action\" name=\"send-alloc-ioi-button\">送信</button>";
             message +=
                     "</form>" +
                             "</div>";
@@ -1353,7 +1354,7 @@ public class MessageSender {
                             "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">貸手の意志決定</h3>" ;
 
             message +=
-                    "<form id=\"import-selectedioi-form\">";
+                    "<form id=\"import-alloc-ioi-form\">";
             if (ConfigLoader.env.equals("prod")) {
                 message += "<div style=\"display:none\">";
             }
@@ -1368,12 +1369,12 @@ public class MessageSender {
             }
 
             message +=
-                    "<h3>DONEのデータの入力</h3>" +
+                    "<h3>配分データの入力</h3>" +
                             "<br/>" +
-                            "<textarea name=\"input_selectedIoi\" placeholder=\"ここにコピーしたDONEデータを貼付てください。 " +
+                            "<textarea name=\"input_alloc_ioi\" placeholder=\"ここにコピーした配分データを貼付てください。 " +
                             "&#13;" +
                             "コピー範囲は、エクセルで開いたCSVファイルの先頭列（列名：種別）から最終列（列名：状況）を含めてください。\" required=\"false\"></textarea>" +
-                            "<button type=\"reset\">消去</button><button type=\"action\" name=\"import-selectedioi-button\">取込</button><button type=\"action\" name=\"proceed-selectedioi-button\">送信へ</button>";
+                            "<button type=\"reset\">消去</button><button type=\"action\" name=\"import-alloc-ioi-button\">取込</button><button type=\"action\" name=\"proceed-alloc-ioi-button\">送信へ</button>";
             message +=
                     "</form>" +
                             "</div>";
@@ -1411,7 +1412,9 @@ public class MessageSender {
         message +=
                 "<select name=\"status-select\" required=\"false\" data-placeholder=\"状況を選択\">";
         message +=
-                "<option value=\"NEW\">NEW</option><option value=\"REJECT\">REJECT</option><option value=\"SELECT\">SELECT</option><option value=\"SEND\">SEND</option><option value=\"DONE\">DONE</option>";
+                "<option value=\"NEW\">NEW</option><option value=\"REJECT\">REJECT</option><option value=\"ACK\">ACK</option>" +
+                        "<option value=\"SEND\">SEND</option><option value=\"TAKE\">TAKE</option><option value=\"ALLOC\">ALLOC</option>" +
+                        "<option value=\"DONE\">DONE</option>";
         message +=
                 "</select>";
 
@@ -1432,7 +1435,7 @@ public class MessageSender {
         OutboundMessage messageOut = new OutboundMessage();
         messageOut.setAttachment(new File(csvFullPath));
         messageOut.setMessage(message);
-        LOGGER.debug("buildViewIoiFormMessage returned");
+        LOGGER.debug("buildCheckIoiFormMessage returned");
         return messageOut;
     }
 
@@ -1575,7 +1578,8 @@ public class MessageSender {
         message +=
                 "<select name=\"status-select\" required=\"false\" data-placeholder=\"状況を選択\">";
         message +=
-                "<option value=\"NEW\">NEW</option><option value=\"REJECT\">REJECT</option><option value=\"SELECT\">SELECT</option><option value=\"SEND\">SEND</option><option value=\"DONE\">DONE</option>";
+                "<option value=\"NEW\">NEW</option><option value=\"REJECT\">REJECT</option><option value=\"SELECT\">SELECT</option>" +
+                        "<option value=\"SEND\">SEND</option><option value=\"DONE\">DONE</option>";
         message +=
                 "</select>";
 
@@ -1600,7 +1604,176 @@ public class MessageSender {
         return messageOut;
     }
 
+    public OutboundMessage buildViewIoiFormMessage(String userName, String requestId, String borrowerName, String lenderName, String status, String csvFullPath) {
+        String message;
+        String titleForm;
+        StringBuilder messageOptionsForLenders = new StringBuilder();
+        StringBuilder messageOptionsForRequestId = new StringBuilder();
+        for (int i = 0; DataServices.counterPartiesList.length > i; i++) {
+            messageOptionsForLenders.append("<option value=\"").append(DataServices.counterPartiesList[i]).append("\">").append(DataServices.counterPartiesList[i]).append("</option>");
+        }
+        for (String optionRequestId : DataServices.getRequestIdList("IOI")) {
+            messageOptionsForRequestId.append("<option value=\"").append(optionRequestId).append("\">").append(optionRequestId).append("</option>");
+        }
 
+        titleForm = "IOIの一覧 ";
+
+        message =
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">" + titleForm + "</h3>";
+
+        message +=
+                "<h4>閲覧者： " + userName + "</h4>" +
+                        "<br/>" +
+                        "<table style='table-layout:fixed;width:1500px'>" +
+                        "<thead>" +
+                        "<tr>" +
+                        "<td style='width:4%;font-weight:bold'>種別</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff'>掲示先</td>" +
+                        "<td style='width:5%;font-weight:bold;color:#3300ff'>銘柄</td>" +
+                        "<td style='width:5%;font-weight:bold;text-align:right;color:#3300ff'>株数</td>" +
+                        "<td style='width:5%;font-weight:bold;color:#3300ff'>開始日</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff'>返却日/期間</td>" +
+                        "<td style='width:4%;font-weight:bold;color:#3300ff;text-align:right'>利率</td>" +
+                        "<td style='width:4%;font-weight:bold;color:#3300ff'>条件</td>" +
+                        "<td style='width:6%;font-weight:bold'>掲示元</td>" +
+                        "<td style='width:7%;font-weight:bold'>掲示番号</td>" +
+                        "<td style='width:3%;font-weight:bold'>枝番</td>" +
+                        "<td style='width:7%;font-weight:bold;text-align:right'>掲示株数</td>" +
+                        "<td style='width:6%;font-weight:bold'>掲示開始</td>" +
+                        "<td style='width:7%;font-weight:bold'>掲示返却日</td>" +
+                        "<td style='width:6%;font-weight:bold;text-align:right'>掲示利率</td>" +
+                        "<td style='width:7%;font-weight:bold'>掲示条件</td>" +
+                        "<td style='width:5%;font-weight:bold;text-align:right'>価格</td>" +
+                        "<td style='width:6%;font-weight:bold'>状況</td>" +
+                        "</tr>" +
+                        "</thead>" +
+                        "<tbody>";
+
+
+        DataServices dataServices = DataServices.getInstance();
+        int totalQtyborrower = 0;
+        int totalQtylender = 0;
+        for (ViewIoi viewIoi : dataServices.viewAllocIois(requestId, lenderName, status)) {
+            totalQtyborrower += viewIoi.getBorrowerQty();
+            totalQtylender += viewIoi.getLenderQty();
+
+            message +=
+                    "<tr>" +
+                            "<td>" + viewIoi.getType() + "</td>" +
+                            "<td class='tempo-text-color--green'>" + viewIoi.getBorrowerName() + "</td>" +
+                            "<td>" + viewIoi.getStockCode() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getBorrowerQty()) + "</td>" +
+                            "<td>" + viewIoi.getBorrowerStart() + "</td>" +
+                            "<td>" + viewIoi.getBorrowerEnd() + "</td>" +
+                            "<td style='text-align:right'>" + viewIoi.getBorrowerRate() + "</td>" +
+                            "<td>" + viewIoi.getBorrowerCondition() + "</td>" +
+                            "<td class='tempo-text-color--blue'>" + viewIoi.getLenderName() + "</td>" +
+                            "<td style='color:#ff0000'>" + viewIoi.getRequestId() + "</td>" +
+                            "<td style='text-align:right;color:#ff0000'>" + viewIoi.getLineNo() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getLenderQty()) + "</td>" +
+                            "<td>" + viewIoi.getLenderStart() + "</td>" +
+                            "<td>" + viewIoi.getLenderEnd() + "</td>" +
+                            "<td style='text-align:right'>" + viewIoi.getLenderRate() + "</td>" +
+                            "<td>" + viewIoi.getLenderCondition() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getPrice()) + "</td>" +
+                            "<td>" + viewIoi.getStatus() + "</td>" +
+                            "</tr>";
+        }
+
+        message +=
+                "</tbody>" +
+                        "<tfoot>" +
+                        "<tr>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "</tr>" +
+                        "</tfoot>" +
+                        "</table>" +
+                        "<br/>" ;
+
+        message +=
+                "<div style=\"display: flex;\">";
+
+//      Div in Left Bottom ---------------------
+//      Div in Left Bottom ---------------------
+//      Div in Left Bottom ---------------------
+        message +=
+                "<div style=\"width:50%;\">";
+        message +=
+                "<form id=\"view-alloc-ioi-form\">";
+
+        message +=
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">借手の操作</h3>" +
+                        "<h3>IOIのデータの絞り込み</h3>" +
+                        "<br/>";
+        message +=
+                "<select name=\"lender-select\" required=\"false\" data-placeholder=\"貸手を選択\">";
+        message += messageOptionsForLenders;
+        message +=
+                "</select>";
+
+        message +=
+                "<select name=\"request-id-select\" required=\"false\" data-placeholder=\"掲示番号を選択\">";
+        message += messageOptionsForRequestId;
+        message +=
+                "</select>";
+
+        message +=
+                "<select name=\"status-select\" required=\"false\" data-placeholder=\"状況を選択\">";
+        message +=
+                "<option value=\"NEW\">NEW</option><option value=\"REJECT\">REJECT</option><option value=\"ACK\">ACK</option>" +
+                        "<option value=\"SEND\">SEND</option><option value=\"TAKE\">TAKE</option><option value=\"ALLOC\">ALLOC</option>" +
+                        "<option value=\"DONE\">DONE</option>";
+        message +=
+                "</select>";
+
+        message +=
+//                "<button type=\"action\" name=\"reject-quote-button\">却下</button>" +
+                "<button type=\"action\" name=\"refresh-alloc-ioi-button\">再表示</button>" +
+                        "</form>";
+
+
+        message +=
+                "</div>";
+
+//       Div in Right Bottom -------------------
+//       Div in Right Bottom -------------------
+//       Div in Right Bottom -------------------
+        message +=
+                "<br/>" +
+                "<div style=\"width:50%;\">";
+
+
+        message +=
+                "</div>";
+
+        message +=
+                "</div>";
+
+
+        OutboundMessage messageOut = new OutboundMessage();
+        if (!csvFullPath.equals("")) {
+            messageOut.setAttachment(new File(csvFullPath));
+        }
+        messageOut.setMessage(message);
+        LOGGER.debug("buildViewIoiFormMessage returned");
+        return messageOut;
+    }
+    
     public OutboundMessage buildCreateQuoteFormMessage() {
         LOGGER.debug("buildCreateQuoteFormMessage returned");
         return this.buildCreateQuoteFormMessage("", "", "", "","", "", "", true);
@@ -1801,7 +1974,7 @@ public class MessageSender {
         if (isNew) {
             titleForm = "IOIの選択: ";
         } else {
-            titleForm = "IOIへの返信: ";
+            titleForm = "IOIへの回答: ";
         }
 
         message =
@@ -1809,7 +1982,7 @@ public class MessageSender {
 
         message +=
 //                "<h4>回答者： <mention uid='" + userId + "'/></h4>" +
-                "<h4>返信者： " + userName + "</h4>" +
+                "<h4>回答者： " + userName + "</h4>" +
                         "<br/>" +
                         "<table style='table-layout:fixed;width:1400px'>" +
                         "<thead>" +
@@ -1947,13 +2120,13 @@ public class MessageSender {
             }
 
             message +=
-                    "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">貸手のIOIに返信</h3>" +
+                    "<h3 class=\"tempo-text-color--white tempo-bg-color--red\">貸手のIOIに回答</h3>" +
                             "<br/>";
 
             message +=
 
                     "<button type=\"action\" name=\"reselect-select-ioi-button\">再選択</button>" +
-                            "<button type=\"action\" name=\"send-select-ioi-button\">返信</button>" +
+                            "<button type=\"action\" name=\"send-select-ioi-button\">回答</button>" +
                             "</form>";
         }
         message +=
@@ -1987,7 +2160,7 @@ public class MessageSender {
         String message;
         String titleForm;
 
-        titleForm = "RESULTSの返信: ";
+        titleForm = "RESULTSの回答: ";
 
         message =
                 "<h3 class=\"tempo-text-color--white tempo-bg-color--green\">" + titleForm + borrowerName+ " → " + lenderName + "</h3>";
@@ -2145,7 +2318,7 @@ public class MessageSender {
         String message;
         String titleForm;
 
-        titleForm = "IOIへの返信: ";
+        titleForm = "IOIへの回答: ";
 
         message =
                 "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">" + titleForm + borrowerName+ " → " + lenderName + "</h3>";
@@ -2154,7 +2327,7 @@ public class MessageSender {
 
         message +=
                 //                "<h4>回答者： <mention uid='" + userId + "'/></h4>" +
-                "<h4>返信者： " + userName + "</h4>" +
+                "<h4>回答者： " + userName + "</h4>" +
                         "<br/>" +
                         "<table style='table-layout:fixed;width:1400px'>" +
                         "<thead>" +
@@ -2170,7 +2343,7 @@ public class MessageSender {
                         "<td style='width:6%;font-weight:bold'>提示元</td>" +
                         "<td style='width:7%;font-weight:bold'>提示番号</td>" +
                         "<td style='width:3%;font-weight:bold'>枝番</td>" +
-                        "<td style='width:7%;font-weight:bold;text-align:right;color:#3300ff'>提示株数</td>" +
+                        "<td style='width:7%;font-weight:bold;text-align:right'>提示株数</td>" +
                         "<td style='width:6%;font-weight:bold'>提示開始</td>" +
                         "<td style='width:7%;font-weight:bold'>提示返却日</td>" +
                         "<td style='width:6%;font-weight:bold;text-align:right'>提示利率</td>" +
@@ -2298,6 +2471,163 @@ public class MessageSender {
     }
 
 
+    public OutboundMessage buildSendAllocIoiFormMessage(String botId, String userId, String userName, String externalChatRoomId,
+                                                           String lenderBotInstantMessageId, String borrowerName, String lenderName, String status, String selectionData) {
+
+        String message;
+        String titleForm;
+
+        titleForm = "IOIの配分: ";
+
+        message =
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--cyan\">" + titleForm + borrowerName+ " ← " + lenderName + "</h3>";
+
+
+
+        message +=
+                //                "<h4>回答者： <mention uid='" + userId + "'/></h4>" +
+                "<h4>回答者： " + userName + "</h4>" +
+                        "<br/>" +
+                        "<table style='table-layout:fixed;width:1400px'>" +
+                        "<thead>" +
+                        "<tr>" +
+                        "<td style='width:4%;font-weight:bold'>種別</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff'>提示先</td>" +
+                        "<td style='width:5%;font-weight:bold;color:#3300ff'>銘柄</td>" +
+                        "<td style='width:7%;font-weight:bold;text-align:right;color:#3300ff'>株数</td>" +
+                        "<td style='width:6%;font-weight:bold;color:#3300ff'>開始日</td>" +
+                        "<td style='width:7%;font-weight:bold;color:#3300ff'>返却日/期間</td>" +
+                        "<td style='width:4%;font-weight:bold;color:#3300ff;text-align:right'>利率</td>" +
+                        "<td style='width:4%;font-weight:bold;color:#3300ff'>条件</td>" +
+                        "<td style='width:6%;font-weight:bold'>提示元</td>" +
+                        "<td style='width:7%;font-weight:bold'>提示番号</td>" +
+                        "<td style='width:3%;font-weight:bold'>枝番</td>" +
+                        "<td style='width:7%;font-weight:bold;text-align:right'>提示株数</td>" +
+                        "<td style='width:6%;font-weight:bold'>提示開始</td>" +
+                        "<td style='width:7%;font-weight:bold'>提示返却日</td>" +
+                        "<td style='width:6%;font-weight:bold;text-align:right'>提示利率</td>" +
+                        "<td style='width:7%;font-weight:bold'>提示条件</td>" +
+                        "<td style='width:5%;font-weight:bold;text-align:right'>価格</td>" +
+                        "<td style='width:6%;font-weight:bold'>状況</td>" +
+                        "</tr>" +
+                        "</thead>" +
+                        "<tbody>";
+
+
+
+        DataServices dataServices = DataServices.getInstance();
+        int totalQtyborrower = 0;
+        int totalQtylender = 0;
+        for (ViewIoi viewIoi : dataServices.viewSendSelectedIoiFromBorrowerToLender(lenderName, status)) {
+            totalQtyborrower += viewIoi.getBorrowerQty();
+            totalQtylender += viewIoi.getLenderQty();
+
+            message +=
+                    "<tr>" +
+                            "<td>" + viewIoi.getType() + "</td>" +
+                            "<td class='tempo-text-color--green'>" + viewIoi.getBorrowerName() + "</td>" +
+                            "<td>" + viewIoi.getStockCode() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getBorrowerQty()) + "</td>" +
+                            "<td>" + viewIoi.getBorrowerStart() + "</td>" +
+                            "<td>" + viewIoi.getBorrowerEnd() + "</td>" +
+                            "<td style='text-align:right'>" + viewIoi.getBorrowerRate() + "</td>" +
+                            "<td>" + viewIoi.getBorrowerCondition() + "</td>" +
+                            "<td class='tempo-text-color--blue'>" + viewIoi.getLenderName() + "</td>" +
+                            "<td style='color:#ff0000'>" + viewIoi.getRequestId() + "</td>" +
+                            "<td style='text-align:right;color:#ff0000'>" + viewIoi.getLineNo() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getLenderQty()) + "</td>" +
+                            "<td>" + viewIoi.getLenderStart() + "</td>" +
+                            "<td>" + viewIoi.getLenderEnd() + "</td>" +
+                            "<td style='text-align:right'>" + viewIoi.getLenderRate() + "</td>" +
+                            "<td>" + viewIoi.getLenderCondition() + "</td>" +
+                            "<td style='text-align:right'>" + String.format("%,d", viewIoi.getPrice()) + "</td>" +
+                            "<td>" + viewIoi.getStatus() + "</td>" +
+                            "</tr>";
+        }
+
+        message +=
+                "</tbody>" +
+                        "<tfoot>" +
+                        "<tr>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtyborrower) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td style='text-align:right;font-weight:bold'>計: </td>" +
+                        "<td style='text-align:right;font-weight:bold'>" + String.format("%,d",totalQtylender) + "</td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "<td></td>" +
+                        "</tr>" +
+                        "</tfoot>" +
+                        "</table>" +
+                        "<br/>" ;
+
+        message +=
+                "<div style=\"display: flex;\">";
+
+
+        //      Div in Left Bottom -----------------
+        //      Div in Left Bottom -----------------
+        //      Div in Left Bottom -----------------
+        message +=
+                "<div style=\"width:50%;\">";
+        message +=
+                "<form id=\"confirm-alloc-ioi-form\">";
+        if (ConfigLoader.env.equals("prod")) {
+            message += "<div style=\"display:none\">";
+        }
+        message +=
+                "<p>userName: botId: externalChatRoomId: borrowerBotInstantMessageId: borrowerName: lenderName: quoteData: </p>" +
+                        "<text-field name=\"user_name\" required=\"false\">" + userName + "</text-field>" +
+                        "<text-field name=\"bot_id\" required=\"false\">" + botId + "</text-field>" +
+                        "<text-field name=\"external_chatroom_id\" required=\"false\">" + externalChatRoomId + "</text-field>" +
+                        "<text-field name=\"lenderbot_im_id\" required=\"false\">" + lenderBotInstantMessageId + "</text-field>" +
+                        "<text-field name=\"counterparty_borrower\" required=\"false\">" + borrowerName + "</text-field>" +
+                        "<text-field name=\"counterparty_lender\" required=\"false\">" + lenderName + "</text-field>" +
+                        "<textarea name=\"selection_data\" required=\"false\">" + selectionData + "</textarea>";
+        if (ConfigLoader.env.equals("prod")) {
+            message += "</div>";
+        }
+
+        message +=
+                "<h3 class=\"tempo-text-color--white tempo-bg-color--blue\">借手(" + borrowerName + ")の対応</h3>" +
+                        "<br/>";
+
+        message +=
+
+                "<button type=\"action\" name=\"confirm-alloc-ioi-button\">確認</button>" +
+                        "</form>";
+
+        message +=
+                "</div>" ;
+
+        //       Div in Right Bottom -----------------
+        //       Div in Right Bottom -----------------
+        //       Div in Right Bottom -----------------
+        message +=
+                "<br/>" +
+                "<div style=\"width:50%;\">";
+
+
+
+        message +=
+                "</div>"+
+                        "</div>";
+
+
+        OutboundMessage messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        LOGGER.debug("buildSendQuoteFormMessage returned");
+        return messageOut;
+    }
 
     public OutboundMessage buildSendQuoteFormMessage(String botId, String userId, String userName, String externalChatRoomId,
                                                      String borrowerBotInstantMessageId, String borrowerName, String lenderName, String lenderStatus, String quoteData, boolean isNew) {
@@ -2306,7 +2636,7 @@ public class MessageSender {
         String titleForm;
 
         if (isNew) {
-            titleForm = "QUOTEの返信: ";
+            titleForm = "QUOTEの回答: ";
         } else {
             titleForm = "QUOTEの更新: ";
         }
@@ -2461,7 +2791,7 @@ public class MessageSender {
 
     public OutboundMessage buildNotifyRejectMessage(String userId, String userName, String borrowerName, String lenderName) {
         String message =
-                "<h5>" + lenderName + "からの<b>QUOTEの返信</b>は、" + borrowerName + "(" + userName + ")に却下されました。</h5>" +
+                "<h5>" + lenderName + "からの<b>QUOTEの回答</b>は、" + borrowerName + "(" + userName + ")に却下されました。</h5>" +
                         "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.rfqHashTag + "\"/></p>";
         OutboundMessage messageOut = new OutboundMessage();
         messageOut.setMessage(message);
@@ -2471,7 +2801,7 @@ public class MessageSender {
 
     public OutboundMessage buildNotifyRejectIoiMessage(String userId, String userName, String borrowerName, String lenderName) {
         String message =
-                "<h5>" + lenderName + "からの<b>IOIの送信</b>は、" + borrowerName + "(" + userName + ")に需要無しと返信されました。</h5>" +
+                "<h5>" + lenderName + "からの<b>IOIの送信</b>は、" + borrowerName + "(" + userName + ")に需要無しと回答されました。</h5>" +
                         "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.ioiHashTag + "\"/></p>";
         OutboundMessage messageOut = new OutboundMessage();
         messageOut.setMessage(message);
@@ -2499,7 +2829,7 @@ public class MessageSender {
 
     public OutboundMessage buildNotifyAcceptMessage(String userId, String userName, String borrowerName, String lenderName) {
         String message =
-                "<h5>" + lenderName + "からの<b>QUOTEの返信</b>は、" + borrowerName + "(" + userName + ")に受付されました。</h5>" +
+                "<h5>" + lenderName + "からの<b>QUOTEの回答</b>は、" + borrowerName + "(" + userName + ")に受付されました。</h5>" +
                         "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.rfqHashTag + "\"/></p>";
         OutboundMessage messageOut = new OutboundMessage();
         messageOut.setMessage(message);
@@ -2524,6 +2854,26 @@ public class MessageSender {
         OutboundMessage messageOut = new OutboundMessage();
         messageOut.setMessage(message);
         LOGGER.debug("buildNotifyAcceptSelectionMessage returned");
+        return messageOut;
+    }
+
+    public OutboundMessage buildNotifyAllocIoiMessage(String userId, String userName, String borrowerName, String lenderName) {
+        String message =
+            "<h5>" + lenderName + "からの<b>IOIの配分</b>は、" + borrowerName + "(" + userName + ")に確認されました。</h5>" +
+                        "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.ioiHashTag + "\"/></p>";
+        OutboundMessage messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        LOGGER.debug("buildNotifyAllocIoiMessage returned");
+        return messageOut;
+    }
+
+    public OutboundMessage buildNotifyAcceptSelectedIoiMessage(String userId, String userName, String borrowerName, String lenderName) {
+        String message =
+                "<h5>" + borrowerName + "からの<b>IOIへの回答は送信</b>は、" + lenderName + "(" + userName + ")に確認されました。</h5>" +
+                        "<p>ハッシュタグ： <hash tag=\"" + ConfigLoader.ioiHashTag + "\"/></p>";
+        OutboundMessage messageOut = new OutboundMessage();
+        messageOut.setMessage(message);
+        LOGGER.debug("buildNotifyAcceptSelectedIoiMessage returned");
         return messageOut;
     }
 
