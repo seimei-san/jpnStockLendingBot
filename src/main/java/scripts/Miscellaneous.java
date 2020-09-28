@@ -25,9 +25,9 @@ public class Miscellaneous {
         String newRequestId;
         String timeStamp = getTimeStamp("requestId");
         if (type.equals("RFQ")) {
-            newRequestId = "B" + timeStamp + String.format("%1$02d", lotNo);
+            newRequestId = ConfigLoader.rfqRequestIdPrefix + timeStamp + String.format("%1$02d", lotNo);
         } else if (type.equals("IOI")) {
-            newRequestId = "I" + timeStamp + String.format("%1$02d", lotNo);
+            newRequestId = ConfigLoader.ioiRequestIdPrefix + timeStamp + String.format("%1$02d", lotNo);
 
         } else {
             newRequestId = "ERROR";

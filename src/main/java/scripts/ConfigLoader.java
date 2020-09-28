@@ -41,6 +41,8 @@ public class ConfigLoader {
     public static String transactionTableSql = "";
     public static String counterPartyTableSql = "";
     public static boolean isInitialized = false;
+    public static String rfqRequestIdPrefix = "";
+    public static String ioiRequestIdPrefix = "";
 
 
 //    public static String[] counterPartiesList; <- relocated to DataServices
@@ -73,6 +75,8 @@ public class ConfigLoader {
             counterPartyTable = node.get("counterPartyTable").asText();
             transactionTableSql = node.get("transactionTableSql").asText();
             counterPartyTableSql = node.get("counterPartyTableSql").asText();
+            rfqRequestIdPrefix = node.get("rfqRequestIdPrefix").asText();
+            ioiRequestIdPrefix = node.get("ioiRequestIdPrefix").asText();
 //            DataServices.getCounterPartyList();
 
             isInitialized = true;
