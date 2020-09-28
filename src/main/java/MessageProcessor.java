@@ -6,6 +6,7 @@ import model.User;
 import model.UserInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scripts.CleanUp;
 import scripts.ConfigLoader;
 import scripts.Miscellaneous;
 import utils.SymMessageParser;
@@ -76,6 +77,7 @@ public class MessageProcessor {
                             msgs[4] = DataImport.importCsv(ConfigLoader.counterPartyTable);
                             msgs[5] = DataServices.getCounterPartyList();
                             msgs[6] = DataServices.getExtRoomIdList();
+                            CleanUp.RemoveFiles(ConfigLoader.uploadCsvPath);
 
                             // to confirm all above jobs are successful or not
                             if (msgs[0].contains("Successful") && msgs[1].contains("Successful") && msgs[2].contains("Successful") &&
