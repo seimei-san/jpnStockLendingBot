@@ -212,7 +212,7 @@ public class AutoLoader {
                 MessageSender.getInstance().sendMessage(Miscellaneous.convertRoomId(ConfigLoader.intChatRoomId), messageOut);
                 LOGGER.debug("AutoLoader.autoLoading.createIoi completed");
 
-            } else if (read_file.toLowerCase().contains("taken")) {
+            } else if (read_file.toLowerCase().contains("take")) {
 
                 String line = null;
                 String botId = ConfigLoader.owner;

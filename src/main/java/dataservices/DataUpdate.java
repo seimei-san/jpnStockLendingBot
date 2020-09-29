@@ -556,7 +556,7 @@ public class DataUpdate {
 
     }
 
-    public static boolean updateStatusAfterSentSelection (String type, String lenderName, String fromStatus, String toStatus) {
+    public static boolean updateStatusAfterSentSelectionByLender (String type, String lenderName, String fromStatus, String toStatus) {
         Connection connection = null;
         Statement statement = null;
         boolean result = true;
@@ -576,14 +576,64 @@ public class DataUpdate {
 
             preStatementSelect.executeUpdate();
 
-            LOGGER.debug("DataUpdate.updateStatusAfterSentSelection completed");
+            LOGGER.debug("DataUpdate.updateStatusAfterSentSelectionByLender completed");
 
         }catch (ClassNotFoundException e) {
             e.printStackTrace();
             result = false;
-            LOGGER.error("DataUpdate.updateStatusAfterSentSelection.ClassException", e);
+            LOGGER.error("DataUpdate.updateStatusAfterSentSelectionByLender.ClassException", e);
         } catch (SQLException e) {
-            LOGGER.error("DataUpdate.updateStatusAfterSentSelection.SQLException", e);
+            LOGGER.error("DataUpdate.updateStatusAfterSentSelectionByLender.SQLException", e);
+            result = false;
+            e.printStackTrace();
+        } finally {
+            try {
+                if (statement != null) {
+                    statement.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (connection != null) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return result;
+
+    }
+
+    public static boolean updateStatusAfterSentSelectionByBorrower (String type, String borrowerName, String fromStatus, String toStatus) {
+        Connection connection = null;
+        Statement statement = null;
+        boolean result = true;
+        try {
+            Class.forName("org.sqlite.JDBC");
+
+            connection = DriverManager.getConnection("jdbc:sqlite:" + ConfigLoader.databasePath + ConfigLoader.database);
+            statement = connection.createStatement();
+            statement.setQueryTimeout(30);  // set timeout to 30 sec.
+
+            String sql = "UPDATE " + ConfigLoader.transactionTable + " SET status=? WHERE type=? AND lenderNo!=0 AND status=? AND borrowerName=?";
+            PreparedStatement preStatementSelect = connection.prepareStatement(sql);
+            preStatementSelect.setString(1, toStatus);
+            preStatementSelect.setString(2, type);
+            preStatementSelect.setString(3, fromStatus);
+            preStatementSelect.setString(4, borrowerName);
+
+            preStatementSelect.executeUpdate();
+
+            LOGGER.debug("DataUpdate.updateStatusAfterSentSelectionByBorrower completed");
+
+        }catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            result = false;
+            LOGGER.error("DataUpdate.updateStatusAfterSentSelectionByBorrower.ClassException", e);
+        } catch (SQLException e) {
+            LOGGER.error("DataUpdate.updateStatusAfterSentSelectionByBorrower.SQLException", e);
             result = false;
             e.printStackTrace();
         } finally {

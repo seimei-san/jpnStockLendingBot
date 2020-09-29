@@ -1959,10 +1959,11 @@ public class DataServices {
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
 
-            String sqlSelectQuoteToLender = "select * from " + ConfigLoader.transactionTable + " WHERE type='" + type + "' AND borrowerName=? AND lenderNo!=0 AND status=?";
+            String sqlSelectQuoteToLender = "select * from " + ConfigLoader.transactionTable + " WHERE type=? AND borrowerName=? AND lenderNo!=0 AND status=?";
             PreparedStatement preparedStatement = connection.prepareStatement(sqlSelectQuoteToLender);
-            preparedStatement.setString(1, borrowerName);
-            preparedStatement.setString(2, fromStatus);
+            preparedStatement.setString(1, fromStatus);
+            preparedStatement.setString(2, borrowerName);
+            preparedStatement.setString(3, fromStatus);
             ResultSet quotesForLender = preparedStatement.executeQuery();
 
             while (quotesForLender.next()) {

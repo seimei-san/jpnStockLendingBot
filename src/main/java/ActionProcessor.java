@@ -813,7 +813,7 @@ public class ActionProcessor {
             String lenderBotInstantMessageId = lenderNameInfo[5];
             OutboundMessage messageOut = MessageSender.getInstance().buildSendSelectionFormMessage(botId, userId, userName, externalChatRoomId, lenderBotInstantMessageId, borrowerName, lenderName, fromStatus,  selectionData);
             MessageSender.getInstance().sendMessage(externalChatRoomId, messageOut);
-            DataUpdate.updateStatusAfterSentSelection("RFQ", lenderName, fromStatus, toStatus);
+            DataUpdate.updateStatusAfterSentSelectionByLender("RFQ", lenderName, fromStatus, toStatus);
         }
         LOGGER.debug("ActionProcessor.manageSelectionToLenderForm completed");
     }
@@ -832,7 +832,7 @@ public class ActionProcessor {
             String borrowerBotInstantMessageId = borrowerNameInfo[5];
             OutboundMessage messageOut = MessageSender.getInstance().buildSendAllocIoiFormMessage(botId, userId, userName, externalChatRoomId, borrowerBotInstantMessageId, borrowerName, lenderName, fromStatus,  selectionData);
             MessageSender.getInstance().sendMessage(externalChatRoomId, messageOut);
-            DataUpdate.updateStatusAfterSentSelection("IOI", lenderName, fromStatus, toStatus);
+            DataUpdate.updateStatusAfterSentSelectionByBorrower("IOI", borrowerName, fromStatus, toStatus);
         }
         LOGGER.debug("ActionProcessor.manageAllocIoiToBorrowerForm completed");
     }
@@ -851,7 +851,7 @@ public class ActionProcessor {
             String lenderBotInstantMessageId = lenderNameInfo[5];
             OutboundMessage messageOut = MessageSender.getInstance().buildSendSelectedIoiFormMessage(botId, userId, userName, externalChatRoomId, lenderBotInstantMessageId, borrowerName, lenderName, fromStatus,  selectionData);
             MessageSender.getInstance().sendMessage(externalChatRoomId, messageOut);
-            DataUpdate.updateStatusAfterSentSelection("IOI", lenderName, fromStatus, toStatus);
+            DataUpdate.updateStatusAfterSentSelectionByLender("IOI", lenderName, fromStatus, toStatus);
         }
         LOGGER.debug("ActionProcessor.manageSelectedIoiToLenderForm completed");
     }
